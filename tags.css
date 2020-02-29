@@ -1,6 +1,28 @@
-edicratic-anchor-tag-style {
-    border-bottom: 5px solid #15c39a;
-    padding-bottom: 0px;
+.edicratic-anchor-tag-style {
+    border-bottom: 5px solid #15c39a !important;
+    padding-bottom: 0px !important;
+    color: black !important;
+    background-color:#FFFF00 !important;
+    position: relative !important;
+    display: inline-block !important;
+}
+
+.edicratic-anchor-tag-style .tooltip {
+    visibility: hidden;
+    width: 15vw;
+    height: 12vh;
+    border-radius: 20px;
+    background-color: #DE5347;
+    overflow-y:auto;
     color: black;
-    background-color:#FFFF00;
+    text-align: center;
+    padding: 5px;
+    font-size: 0.8rem;
+    line-height: 150%;
+    position: absolute;
+    z-index: 1;
+}
+
+.edicratic-anchor-tag-style:hover .tooltip {
+    visibility: visible;
 }

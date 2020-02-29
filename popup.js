@@ -14,8 +14,9 @@ let changeColor = document.getElementById('changeColor');
 changeColor.onclick = function(element) {
     chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
         var specTab = tabs[0];
-        chrome.tabs.executeScript(specTab.id, {file: 'tags.js'});
         chrome.tabs.insertCSS(specTab.id, {file: 'tags.css'});
+        chrome.tabs.executeScript(specTab.id, {file: 'tags.js'});
+        
 
 
     });
