@@ -14,10 +14,11 @@ JSON_ARRAY = {
 };
 ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
 TOOL_TIP_CLASS_NAME = 'tooltip';
+POST_URL = 'https://factcheck.edicratic.com/bycontents';
 
 init();
 function init() {
-    removeTagsWithEntities();
+    data = makePostRequest();
     JSON_ARRAY.entites.forEach((obj) => {
         let {entity, link, data} = obj;
         var regex = new RegExp(entity, "gi");
@@ -43,10 +44,6 @@ function modifyAllText(regex, link, entity, data, childList, set) {
             const nextList = child.children;
             const length = nextList.length;
             var text = child.text || child.textContent;
-            if (text.toLowerCase().includes(entity.toLowerCase())) {
-                console.log(child);
-                console.log(nextList);
-            }
             if (length === 0 && text !== "" && text !== undefined && text.toLowerCase().includes(entity.toLowerCase())) {
                 //console.log(child);
                 child.innerText = "";
@@ -84,4 +81,17 @@ function removeTagsWithEntities() {
                 });
         }
     }
+}
+
+function makePostRequest() {
+    let data = {"blob": document.body.innerText.toString().substring(0, 99)};
+    console.log(JSON.stringify(data));
+    fetch(POST_URL, {
+        method: "POST", 
+        body: JSON.stringify(data),
+    }).then((res) => {
+        console.log(res);
+        return res;
+    }).catch((e) => console.log(e));
+
 }
