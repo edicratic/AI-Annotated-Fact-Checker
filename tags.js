@@ -16,11 +16,14 @@ ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
 TOOL_TIP_CLASS_NAME = 'tooltip';
 POST_URL = 'https://factcheck.edicratic.com/bycontents';
 
-init();
-function init() {
-    data = makePostRequest();
-    JSON_ARRAY.entites.forEach((obj) => {
-        let {entity, link, data} = obj;
+makePostRequest();
+function init(data) {
+    data.forEach((obj) => {
+        let entity = Object.keys(obj)[0];
+        let data = obj[entity][0].description;
+        entity = removeNonAlphaNumeric(entity);
+        let link = 'www.google.com';
+        console.log(entity);
         var regex = new RegExp(entity, "gi");
         let childList = document.body.children
         const set = new Set();
@@ -84,7 +87,7 @@ function removeTagsWithEntities() {
 }
 
 function makePostRequest() {
-    let data = {"blob": document.body.innerText.range(0, 100)};
+    let data = {"blob": document.body.innerText.substring(0, 1000)};
     console.log(JSON.stringify(data));
     fetch(POST_URL, {
         method: "POST", 
@@ -92,9 +95,17 @@ function makePostRequest() {
         headers: {
             'Content-Type': 'application/json',
         }
-    }).then((res) => {
-        console.log(res);
-        return res;
-    }).catch((e) => console.log(e));
+    }).then(res => res.json()).then(data => {
+        console.log(data);
+        const title = Object.keys(data[0])[0];
+        console.log(title);
+        console.log(data[0][title]);
+        init(data);
+    }).catch(e => console.log(e));
 
+}
+
+function removeNonAlphaNumeric(word) {
+    var PATTERN = /[^\x20\x2D0-9A-Z\x5Fa-z\xC0-\xD6\xD8-\xF6\xF8-\xFF]/g;
+    return word.replace(PATTERN, '');
 }
