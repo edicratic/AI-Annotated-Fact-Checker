@@ -84,10 +84,7 @@ function removeTagsWithEntities() {
 }
 
 function makePostRequest() {
-    let data = {"blob": "Browser Extension"};
-    let header = {
-        'Content-Type': 'application/json',
-      }
+    let data = {"blob": document.body.innerText.range(0, 100)};
     console.log(JSON.stringify(data));
     fetch(POST_URL, {
         method: "POST", 
@@ -95,6 +92,9 @@ function makePostRequest() {
         headers: {
             'Content-Type': 'application/json',
         }
-    }).then(res => res.json().then((data) => console.log(data))).catch((e) => console.log(e));
+    }).then((res) => {
+        console.log(res);
+        return res;
+    }).catch((e) => console.log(e));
 
 }
