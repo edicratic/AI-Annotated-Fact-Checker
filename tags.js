@@ -1,7 +1,7 @@
 JSON_ARRAY = {
     "entites": [
         {
-            "entity": "Extensions",
+            "entity": "Extension",
             "link": 'https://en.wikipedia.org/wiki/Extension',
             "data": "This is some bullshit data. This is some bullshit data. This is some bullshit data. This is some bullshit data.This is some bullshit data.This is some bullshit data.This is some bullshit data.This is some bullshit data."
         },
@@ -21,27 +21,46 @@ function init() {
     JSON_ARRAY.entites.forEach((obj) => {
         let {entity, link, data} = obj;
         var regex = new RegExp(entity, "gi");
-        //let childList = document.body.children
-        //const set = new Set();
-        // modifyAllText(regex, link, entity, data, childList, set);
-        document.body.innerHTML = document.body.innerHTML.replace(regex, `<a class="${ANCHOR_CLASS_NAME}" data="${data}" href=${link}>${entity} <span class="${TOOL_TIP_CLASS_NAME}">${data}</span> </a>`);
+        let childList = document.body.children
+        const set = new Set();
+        modifyAllText(regex, link, entity, data, childList, set);
+        //document.body.innerHTML = document.body.innerHTML.replace(regex, `<a class="${ANCHOR_CLASS_NAME}" data="${data}" href=${link}>${entity} <span class="${TOOL_TIP_CLASS_NAME}">${data}</span> </a>`);
     });
 }
 
 function modifyAllText(regex, link, entity, data, childList, set) {
+    /*
+        var p = document.getElementById(parentId);
+    var newElement = document.createElement(elementTag);
+    newElement.setAttribute('id', elementId);
+    newElement.innerHTML = html;
+    p.appendChild(newElement);
+     */
     for (var i = 0; i < childList.length; i++) {
         const child = childList[i];
         if(!set.has(child)) {
             set.add(child);
             const nextList = child.children;
+            const length = nextList.length;
             var text = child.text || child.textContent;
-            console.log(text);
-            if (text !== "" && text !== undefined) {
-                text = text.replace(regex, `<a class="${ANCHOR_CLASS_NAME}" data="${data}" href=${link}>${entity} <span class="${TOOL_TIP_CLASS_NAME}">${data}</span> </a>`);
-                child.outerHTML = text;
+            if (text.toLowerCase().includes(entity.toLowerCase())) {
+                console.log(child);
+                console.log(nextList);
             }
-            if (nextList.length !== 0) {
-                modifyAllText(regex, link, entity, data, nextList)
+            if (length === 0 && text !== "" && text !== undefined && text.toLowerCase().includes(entity.toLowerCase())) {
+                //console.log(child);
+                child.innerText = "";
+                text = text.replace(regex, `<a class="${ANCHOR_CLASS_NAME}" data="${data}" href=${link}>${entity} <span class="${TOOL_TIP_CLASS_NAME}">${data}</span> </a>`);
+                var newElement = document.createElement('a');
+                // console.log(newElement);
+                newElement.innerHTML = text;
+                child.appendChild(newElement);
+                set.add(newElement);
+                //child.classList.add(ANCHOR_CLASS_NAME);
+                
+            }
+            if (length !== 0) {
+                modifyAllText(regex, link, entity, data, nextList, set)
             }
     }
     }
