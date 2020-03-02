@@ -8,21 +8,21 @@
 }
 
 .edicratic-anchor-tag-style .tooltip {
-    visibility: hidden;
-    width: 15vw;
-    height: 12vh;
-    border-radius: 20px;
-    background-color: #DE5347;
-    overflow-y:auto;
-    color: black;
-    text-align: center;
-    padding: 5px;
-    font-size: 0.8rem;
-    line-height: 150%;
-    position: absolute;
-    z-index: 1;
+    visibility: hidden !important;
+    width: 15vw !important;
+    height: 12vh !important;
+    border-radius: 20px !important;
+    background-color: #DE5347 !important;
+    overflow-y:auto !important;
+    color: black !important;
+    text-align: center !important;
+    padding: 5px !important;
+    font-size: 0.8rem !important;
+    line-height: 150% !important;
+    position: absolute !important;
+    z-index: 1 !important;
 }
 
 .edicratic-anchor-tag-style:hover .tooltip {
-    visibility: visible;
+    visibility: visible !important;
 }
