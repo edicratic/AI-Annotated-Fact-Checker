@@ -36,7 +36,8 @@ function modifyAllText(regex, link, entity, data, childList, set) {
             var text = child.text || child.textContent;
             if (length === 0 && text !== "" && text !== undefined && text.toLowerCase().includes(entity.toLowerCase())) {
                 child.innerText = "";
-                text = text.replace(regex, `<a class="${ANCHOR_CLASS_NAME}" href=${link}>${entity} <span class="${TOOL_TIP_CLASS_NAME}">${data}</span> </a>`);
+                var uniqueId = "a" + Date.now();
+                text = text.replace(regex, `<a id="${uniqueId}" class="${ANCHOR_CLASS_NAME}" href=${link}>${entity} <span id="${uniqueId}" class="${TOOL_TIP_CLASS_NAME}">${data} <br/> <img id="${uniqueId}" class="leftArrow" src="https://cdn2.iconfinder.com/data/icons/picons-basic-2/57/basic2-289_arrow_left-128.png"/> <img id="${uniqueId}" class="rightArrow" src="https://cdn2.iconfinder.com/data/icons/picons-basic-2/57/basic2-290_arrow_right-128.png"/> </span> </a>`);
                 var newElement = document.createElement('a');
                 newElement.innerHTML = text;
                 child.appendChild(newElement);
