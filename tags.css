@@ -8,21 +8,56 @@
 }
 
 .edicratic-anchor-tag-style .tooltip {
+    float: left !important;
+    text-align: center;
     visibility: hidden !important;
-    width: 15vw !important;
-    height: 12vh !important;
-    border-radius: 20px !important;
-    background-color: #DE5347 !important;
-    overflow-y:auto !important;
+    height: 50vh !important;
+    width: 100% !important;
+    min-width: 100px;
+    background-color: #f5f5f5 !important;
     color: black !important;
     text-align: center !important;
-    padding: 5px !important;
-    font-size: 0.8rem !important;
-    line-height: 150% !important;
+    padding: 5px 0 !important;
+    border-radius: 6px !important;
+    font-size: large;
+
+    /* Position the tooltip text */
     position: absolute !important;
-    z-index: 1 !important;
+    z-index: 5 !important;
+    bottom: 125% !important;
+    left: 0 !important;
+    /*margin-left: -60px !important; */
+
+    /* Fade in tooltip */
+    opacity: 0 !important;
+    transition: opacity 0.3s !important;
+
 }
 
 .edicratic-anchor-tag-style:hover .tooltip {
     visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.edicratic-anchor-tag-style .tooltip .left {
+    
+}
+
+/* .edicratic-anchor-tag-style .tooltip::after {
+    content: "" !important;
+    position: absolute !important;
+    top: 100% !important;
+    left: 50% !important;
+    margin-left: -5px !important;
+    border-width: 5px !important;
+    border-style: solid !important;
+    border-color: #555 !important;
+  } */
+
+  hr { display: block !important;
+    height: 1px !important;
+    border: 0 !important;
+    border-top: 5px solid black !important;
+    margin: 1em 0 !important;
+    padding: 0 !important;
 }
