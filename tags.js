@@ -138,6 +138,7 @@ function addListeners() {
 
 function arrowClick(e, isLeft) {
     e.preventDefault();
+    console.log('clicked');
     const id = e.toElement.id;
     const entry = idToData[id];
     var previousIndex = entry[0];
@@ -145,6 +146,8 @@ function arrowClick(e, isLeft) {
     var newIndex = isLeft ? previousIndex === 0 ? array.length - 1 : previousIndex - 1 : ((previousIndex + 1) % array.length);
     idToData[id][0] = newIndex;
     const span = document.getElementById(`${id}-parent`);
+    console.log(span);
     span.innerHTML = `${array[newIndex]} <br/> <img id="${id}" class="leftArrow" src="https://cdn2.iconfinder.com/data/icons/picons-basic-2/57/basic2-289_arrow_left-128.png"/> <img id="${id}" class="rightArrow" src="https://cdn2.iconfinder.com/data/icons/picons-basic-2/57/basic2-290_arrow_right-128.png"/>`
+    console.log(span);
     addListeners();
 }
