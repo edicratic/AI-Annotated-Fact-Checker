@@ -1,22 +1,28 @@
 ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
 TOOL_TIP_CLASS_NAME = 'tooltip';
 POST_URL = 'https://factcheck.edicratic.com/bycontents';
+idToData = {};
 
 //addSemanticUI();
 makePostRequest();
 function init(data) {
     data.forEach((obj) => {
         let entity = Object.keys(obj)[0];
-        let item = obj[entity][0];
-        let data = `<b>${item.title}</b>` + '<hr style="color:black"/>' + (stripHtml(item.extract) || item.description);
+        let items = obj[entity];
+        let itemsArray = [];
+        for (var i = 0; i < items.length; i++) {
+            let item = items[i];
+            let data = `<b>${item.title}</b>` + '<hr style="color:black"/>' + (stripHtml(item.extract) || item.description);
+            itemsArray.push(data);
+        }
         entity = removeNonAlphaNumeric(entity);
         let link = 'www.google.com';
-        console.log(data);
         var regex = new RegExp(entity, "gi");
         let childList = document.body.children
         const set = new Set();
-        modifyAllText(regex, link, entity, data, childList, set);
+        modifyAllText(regex, link, entity, itemsArray, childList, set);
     });
+    addListeners();
 }
 
 function modifyAllText(regex, link, entity, data, childList, set) {
@@ -36,8 +42,9 @@ function modifyAllText(regex, link, entity, data, childList, set) {
             var text = child.text || child.textContent;
             if (length === 0 && text !== "" && text !== undefined && text.toLowerCase().includes(entity.toLowerCase())) {
                 child.innerText = "";
-                var uniqueId = "a" + Date.now();
-                text = text.replace(regex, `<a id="${uniqueId}" class="${ANCHOR_CLASS_NAME}" href=${link}>${entity} <span id="${uniqueId}" class="${TOOL_TIP_CLASS_NAME}">${data} <br/> <img id="${uniqueId}" class="leftArrow" src="https://cdn2.iconfinder.com/data/icons/picons-basic-2/57/basic2-289_arrow_left-128.png"/> <img id="${uniqueId}" class="rightArrow" src="https://cdn2.iconfinder.com/data/icons/picons-basic-2/57/basic2-290_arrow_right-128.png"/> </span> </a>`);
+                var uniqueId = "a" + i + Math.floor(Math.random() * 1000000);
+                text = text.replace(regex, `<a id="${uniqueId}" class="${ANCHOR_CLASS_NAME}">${entity} <span id="${uniqueId}-parent" class="${TOOL_TIP_CLASS_NAME}">${data[0]} <br/> <img id="${uniqueId}" class="leftArrow" src="https://cdn2.iconfinder.com/data/icons/picons-basic-2/57/basic2-289_arrow_left-128.png"/> <img id="${uniqueId}" class="rightArrow" src="https://cdn2.iconfinder.com/data/icons/picons-basic-2/57/basic2-290_arrow_right-128.png"/> </span> </a>`);
+                idToData[uniqueId] = [0, data]
                 var newElement = document.createElement('a');
                 newElement.innerHTML = text;
                 child.appendChild(newElement);
@@ -115,4 +122,29 @@ function stripHtml(html) {
    var tmp = document.createElement("DIV");
    tmp.innerHTML = html;
    return tmp.textContent || tmp.innerText || "";
+}
+
+function addListeners() {
+    let leftArrows = document.getElementsByClassName('leftArrow');
+    let rightArrows = document.getElementsByClassName('rightArrow');
+    for (var i = 0; i < leftArrows.length; i++) {
+        leftArrows[i].addEventListener('click', (e) => arrowClick(e, true), true);
+    }
+    for (var i = 0; i < rightArrows.length; i++) {
+        rightArrows[i].addEventListener('click', (e) => arrowClick(e, false), true);
+
+    }
+}
+
+function arrowClick(e, isLeft) {
+    e.preventDefault();
+    const id = e.toElement.id;
+    const entry = idToData[id];
+    var previousIndex = entry[0];
+    var array = entry[1];
+    var newIndex = isLeft ? previousIndex === 0 ? array.length - 1 : previousIndex - 1 : ((previousIndex + 1) % array.length);
+    idToData[id][0] = newIndex;
+    const span = document.getElementById(`${id}-parent`);
+    span.innerHTML = `${array[newIndex]} <br/> <img id="${id}" class="leftArrow" src="https://cdn2.iconfinder.com/data/icons/picons-basic-2/57/basic2-289_arrow_left-128.png"/> <img id="${id}" class="rightArrow" src="https://cdn2.iconfinder.com/data/icons/picons-basic-2/57/basic2-290_arrow_right-128.png"/>`
+    addListeners();
 }
