@@ -82,6 +82,7 @@ function makePostRequest() {
     const spinner = document.createElement('div');
     spinner.className = "loading";
     document.body.appendChild(spinner);
+    document.body.style.paddingTop = '45vh';
     let data = {"blob": document.body.innerText.substring(0, 1000)};
     console.log(JSON.stringify(data));
     fetch(POST_URL, {
@@ -92,6 +93,7 @@ function makePostRequest() {
         }
     }).then(res => res.json()).then(data => {
         spinner.style.display = "none";
+        console.log(data);
         init(data);
     }).catch(e => console.log(e));
 
@@ -138,6 +140,7 @@ function addListeners() {
 
 function arrowClick(e, isLeft) {
     e.preventDefault();
+    e.stopPropagation();
     console.log('clicked');
     const id = e.toElement.id;
     const entry = idToData[id];
@@ -146,8 +149,12 @@ function arrowClick(e, isLeft) {
     var newIndex = isLeft ? previousIndex === 0 ? array.length - 1 : previousIndex - 1 : ((previousIndex + 1) % array.length);
     idToData[id][0] = newIndex;
     const span = document.getElementById(`${id}-parent`);
-    console.log(span);
-    span.innerHTML = `${array[newIndex]} <br/> <img id="${id}" class="leftArrow" src="https://cdn2.iconfinder.com/data/icons/picons-basic-2/57/basic2-289_arrow_left-128.png"/> <img id="${id}" class="rightArrow" src="https://cdn2.iconfinder.com/data/icons/picons-basic-2/57/basic2-290_arrow_right-128.png"/>`
-    console.log(span);
-    addListeners();
+    console.log(newIndex);
+    console.log(previousIndex);
+    if (newIndex !== previousIndex) {
+        span.innerHTML = `${array[newIndex]} <br/> <img id="${id}" class="leftArrow" src="https://cdn2.iconfinder.com/data/icons/picons-basic-2/57/basic2-289_arrow_left-128.png"/> <img id="${id}" class="rightArrow" src="https://cdn2.iconfinder.com/data/icons/picons-basic-2/57/basic2-290_arrow_right-128.png"/>`
+        span.addEventListener('click', (e) => arrowClick(e, isLeft), false);
+        span.scrollTop = 0;
+       // addListeners();
+    }
 }
