@@ -79,6 +79,9 @@ function removeTagsWithEntities() {
 }
 
 function makePostRequest() {
+    const spinner = document.createElement('div');
+    spinner.className = "loading";
+    document.body.appendChild(spinner);
     let data = {"blob": document.body.innerText.substring(0, 1000)};
     console.log(JSON.stringify(data));
     fetch(POST_URL, {
@@ -88,10 +91,7 @@ function makePostRequest() {
             'Content-Type': 'application/json',
         }
     }).then(res => res.json()).then(data => {
-        console.log(data);
-        const title = Object.keys(data[0])[0];
-        console.log(title);
-        console.log(data[0][title]);
+        spinner.style.display = "none";
         init(data);
     }).catch(e => console.log(e));
 
