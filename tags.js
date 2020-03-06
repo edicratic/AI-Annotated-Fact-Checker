@@ -12,7 +12,7 @@ function init(data) {
         let itemsArray = [];
         for (var i = 0; i < items.length; i++) {
             let item = items[i];
-            let data = {'link': item.wikilink,'full_html': `<b>${item.title}</b>` + '<hr style="color:black"/><p>' + (stripHtml(item.extract) || item.description) + `<br/><i onclick="window.open('${item.wikilink}', '_blank');" class="inner-link">Learn More Here</i></p>`, 'title': item.title, 'content': (stripHtml(item.extract) || item.description)}
+            let data = {'link': item.wikilink,'full_html': `<b>${item.title}</b>` + '<hr style="color:black"/><p>' + (stripHtml(item.extract) || item.description) + `<br/><br/><i onclick="window.open('${item.wikilink}', '_blank');" class="inner-link">Learn More Here</i></p>`, 'title': item.title, 'content': (stripHtml(item.extract) || item.description)}
             itemsArray.push(data);
         }
         entity = removeNonAlphaNumeric(entity);
@@ -49,6 +49,8 @@ function modifyAllText(regex, link, entity, data, childList, set) {
                 newElement.innerHTML = text;
                 child.appendChild(newElement);
                 set.add(newElement);
+                const span = document.getElementById(`${uniqueId}-parent`);
+                span.onclick = e => e.preventDefault();
             }
             if (length !== 0) {
                 modifyAllText(regex, link, entity, data, nextList, set)
@@ -81,7 +83,8 @@ function makePostRequest() {
     const spinner = document.createElement('div');
     spinner.className = "loading";
     document.body.appendChild(spinner);
-    document.body.style.paddingTop = '45vh';
+    document.body.style.paddingTop = '80vh';
+    window.scrollTo(0, 150);
     let data = {"blob": document.body.innerText.substring(0, 1000)};
     console.log(JSON.stringify(data));
     fetch(POST_URL, {
@@ -148,6 +151,6 @@ function arrowClick(e, isLeft) {
     idToData[id][0] = newIndex;
     const span = document.getElementById(`${id}-parent`);
     span.children[0].innerHTML = array[newIndex]['title']
-    span.children[2].innerHTML = array[newIndex]['content'] + `<br/> <i onclick="window.open('${array[newIndex]['link']}', '_blank');" class="inner-link">Learn More Here</i>`
+    span.children[2].innerHTML = array[newIndex]['content'] + `<br/><br/> <i onclick="window.open('${array[newIndex]['link']}', '_blank');" class="inner-link">Learn More Here</i>`
     span.scrollTop = 0;
 }

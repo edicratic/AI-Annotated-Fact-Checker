@@ -5,6 +5,7 @@
     background-color:#FFFF00 !important;
     position: relative !important;
     display: inline-block !important;
+    cursor: pointer;
 }
 
 .edicratic-anchor-tag-style .tooltip {
@@ -12,7 +13,7 @@
     text-align: center;
     visibility: hidden !important;
     /*height: 30vh !important;*/
-    height: 50vh !important;
+    height: auto !important;
     width: 100% !important;
     min-width: 200px !important;
     background-color: #f5f5f5 !important;
@@ -20,7 +21,7 @@
     text-align: center !important;
     padding: 5px 0 !important;
     border-radius: 6px !important;
-    font-size: large;
+    font-size: 1vw !important;
 
     /* Position the tooltip text */
     position: absolute !important;
@@ -33,6 +34,12 @@
     opacity: 0 !important;
     transition: opacity 0.3s !important;
     /* word-break: break-all; */
+    font-weight: normal !important;
+    font-family: 'Times New Roman' !important;
+    font-style: normal !important;
+    line-height: normal !important;
+    overflow-y:auto !important;
+
 
 }
 
