@@ -50,7 +50,6 @@ function modifyAllText(regex, link, entity, data, childList, set) {
                 child.appendChild(newElement);
                 set.add(newElement);
                 const anchor = document.getElementById(`${uniqueId}-parent`);
-                console.log(anchor);
                 anchor.onclick = e => e.preventDefault();
                 
             }
