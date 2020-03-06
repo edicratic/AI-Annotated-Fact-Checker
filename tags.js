@@ -12,7 +12,7 @@ function init(data) {
         let itemsArray = [];
         for (var i = 0; i < items.length; i++) {
             let item = items[i];
-            let data = {'full_html': `<b>${item.title}</b>` + '<hr style="color:black"/><p>' + (stripHtml(item.extract) || item.description) + '</p>', 'title': item.title, 'content': (stripHtml(item.extract) || item.description)}
+            let data = {'link': item.wikilink,'full_html': `<b>${item.title}</b>` + '<hr style="color:black"/><p>' + (stripHtml(item.extract) || item.description) + '</p>', 'title': item.title, 'content': (stripHtml(item.extract) || item.description)}
             itemsArray.push(data);
         }
         entity = removeNonAlphaNumeric(entity);
@@ -43,12 +43,15 @@ function modifyAllText(regex, link, entity, data, childList, set) {
             if (length === 0 && text !== "" && text !== undefined && text.toLowerCase().includes(entity.toLowerCase())) {
                 child.innerText = "";
                 var uniqueId = "a" + i + Math.floor(Math.random() * 1000000);
-                text = text.replace(regex, `<a id="${uniqueId}" class="${ANCHOR_CLASS_NAME}">${entity} <span id="${uniqueId}-parent" class="${TOOL_TIP_CLASS_NAME}">${data[0]['full_html']} <br/> <img id="${uniqueId}" class="leftArrow" src="https://cdn2.iconfinder.com/data/icons/picons-basic-2/57/basic2-289_arrow_left-128.png"/> <img id="${uniqueId}" class="rightArrow" src="https://cdn2.iconfinder.com/data/icons/picons-basic-2/57/basic2-290_arrow_right-128.png"/> </span> </a>`);
+                text = text.replace(regex, `<a target="_blank" href=${data[0]['link']} id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${entity} <span id="${uniqueId}-parent" class="${TOOL_TIP_CLASS_NAME}">${data[0]['full_html']} <br/> <img id="${uniqueId}" class="leftArrow" src="https://cdn2.iconfinder.com/data/icons/picons-basic-2/57/basic2-289_arrow_left-128.png"/> <img id="${uniqueId}" class="rightArrow" src="https://cdn2.iconfinder.com/data/icons/picons-basic-2/57/basic2-290_arrow_right-128.png"/> </span> </a>`);
                 idToData[uniqueId] = [0, data]
                 var newElement = document.createElement('a');
                 newElement.innerHTML = text;
                 child.appendChild(newElement);
                 set.add(newElement);
+                const anchor = document.getElementById(`${uniqueId}-parent`);
+                console.log(anchor);
+                anchor.onclick = e => e.preventDefault();
                 
             }
             if (length !== 0) {
@@ -141,7 +144,6 @@ function addListeners() {
 function arrowClick(e, isLeft) {
     e.preventDefault();
     e.stopPropagation();
-    console.log('clicked');
     const id = e.toElement.id;
     const entry = idToData[id];
     var previousIndex = entry[0];
@@ -149,11 +151,9 @@ function arrowClick(e, isLeft) {
     var newIndex = isLeft ? previousIndex === 0 ? array.length - 1 : previousIndex - 1 : ((previousIndex + 1) % array.length);
     idToData[id][0] = newIndex;
     const span = document.getElementById(`${id}-parent`);
-    console.log(span.innerHTML);
-    console.log(span.innerText);
-    console.log(newIndex);
-    console.log(previousIndex);
     span.children[0].innerHTML = array[newIndex]['title']
     span.children[2].innerHTML = array[newIndex]['content']
     span.scrollTop = 0;
+    const anchorTag = document.getElementById(`${id}-parent-parent`);
+    anchorTag.href = array[newIndex]['link'];
 }
