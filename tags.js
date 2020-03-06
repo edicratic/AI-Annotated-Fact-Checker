@@ -23,6 +23,7 @@ function init(data) {
         modifyAllText(regex, link, entity, itemsArray, childList, set);
     });
     addListeners();
+    preventSpanDefaultBehaviour();
 }
 
 function modifyAllText(regex, link, entity, data, childList, set) {
@@ -49,8 +50,6 @@ function modifyAllText(regex, link, entity, data, childList, set) {
                 newElement.innerHTML = text;
                 child.appendChild(newElement);
                 set.add(newElement);
-                const span = document.getElementById(`${uniqueId}-parent`);
-                span.onclick = e => e.preventDefault();
             }
             if (length !== 0) {
                 modifyAllText(regex, link, entity, data, nextList, set)
@@ -153,4 +152,11 @@ function arrowClick(e, isLeft) {
     span.children[0].innerHTML = array[newIndex]['title']
     span.children[2].innerHTML = array[newIndex]['content'] + `<br/><br/> <i onclick="window.open('${array[newIndex]['link']}', '_blank');" class="inner-link">Learn More Here</i>`
     span.scrollTop = 0;
+}
+
+function preventSpanDefaultBehaviour() {
+    const spans = document.getElementsByClassName(TOOL_TIP_CLASS_NAME);
+    for (var i = 0; i < spans.length; i++) {
+        spans[i].onclick = e => e.preventDefault();
+    }
 }
