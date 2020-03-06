@@ -92,6 +92,11 @@
     padding: 0 !important;
 }
 
+.inner-link {
+    color: #0645ad;
+    cursor: pointer;
+}
+
 /* img {
     width: 10% !important;
     height: 10% !important;
