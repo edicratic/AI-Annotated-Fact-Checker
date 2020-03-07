@@ -6,13 +6,6 @@
         "scripts": ["background.js"],
         "persistent": false
     },
-    "content_scripts": [
-        {
-          "matches": [ "http://*/*", "https://*/*", "file:///*/*"],
-          "css" : ["tags.css"],
-          "all_frames": true
-        }
-    ],
     "permissions": [
         "background", 
         "tabs", 
