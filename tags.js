@@ -24,6 +24,8 @@ function init(data) {
     });
     addListeners();
     preventSpanDefaultBehaviour();
+    adjustSpansBasedOnHeight();
+    document.body.onscroll = (e) => adjustSpansBasedOnHeight();
 }
 
 function modifyAllText(regex, link, entity, data, childList, set) {
@@ -82,8 +84,8 @@ function makePostRequest() {
     const spinner = document.createElement('div');
     spinner.className = "loading";
     document.body.appendChild(spinner);
-    document.body.style.paddingTop = '80vh';
-    window.scrollTo(0, 150);
+    // document.body.style.paddingTop = '80vh';
+    // window.scrollTo(0, 150);
     let data = {"blob": document.body.innerText.substring(0, 1000)};
     console.log(JSON.stringify(data));
     fetch(POST_URL, {
@@ -158,5 +160,25 @@ function preventSpanDefaultBehaviour() {
     const spans = document.getElementsByClassName(TOOL_TIP_CLASS_NAME);
     for (var i = 0; i < spans.length; i++) {
         spans[i].onclick = e => e.preventDefault();
+    }
+}
+
+function adjustSpansBasedOnHeight() {
+    const spans = document.getElementsByClassName(TOOL_TIP_CLASS_NAME);
+    for (var i = 0; i < spans.length; i++) {
+        const aTag = document.getElementById(`${spans[i].id}-parent`);
+        if (aTag) {
+            if ((aTag.offsetTop <= spans[i].clientHeight) || aTag.getBoundingClientRect().top <= spans[i].clientHeight) {
+                spans[i].style.bottom = '';
+                spans[i].style.top = '100%';
+                spans[i].style.minHeight = '50vh';
+
+            } else {
+                spans[i].style.bottom = '100%';
+                spans[i].style.top = '';
+                spans[i].style.minHeight = '';
+                
+            }
+         }
     }
 }
