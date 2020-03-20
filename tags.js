@@ -1,9 +1,12 @@
 ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
 TOOL_TIP_CLASS_NAME = 'tooltip';
+FONTAWESOME_PATHS = ['fontawesome/all.min.css', 'fontawesome/fontawesome.min.css']
 POST_URL = 'https://factcheck.edicratic.com/bycontents';
+LEFT_ARROW_LINK = 'https://freesvg.org/img/Soeb-Plain-Arrows-8.png'
+RIGHT_ARROW_LINK = 'https://freesvg.org/img/Soeb-Plain-Arrows-9.png'
 idToData = {};
 
-//addSemanticUI();
+//addFontAwesome();
 makePostRequest();
 function init(data) {
     data.forEach((obj) => {
@@ -46,7 +49,7 @@ function modifyAllText(regex, link, entity, data, childList, set) {
             if (length === 0 && text !== "" && text !== undefined && text.toLowerCase().includes(entity.toLowerCase())) {
                 child.innerText = "";
                 var uniqueId = "a" + i + Math.floor(Math.random() * 1000000);
-                text = text.replace(regex, `<a id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${entity} <span id="${uniqueId}-parent" class="${TOOL_TIP_CLASS_NAME}">${data[0]['full_html']} <br/> <img id="${uniqueId}" class="leftArrow" src="https://cdn2.iconfinder.com/data/icons/picons-basic-2/57/basic2-289_arrow_left-128.png"/> <img id="${uniqueId}" class="rightArrow" src="https://cdn2.iconfinder.com/data/icons/picons-basic-2/57/basic2-290_arrow_right-128.png"/> </span> </a>`);
+                text = text.replace(regex, `<a id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${entity} <span id="${uniqueId}-parent" class="${TOOL_TIP_CLASS_NAME}">${data[0]['full_html']} <br/> <div id="${uniqueId}" class="leftArrow fa fa-arrow-left fa-3x"></div> <div id="${uniqueId}" class="rightArrow fa fa-arrow-right fa-3x"></div> </span> </a>`);
                 idToData[uniqueId] = [0, data]
                 var newElement = document.createElement('a');
                 newElement.innerHTML = text;
@@ -183,4 +186,19 @@ function adjustSpansBasedOnHeight() {
             }
          }
     }
+}
+
+function addFontAwesome() {
+    for (var i = 0; i < FONTAWESOME_PATHS.length; i++) {
+        let link = document.createElement('link');
+        link.href = FONTAWESOME_PATHS[i];
+        link.rel  = 'stylesheet';
+        link.type = 'text/css';
+        link.media = 'all';
+        var head  = document.getElementsByTagName('head')[0];
+        head.appendChild(link);
+
+    }
+
+
 }
