@@ -171,12 +171,14 @@ function adjustSpansBasedOnHeight() {
             if ((aTag.offsetTop <= spans[i].clientHeight) || aTag.getBoundingClientRect().top <= spans[i].clientHeight) {
                 spans[i].style.bottom = '';
                 spans[i].style.top = '100%';
-                spans[i].style.minHeight = '50vh';
+                //spans[i].style.minHeight = '50vh';
+                //spans[i].style.backgroundColor = 'black';
 
             } else {
                 spans[i].style.bottom = '100%';
                 spans[i].style.top = '';
-                spans[i].style.minHeight = '';
+                //spans[i].style.minHeight = '';
+                //spans[i].style.backgroundColor = '#f5f5f5';
                 
             }
          }
