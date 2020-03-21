@@ -1,9 +1,6 @@
 ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
 TOOL_TIP_CLASS_NAME = 'tooltip';
-FONTAWESOME_PATHS = ['fontawesome/all.min.css', 'fontawesome/fontawesome.min.css']
 POST_URL = 'https://factcheck.edicratic.com/bycontents';
-LEFT_ARROW_LINK = 'https://freesvg.org/img/Soeb-Plain-Arrows-8.png'
-RIGHT_ARROW_LINK = 'https://freesvg.org/img/Soeb-Plain-Arrows-9.png'
 idToData = {};
 
 //addFontAwesome();
@@ -65,24 +62,6 @@ function modifyAllText(regex, link, entity, data, childList, set) {
     
 }
 
-function removeTagsWithEntities() {
-    const possibleTags = ['a', 'p', 'h1', 'h2', 'h3', 'h4', 'div', 'img', 'span']
-    let tags = [];
-    possibleTags.forEach((tag) => {
-        tags = tags.concat(document.getElementsByTagName(tag));
-    });
-    for (var i = 0; i < tags.length; i++) {
-        const subArray = tags[i];
-            for (var j = 0; j < subArray.length; j++) {
-                let currentTag = subArray[j];
-                JSON_ARRAY.entites.forEach((obj) => {
-                    if (currentTag.href && currentTag.href.toLowerCase().includes(obj.entity.toLowerCase())) currentTag.href = '';
-                    if (currentTag.id && currentTag.id.toLowerCase().includes(obj.entity.toLowerCase())) currentTag.id = '';
-                });
-        }
-    }
-}
-
 function makePostRequest() {
     const spinner = document.createElement('div');
     spinner.className = "loading";
@@ -108,22 +87,6 @@ function makePostRequest() {
 function removeNonAlphaNumeric(word) {
     var PATTERN = /[^\x20\x2D0-9A-Z\x5Fa-z\xC0-\xD6\xD8-\xF6\xF8-\xFF]/g;
     return word.replace(PATTERN, '');
-}
-
-function addSemanticUI() {
-    var head = document.getElementsByTagName('HEAD')[0]; 
-    
-    //add css
-    var link = document.createElement('link'); 
-    link.rel = 'stylesheet';  
-    link.type = 'text/css'; 
-    link.href = 'https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css';  
-    head.appendChild(link);
-
-    //add js
-    var jsLink = document.createElement('script');
-    jsLink.src = 'https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js';
-    head.appendChild(jsLink);
 }
 
 function stripHtml(html) {
@@ -154,8 +117,15 @@ function arrowClick(e, isLeft) {
     var newIndex = isLeft ? previousIndex === 0 ? array.length - 1 : previousIndex - 1 : ((previousIndex + 1) % array.length);
     idToData[id][0] = newIndex;
     const span = document.getElementById(`${id}-parent`);
+    const isBottom = span.style.top === '100%';
+    const height = span.children[2].clientHeight;
     span.children[0].innerHTML = array[newIndex]['title']
     span.children[2].innerHTML = array[newIndex]['content'] + `<br/><br/> <i onclick="window.open('${array[newIndex]['link']}', '_blank');" class="inner-link">Learn More Here</i>`
+    if (isBottom) {
+        span.children[2].style.minHeight = `${height}px`;
+    } else {
+        span.children[2].style.minHeight = '';
+    }
     span.scrollTop = 0;
 }
 
@@ -174,31 +144,13 @@ function adjustSpansBasedOnHeight() {
             if ((aTag.offsetTop <= spans[i].clientHeight) || aTag.getBoundingClientRect().top <= spans[i].clientHeight) {
                 spans[i].style.bottom = '';
                 spans[i].style.top = '100%';
-                //spans[i].style.minHeight = '50vh';
-                //spans[i].style.backgroundColor = 'black';
 
             } else {
                 spans[i].style.bottom = '100%';
                 spans[i].style.top = '';
-                //spans[i].style.minHeight = '';
-                //spans[i].style.backgroundColor = '#f5f5f5';
+                spans[i].children[2].style.minHeight = '';
                 
             }
          }
     }
-}
-
-function addFontAwesome() {
-    for (var i = 0; i < FONTAWESOME_PATHS.length; i++) {
-        let link = document.createElement('link');
-        link.href = FONTAWESOME_PATHS[i];
-        link.rel  = 'stylesheet';
-        link.type = 'text/css';
-        link.media = 'all';
-        var head  = document.getElementsByTagName('head')[0];
-        head.appendChild(link);
-
-    }
-
-
 }
