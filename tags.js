@@ -1,5 +1,5 @@
 ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
-TOOL_TIP_CLASS_NAME = 'tooltip';
+TOOL_TIP_CLASS_NAME = 'edicratic-tooltip';
 POST_URL = 'https://factcheck.edicratic.com/bycontents';
 idToData = {};
 
