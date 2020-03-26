@@ -1,7 +1,6 @@
 .edicratic-anchor-tag-style {
     border-bottom: 5px solid #15c39a !important;
     padding-bottom: 0px !important;
-    color: black !important;
     position: relative !important;
     display: inline-block !important;
     cursor: pointer;
@@ -218,5 +217,11 @@
       -ms-transform: rotate(360deg);
       -o-transform: rotate(360deg);
       transform: rotate(360deg);
+    }
+  }
+
+  @media screen and (max-width: 992px) {
+    .edicratic-tooltip {
+      font-size: 2vw !important;
     }
   }
