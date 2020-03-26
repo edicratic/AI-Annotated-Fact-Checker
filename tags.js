@@ -2,7 +2,6 @@ ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
 TOOL_TIP_CLASS_NAME = 'edicratic-tooltip';
 POST_URL = 'https://factcheck.edicratic.com/bycontents';
 idToData = {};
-insideSpan = {};
 
 //addFontAwesome();
 makePostRequest();
@@ -64,17 +63,9 @@ function modifyAllText(regex, link, entity, data, childList, set) {
                 tooltip.onmouseleave = (e) => {
                     if(e.target) {
                         let id = e.target.id;
+                        console.log(e.target.clientHeight);
                         id = id.substring(0, id.indexOf('-'));
-                        insideSpan[id] = false;
                         removeSpan(id);
-                    }
-                }
-                tooltip.onmouseenter = (e) => {
-                    console.log(e);
-                    if (e.target) {
-                        let id = e.target.id;
-                        id = id.substring(0, id.indexOf('-'));
-                        insideSpan[id] = true;
                     }
                 }
                 document.body.prepend(tooltip)
@@ -91,22 +82,26 @@ function modifyAllText(regex, link, entity, data, childList, set) {
 }
 
 function mouseOverHandle(e, id) {
-    console.log(insideSpan);
     if (e.target) {
         id = e.target.id;
         id = id.substring(0, id.indexOf('-'));
         const span = document.getElementById(`${id}-parent`);
         const anchor = document.getElementById(`${id}-parent-parent`);
-        var offset = $(`#${anchor.id}`).offset();
-        var height = $(`#${anchor.id}`).height();
-        var width = $(`#${anchor.id}`).width();
-        let x = offset.left;
-        let y = offset.top + height -3;
+        var positions = getPosition(anchor);
+        let x = positions.x;
+        let y = positions.y + anchor.clientHeight + 5;
         span.style.visibility = 'visible';
         span.style.width = `${anchor.clientWidth}px`;
         span.style.left = `${x}px`;
-        span.style.top = `${y}px`;
         span.style.display = 'block';
+        console.log(span.clientHeight);
+        console.log(y);
+
+        if (y <= span.clientHeight) {
+            span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
+        } else {
+            span.style.top = `${y}px`;
+        }
     }
 }
 
@@ -117,21 +112,17 @@ function removeSpan(id) {
 }
 
 function handleMouseLeaveAnchor(e, id) {
-    console.log(insideSpan);
-    console.log(id);
     const span = document.getElementById(`${id}-parent`);
     const anchor = document.getElementById(`${id}-parent-parent`);
     if (!isOverLap(span, anchor, e.clientX, e.clientY)) removeSpan(id);
 }
 
 function isOverLap(span, anchor, x, y) {
-    console.log(y);
     var left = span.style.left;
     var x_span = parseInt(left.substring(0, left.indexOf('p')));
     var top = span.style.top;
     var y_span = parseInt(top.substring(0, top.indexOf('p')));
-    console.log(y_span);
-    xOverLap = x >= x_span - 10 && x <= x_span + span.clientWidth + 10;
+    xOverLap = x >= x_span && x <= x_span + span.clientWidth + 10;
     yOverLap = y >= y_span - 10 - window.pageYOffset && y_span <= y_span + span.clientHeight + 10;
     return xOverLap && yOverLap;
 
