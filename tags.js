@@ -25,8 +25,8 @@ function init(data) {
     });
     addListeners();
     preventSpanDefaultBehaviour();
-    //adjustSpansBasedOnHeight();
-    //document.body.onscroll = (e) => adjustSpansBasedOnHeight();
+    adjustSpansBasedOnHeight();
+    document.body.onscroll = (e) => adjustSpansBasedOnHeight();
 }
 
 function modifyAllText(regex, link, entity, data, childList, set) {
@@ -64,7 +64,6 @@ function modifyAllText(regex, link, entity, data, childList, set) {
                 tooltip.onmouseleave = (e) => {
                     if(e.target) {
                         let id = e.target.id;
-                        console.log(e.target.clientHeight);
                         id = id.substring(0, id.indexOf('-'));
                         removeSpan(id);
                     }
@@ -85,12 +84,9 @@ function modifyAllText(regex, link, entity, data, childList, set) {
 function mouseOverHandle(e, id) {
     if (e.target && e.target.id) {
         id = e.target.id;
-        console.log(id);
         id = id.substring(0, id.indexOf('-'));
         const span = document.getElementById(`${id}-parent`);
         const anchor = document.getElementById(`${id}-parent-parent`);
-        console.log(span);
-        console.log(anchor);
         var positions = getPosition(anchor);
         let x = positions.x;
         let y = positions.y + anchor.clientHeight;
@@ -98,8 +94,6 @@ function mouseOverHandle(e, id) {
         span.style.width = `${anchor.clientWidth}px`;
         span.style.left = `${x}px`;
         span.style.display = 'block';
-        console.log(span.clientHeight);
-        console.log(y);
 
         if (anchor.offsetTop <= span.clientHeight || anchor.getBoundingClientRect().top <= span.clientHeight) {
             span.style.top = `${y}px`;
@@ -108,7 +102,6 @@ function mouseOverHandle(e, id) {
             span.children[2].style.minHeight = '';
             span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
             onTop[id] = true;
-            
         }
     }
 }
@@ -218,17 +211,18 @@ function preventSpanDefaultBehaviour() {
 function adjustSpansBasedOnHeight() {
     const spans = document.getElementsByClassName(TOOL_TIP_CLASS_NAME);
     for (var i = 0; i < spans.length; i++) {
-        const aTag = document.getElementById(`${spans[i].id}-parent`);
-        if (aTag) {
-            if ((aTag.offsetTop <= spans[i].clientHeight) || aTag.getBoundingClientRect().top <= spans[i].clientHeight) {
-                spans[i].style.bottom = '';
-                spans[i].style.top = '100%';
-
+        const anchor = document.getElementById(`${spans[i].id}-parent`);
+        var positions = getPosition(anchor);
+        let y = positions.y + anchor.clientHeight;
+        if (anchor) {
+            let span = spans[i];
+            if (anchor.offsetTop <= span.clientHeight || anchor.getBoundingClientRect().top <= span.clientHeight) {
+                span.style.top = `${y}px`;
+                onTop[id] = false;
             } else {
-                spans[i].style.bottom = '100%';
-                spans[i].style.top = '';
-                spans[i].children[2].style.minHeight = '';
-
+                span.children[2].style.minHeight = '';
+                span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
+                onTop[id] = true;
             }
          }
     }
