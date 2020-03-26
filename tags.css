@@ -2,10 +2,13 @@
     border-bottom: 5px solid #15c39a !important;
     padding-bottom: 0px !important;
     color: black !important;
-    background-color:#d3d3d3 !important;
     position: relative !important;
     display: inline-block !important;
     cursor: pointer;
+}
+
+.edicratic-anchor-tag-style:hover {
+  background-color:#d3d3d3 !important;
 }
 
 .edicratic-tooltip {
@@ -27,13 +30,6 @@
     z-index: 1000000 !important;
     left: 30px;
     top: 10px;
-    /* left: 0 !important; */
-    /*margin-left: -60px !important; */
-
-    /* Fade in edicratic-tooltip */
-    /* opacity: 0 !important;
-    transition: opacity 0.3s !important; */
-    /* word-break: break-all; */
     font-weight: normal !important;
     font-family: 'Times New Roman' !important;
     font-style: normal !important;
