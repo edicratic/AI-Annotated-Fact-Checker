@@ -45,10 +45,10 @@ function modifyAllText(regex, link, entity, data, childList, set) {
             var text = child.text || child.textContent;
             if (length === 0 && text !== "" && text !== undefined && text.toLowerCase().includes(entity.toLowerCase())) {
                 child.innerText = "";
-                var uniqueId = "a" + i + Math.floor(Math.random() * 1000000);
-                text = text.replace(regex, `<a id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${entity}</a>`);
+                var uniqueId = "d" + i + Math.floor(Math.random() * 1000000);
+                text = text.replace(regex, `<div id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${entity}</div>`);
                 idToData[uniqueId] = [0, data]
-                var newElement = document.createElement('a');
+                var newElement = document.createElement('div');
                 newElement.innerHTML = text;
                 newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId);
                 child.appendChild(newElement);
@@ -69,7 +69,7 @@ function modifyAllText(regex, link, entity, data, childList, set) {
     }
     }
 
-    
+
 }
 
 function mouseOverHandle(e, id) {
@@ -79,6 +79,7 @@ function mouseOverHandle(e, id) {
     let y = e.clientY;
     span.style.visibility = 'visible';
     span.style.left = `${x}px`;
+    span.style.display = 'block';
     span.style.top = `${y}px`;
 
 }
@@ -92,7 +93,7 @@ function makePostRequest() {
     let data = {"blob": document.body.innerText.substring(0, 1000)};
     console.log(JSON.stringify(data));
     fetch(POST_URL, {
-        method: "POST", 
+        method: "POST",
         body: JSON.stringify(data),
         headers: {
             'Content-Type': 'application/json',
@@ -170,7 +171,7 @@ function adjustSpansBasedOnHeight() {
                 spans[i].style.bottom = '100%';
                 spans[i].style.top = '';
                 spans[i].children[2].style.minHeight = '';
-                
+
             }
          }
     }
