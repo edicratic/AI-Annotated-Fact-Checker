@@ -24,8 +24,8 @@ function init(data) {
     });
     addListeners();
     preventSpanDefaultBehaviour();
-    adjustSpansBasedOnHeight();
-    document.body.onscroll = (e) => adjustSpansBasedOnHeight();
+    //adjustSpansBasedOnHeight();
+    //document.body.onscroll = (e) => adjustSpansBasedOnHeight();
 }
 
 function modifyAllText(regex, link, entity, data, childList, set) {
@@ -46,12 +46,22 @@ function modifyAllText(regex, link, entity, data, childList, set) {
             if (length === 0 && text !== "" && text !== undefined && text.toLowerCase().includes(entity.toLowerCase())) {
                 child.innerText = "";
                 var uniqueId = "a" + i + Math.floor(Math.random() * 1000000);
-                text = text.replace(regex, `<a id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${entity} <span id="${uniqueId}-parent" class="${TOOL_TIP_CLASS_NAME}">${data[0]['full_html']} <br/> <div id="${uniqueId}" class="leftArrow fa fa-arrow-left fa-3x"></div> <div id="${uniqueId}" class="rightArrow fa fa-arrow-right fa-3x"></div> </span> </a>`);
+                text = text.replace(regex, `<a id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${entity}</a>`);
                 idToData[uniqueId] = [0, data]
                 var newElement = document.createElement('a');
                 newElement.innerHTML = text;
+                newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId);
                 child.appendChild(newElement);
                 set.add(newElement);
+
+                //create span
+                var tooltip = document.createElement('span');
+                tooltip.id = `${uniqueId}-parent`;
+                tooltip.className = TOOL_TIP_CLASS_NAME;
+                tooltip.innerHTML = `${data[0]['full_html']} <br/> <div id="${uniqueId}" class="leftArrow fa fa-arrow-left fa-3x"></div> <div id="${uniqueId}" class="rightArrow fa fa-arrow-right fa-3x"></div>`
+                document.body.prepend(tooltip)
+                set.add(tooltip);
+
             }
             if (length !== 0) {
                 modifyAllText(regex, link, entity, data, nextList, set)
@@ -60,6 +70,17 @@ function modifyAllText(regex, link, entity, data, childList, set) {
     }
 
     
+}
+
+function mouseOverHandle(e, id) {
+    const span = document.getElementById(`${id}-parent`);
+    console.log(`${id}-parent`);
+    let x = e.clientX;
+    let y = e.clientY;
+    span.style.visibility = 'visible';
+    span.style.left = `${x}px`;
+    span.style.top = `${y}px`;
+
 }
 
 function makePostRequest() {

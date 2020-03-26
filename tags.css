@@ -8,10 +8,10 @@
     cursor: pointer;
 }
 
-.edicratic-anchor-tag-style .tooltip {
+.tooltip {
     float: left !important;
     text-align: center;
-    visibility: hidden !important;
+    /* visibility: hidden !important; */
     /*height: 30vh !important;*/
     height: auto !important;
     width: 100% !important;
@@ -24,14 +24,14 @@
     font-size: 1vw !important;
     padding: 1rem;
 
-    position: absolute !important;
+    /* position: absolute !important; */
     z-index: 99999 !important;
-    left: 0 !important;
+    /* left: 0 !important; */
     /*margin-left: -60px !important; */
 
     /* Fade in tooltip */
-    opacity: 0 !important;
-    transition: opacity 0.3s !important;
+    /* opacity: 0 !important;
+    transition: opacity 0.3s !important; */
     /* word-break: break-all; */
     font-weight: normal !important;
     font-family: 'Times New Roman' !important;
@@ -42,12 +42,12 @@
 
 }
 
-.edicratic-anchor-tag-style:hover .tooltip {
+/* .edicratic-anchor-tag-style:hover .tooltip {
     visibility: visible !important;
     opacity: 1 !important;
-}
+} */
 
-.edicratic-anchor-tag-style .tooltip .rightArrow {
+.tooltip .rightArrow {
     float: right !important;
     margin-right: 1rem !important;
     width: 4rem !important;
@@ -57,7 +57,7 @@
 
 }
 
-.edicratic-anchor-tag-style .tooltip .leftArrow {
+.tooltip .leftArrow {
     float: left !important;
     margin-left: 1rem !important;
     width: 4rem !important;
@@ -67,13 +67,13 @@
 
 }
 
-.edicratic-anchor-tag-style .tooltip .leftArrow:hover {
+.tooltip .leftArrow:hover {
     top: -10px !important;
     background-color: #15c39a !important;
 
 }
 
-.edicratic-anchor-tag-style .tooltip .rightArrow:hover {
+.tooltip .rightArrow:hover {
     top: -10px !important;
     background-color: #15c39a !important;
 
