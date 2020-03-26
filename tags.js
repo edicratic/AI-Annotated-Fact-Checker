@@ -124,7 +124,9 @@ function isOverLap(span, anchor, x, y, id) {
     var top = span.style.top;
     var y_span = parseInt(top.substring(0, top.indexOf('p')));
     xOverLap = x >= x_span && x <= x_span + span.clientWidth + 10;
-    yOverLap = !onTop[id] ? y >= y_span - 10 - window.pageYOffset && y_span <= y_span + span.clientHeight + 10 : y <= y_span + span.clientHeight - window.pageYOffset && y >= y_span - 10;
+    yOverLap = !onTop[id] ? y >= y_span - 10 - window.pageYOffset && y <= y_span + span.clientHeight + 10 : y >= y_span - window.pageYOffset && y <= getPosition(anchor).y - window.pageYOffset;
+    console.log(y);
+    console.log(getPosition(anchor).y - window.pageYOffset);
     return xOverLap && yOverLap;
 
 }
