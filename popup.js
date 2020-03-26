@@ -19,7 +19,6 @@ changeColor.onclick = function(element) {
         chrome.tabs.insertCSS(specTab.id, {file: 'tags.css'});
         chrome.tabs.insertCSS(specTab.id, {file: 'fontawesome.css'});
         chrome.tabs.executeScript(specTab.id, {file: 'fontawesome.js'}, () => console.log("DONE"));
-        chrome.tabs.executeScript(specTab.id, {file: 'jquery-3.4.1.min.js'});
         chrome.tabs.executeScript(specTab.id, {file: 'tags.js'}, () => console.log("DONE"));
         window.close();
     });

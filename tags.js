@@ -2,6 +2,7 @@ ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
 TOOL_TIP_CLASS_NAME = 'edicratic-tooltip';
 POST_URL = 'https://factcheck.edicratic.com/bycontents';
 idToData = {};
+onTop = {};
 
 //addFontAwesome();
 makePostRequest();
@@ -82,14 +83,17 @@ function modifyAllText(regex, link, entity, data, childList, set) {
 }
 
 function mouseOverHandle(e, id) {
-    if (e.target) {
+    if (e.target && e.target.id) {
         id = e.target.id;
+        console.log(id);
         id = id.substring(0, id.indexOf('-'));
         const span = document.getElementById(`${id}-parent`);
         const anchor = document.getElementById(`${id}-parent-parent`);
+        console.log(span);
+        console.log(anchor);
         var positions = getPosition(anchor);
         let x = positions.x;
-        let y = positions.y + anchor.clientHeight + 5;
+        let y = positions.y + anchor.clientHeight;
         span.style.visibility = 'visible';
         span.style.width = `${anchor.clientWidth}px`;
         span.style.left = `${x}px`;
@@ -97,10 +101,14 @@ function mouseOverHandle(e, id) {
         console.log(span.clientHeight);
         console.log(y);
 
-        if (y <= span.clientHeight) {
-            span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
-        } else {
+        if (anchor.offsetTop <= span.clientHeight || anchor.getBoundingClientRect().top <= span.clientHeight) {
             span.style.top = `${y}px`;
+            onTop[id] = false;
+        } else {
+            span.children[2].style.minHeight = '';
+            span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
+            onTop[id] = true;
+            
         }
     }
 }
@@ -114,16 +122,16 @@ function removeSpan(id) {
 function handleMouseLeaveAnchor(e, id) {
     const span = document.getElementById(`${id}-parent`);
     const anchor = document.getElementById(`${id}-parent-parent`);
-    if (!isOverLap(span, anchor, e.clientX, e.clientY)) removeSpan(id);
+    if (!isOverLap(span, anchor, e.clientX, e.clientY, id)) removeSpan(id);
 }
 
-function isOverLap(span, anchor, x, y) {
+function isOverLap(span, anchor, x, y, id) {
     var left = span.style.left;
     var x_span = parseInt(left.substring(0, left.indexOf('p')));
     var top = span.style.top;
     var y_span = parseInt(top.substring(0, top.indexOf('p')));
     xOverLap = x >= x_span && x <= x_span + span.clientWidth + 10;
-    yOverLap = y >= y_span - 10 - window.pageYOffset && y_span <= y_span + span.clientHeight + 10;
+    yOverLap = !onTop[id] ? y >= y_span - 10 - window.pageYOffset && y_span <= y_span + span.clientHeight + 10 : y <= y_span + span.clientHeight - window.pageYOffset && y >= y_span - 10;
     return xOverLap && yOverLap;
 
 }
@@ -181,15 +189,22 @@ function arrowClick(e, isLeft) {
     var newIndex = isLeft ? previousIndex === 0 ? array.length - 1 : previousIndex - 1 : ((previousIndex + 1) % array.length);
     idToData[id][0] = newIndex;
     const span = document.getElementById(`${id}-parent`);
-    const isBottom = span.style.top === '100%';
-    const height = span.children[2].clientHeight;
     span.children[0].innerHTML = array[newIndex]['title']
+    const height = span.children[2].clientHeight;
     span.children[2].innerHTML = array[newIndex]['content'] + `<br/><br/> <i onclick="window.open('${array[newIndex]['link']}', '_blank');" class="inner-link">Learn More Here</i>`
-    if (isBottom) {
-        span.children[2].style.minHeight = `${height}px`;
-    } else {
+    
+    //keep padding constant when on top
+    if (onTop[id]) {
+        const anchor = document.getElementById(`${id}-parent-parent`);
+        var positions = getPosition(anchor);
+        let y = positions.y + anchor.clientHeight;
+        span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
         span.children[2].style.minHeight = '';
+
+    } else {
+        span.children[2].style.minHeight = `${height}px`;
     }
+   
     span.scrollTop = 0;
 }
 
