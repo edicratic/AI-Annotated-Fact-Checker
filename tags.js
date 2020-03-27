@@ -49,9 +49,10 @@ function modifyAllText(regex, link, entity, data, childList, set) {
             if (length === 0 && text !== "" && text !== undefined && text.toLowerCase().includes(entity.toLowerCase())) {
                 child.innerText = "";
                 var uniqueId = "d" + i + Math.floor(Math.random() * 1000000);
-                text = text.replace(regex, `<div id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${entity}</div>`);
+                text = text.replace(regex, `<div id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text.match(regex)}</div>`);
                 idToData[uniqueId] = [0, data]
                 var newElement = document.createElement('div');
+                newElement.style.display = "inline";
                 newElement.innerHTML = text;
                 newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId);
                 newElement.onmouseleave = (e) => handleMouseLeaveAnchor(e, uniqueId);
