@@ -2,6 +2,10 @@ ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
 TOOL_TIP_CLASS_NAME = 'edicratic-tooltip';
 POST_URL = 'https://factcheck.edicratic.com/bycontents';
 INNER_LINK = 'inner-link';
+SHOW_MORE_ICON_CLASS = "show-more fa fa-angle-down fa-3x";
+SHOW_LESS_ICON_CLASS = "show-more fa fa-angle-up fa-3x";
+PARAGRAPH_CLASS_NAME = 'edicratic-paragraph-classname'
+NEW_LINE_ID = "please-remove-me";
 idToData = {};
 onTop = {};
 
@@ -15,7 +19,7 @@ function init(data) {
         let itemsArray = [];
         for (var i = 0; i < items.length; i++) {
             let item = items[i];
-            let data = {'link': item.wikilink,'full_html': `<b>${item.title}</b>` + '<hr style="color:black"/><p>' + (stripHtml(item.extract) || item.description) + `<br/><br/><i onclick="window.open('${item.wikilink}', '_blank');" class="inner-link">Learn More Here</i></p>`, 'title': item.title, 'content': (stripHtml(item.extract) || item.description)}
+            let data = {'link': item.wikilink,'full_html': `<b>${item.title}</b>` + `<hr style="color:black"/><p class=${PARAGRAPH_CLASS_NAME}>` + (stripHtml(item.extract) || item.description) + `</p><i onclick="window.open('${item.wikilink}', '_blank');" class="inner-link">Learn More Here</i>`, 'title': item.title, 'content': (stripHtml(item.extract) || item.description)}
             itemsArray.push(data);
         }
         entity = removeNonAlphaNumeric(entity);
@@ -63,7 +67,7 @@ function modifyAllText(regex, link, entity, data, childList, set) {
                 var tooltip = document.createElement('span');
                 tooltip.id = `${uniqueId}-parent`;
                 tooltip.className = TOOL_TIP_CLASS_NAME;
-                tooltip.innerHTML = `${data[0]['full_html']} <br/> <div id="${uniqueId}" class="leftArrow fa fa-arrow-left fa-3x"></div> <div id="${uniqueId}" class="rightArrow fa fa-arrow-right fa-3x"></div>`
+                tooltip.innerHTML = `${data[0]['full_html']} <br/><br/> <div id="${uniqueId}" class="leftArrow fa fa-arrow-left fa-3x"></div> <div id="${uniqueId}" class="rightArrow fa fa-arrow-right fa-3x"></div>`
                 tooltip.onmouseleave = (e) => {
                     if(e.target) {
                         let id = e.target.id;
@@ -116,11 +120,20 @@ function mouseOverHandle(e, id) {
         if (anchor.offsetTop <= span.clientHeight || anchor.getBoundingClientRect().top <= span.clientHeight) {
             span.style.top = `${y}px`;
             onTop[id] = false;
+            span.children[2].style.maxHeight = '100px';
         } else {
             span.children[2].style.minHeight = '';
             span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
             onTop[id] = true;
+            span.children[2].style.maxHeight = '';
         }
+
+        if (!textIsShown(span) && !onTop[id]) {
+            removeIconShowMore(span);
+            if (isOverflown(span.children[2])) {
+                createIconShowMore(span);
+            }
+    }
     }
 }
 
@@ -204,17 +217,36 @@ function arrowClick(e, isLeft) {
     e.preventDefault();
     e.stopPropagation();
     const id = e.toElement.id;
+    e.toElement.style.marginTop = '';
+    let otherArrow;
+    let otherArrows = document.getElementsByClassName(isLeft ? 'rightArrow' : 'leftArrow');
+    for (var i = 0; i < otherArrows.length; i++) {
+        if(otherArrows[i].id === id) otherArrow = otherArrows[i];
+    }
+    otherArrow.style.marginTop = '';
     const entry = idToData[id];
     var previousIndex = entry[0];
     var array = entry[1];
     var newIndex = isLeft ? previousIndex === 0 ? array.length - 1 : previousIndex - 1 : ((previousIndex + 1) % array.length);
     idToData[id][0] = newIndex;
     const span = document.getElementById(`${id}-parent`);
+    const spanHeight = span.clientHeight;
+    //span.children[2].style.minHeight = '';
+    span.style.minHeight = '';
     span.children[0].innerHTML = array[newIndex]['title']
-    const height = span.children[2].clientHeight;
-    span.children[2].innerHTML = array[newIndex]['content'] + `<br/><br/> <i onclick="window.open('${array[newIndex]['link']}', '_blank');" class="inner-link">Learn More Here</i>`
-    
+    let height = 0;
+    console.log(span.clientHeight);
+    span.children[2].innerHTML = array[newIndex]['content'];
+    let indexOfLink = 3;
+    for (var i = 0; i < span.children.length; i++) {
+        if(span.children[i].className === INNER_LINK) indexOfLink = i;
+        if(span.children[i].className === SHOW_LESS_ICON_CLASS || span.children[i].className === SHOW_MORE_ICON_CLASS
+            || span.children[i].id === NEW_LINE_ID) height += span.children[i].clientHeight;
+    }
+    span.children[indexOfLink].outerHTML = `<i onclick="window.open('${array[newIndex]['link']}', '_blank');" class="inner-link">Learn More Here</i>`
+    let distance = e.toElement.getBoundingClientRect().y - e.toElement.parentElement.getBoundingClientRect().y - e.toElement.clientHeight;
     //keep padding constant when on top
+    removeIconShowMore(span);
     if (onTop[id]) {
         const anchor = document.getElementById(`${id}-parent-parent`);
         var positions = getPosition(anchor);
@@ -223,9 +255,28 @@ function arrowClick(e, isLeft) {
         span.children[2].style.minHeight = '';
 
     } else {
-        span.children[2].style.minHeight = `${height}px`;
+        let change = spanHeight - span.clientHeight;
+        console.log(change);
+        span.style.minHeight =  `${spanHeight}px`;
+        if (isOverflown(span.children[2])) {
+            span.children[2].style.paddingBottom = '';
+            createIconShowMore(span);
+        } 
+        // else {
+        //     span.children[2].style.paddingBottom = `${change}px`;
+        // }
+        let arr = e.toElement;
+        let offset = arr.offsetParent.clientHeight - arr.offsetTop - arr.clientHeight;
+        arr.style.marginTop = `${offset}px`;
+        otherArrow.style.marginTop = `${offset}px`;
     }
-   
+
+    
+
+
+    // if (span.clientHeight < spanHeight) {
+    //     span.children[2].style.minHeight = `${span.children[2].clientHeight +spanHeight - span.clientHeight}px`;
+    // }
     span.scrollTop = 0;
 }
 
@@ -247,10 +298,12 @@ function adjustSpansBasedOnHeight() {
             if (anchor.offsetTop <= span.clientHeight || anchor.getBoundingClientRect().top <= span.clientHeight) {
                 span.style.top = `${y}px`;
                 onTop[id] = false;
+                span.style.children[2].maxHeight = '100px';
             } else {
                 span.children[2].style.minHeight = '';
                 span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
                 onTop[id] = true;
+                span.style.children[2].maxHeight = '';
             }
          }
     }
@@ -267,4 +320,92 @@ function getPosition(element) {
     }
 
     return { x: xPosition, y: yPosition };
+}
+
+function isOverflown(element) {
+    return element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+}
+
+function createIconShowMore(span) {
+    let innerLink = span.children[3];
+    let icon = document.createElement('i');
+    icon.className = SHOW_MORE_ICON_CLASS;
+    let id = span.id;
+    id = id.substring(0, id.indexOf('-'));
+    icon.id = `${id}-icon`;
+    icon.onclick = (e) => showHiddenText(e);
+    let br = document.createElement('br');
+    height = br.clientHeight + icon.clientHeight;
+    br.id= NEW_LINE_ID;
+    innerLink.parentNode.insertBefore(icon, innerLink);
+    innerLink.parentNode.insertBefore(br, innerLink);
+    console.log(height);
+    return height;
+}
+
+function removeIconShowMore(span) {
+    for (var i = 0; i < span.children.length; i++) {
+        if (span.children[i].className === SHOW_MORE_ICON_CLASS || span.children[i].id === NEW_LINE_ID) {
+            span.children[i].parentNode.removeChild(span.children[i]);
+        }
+    }
+    for (var i = 0; i < span.children.length; i++) {
+        if (span.children[i].className === SHOW_MORE_ICON_CLASS || span.children[i].id === NEW_LINE_ID) {
+            span.children[i].parentNode.removeChild(span.children[i]);
+        }
+    }
+}
+
+function showHiddenText(e) {
+    let id = e.toElement.id;
+    id = id.substring(0, id.indexOf('-'));
+    let span = document.getElementById(`${id}-parent`);
+    span.children[2].style.maxHeight = '1000000px';
+    let newIcon = document.createElement('i');
+    newIcon.id = `${id}-icon`;
+    newIcon.className = SHOW_LESS_ICON_CLASS;
+    newIcon.onclick = (e) => hideText(e);
+    let oldIcon = e.toElement;
+    oldIcon.parentNode.replaceChild(newIcon, oldIcon);
+
+    //remove Arrows
+    let leftArrows= document.getElementsByClassName('leftArrow');
+    let rightArrows = document.getElementsByClassName('rightArrow');
+    for (var i = 0; i < leftArrows.length; i++) {
+        if (leftArrows[i].id === id) leftArrows[i].style.display = 'none';
+    }
+    for (var i = 0; i < rightArrows.length; i++) {
+        if(rightArrows[i].id === id) rightArrows[i].style.display = 'none';
+    }
+
+}
+
+function hideText(e) {
+    let id = e.toElement.id;
+    id = id.substring(0, id.indexOf('-'));
+    let span = document.getElementById(`${id}-parent`);
+    span.children[2].style.maxHeight = '100px';
+    let newIcon = document.createElement('i');
+    newIcon.className = SHOW_MORE_ICON_CLASS;
+    newIcon.id = `${id}-icon`;
+    newIcon.onclick = (e) => showHiddenText(e);
+    let oldIcon = e.toElement;
+    oldIcon.parentNode.replaceChild(newIcon, oldIcon);
+
+    //add arrows
+    let leftArrows= document.getElementsByClassName('leftArrow');
+    let rightArrows = document.getElementsByClassName('rightArrow');
+    for (var i = 0; i < leftArrows.length; i++) {
+        if (leftArrows[i].id === id) leftArrows[i].style.display = '';
+    }
+    for (var i = 0; i < rightArrows.length; i++) {
+        if(rightArrows[i].id === id) rightArrows[i].style.display = '';
+    }
+}
+
+function textIsShown(span) {
+    for (var i = 0; i < span.children.length; i++) {
+        if (span.children[i].className === SHOW_LESS_ICON_CLASS) return true;
+    }
+    return false;
 }
