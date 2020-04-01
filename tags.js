@@ -27,22 +27,15 @@ function init(data) {
         var regex = new RegExp(entity, "i");
         let childList = document.body.children
         const set = new Set();
-        modifyAllText(regex, link, entity, itemsArray, childList, set);
+        if(itemsArray.length > 0) modifyAllText(regex, link, entity, itemsArray, childList, set);
     });
     addListeners();
     preventSpanDefaultBehaviour();
-    adjustSpansBasedOnHeight();
+    //adjustSpansBasedOnHeight();
     document.body.onscroll = (e) => adjustSpansBasedOnHeight();
 }
 
 function modifyAllText(regex, link, entity, data, childList, set) {
-    /*
-        var p = document.getElementById(parentId);
-    var newElement = document.createElement(elementTag);
-    newElement.setAttribute('id', elementId);
-    newElement.innerHTML = html;
-    p.appendChild(newElement);
-     */
     for (var i = 0; i < childList.length; i++) {
         const child = childList[i];
         if(!set.has(child) && child.className !== ANCHOR_CLASS_NAME && child.className !== TOOL_TIP_CLASS_NAME) {
@@ -91,7 +84,6 @@ function modifyAllText(regex, link, entity, data, childList, set) {
 function mouseMoveEvent(e) {
     var x = event.clientX, y = event.clientY,
     elementMouseIsOver = document.elementFromPoint(x, y);
-    console.log(elementMouseIsOver);
     if (elementMouseIsOver.className !== ANCHOR_CLASS_NAME && elementMouseIsOver.className !== TOOL_TIP_CLASS_NAME
         && elementMouseIsOver.parentElement.className !== TOOL_TIP_CLASS_NAME && elementMouseIsOver.className !== INNER_LINK) {
         let spans = document.getElementsByClassName(TOOL_TIP_CLASS_NAME);
@@ -116,11 +108,12 @@ function mouseOverHandle(e, id) {
         span.style.width = `${anchor.clientWidth}px`;
         span.style.left = `${x}px`;
         span.style.display = 'block';
+        let expanded = textIsShown(span);
 
         if (anchor.offsetTop <= span.clientHeight || anchor.getBoundingClientRect().top <= span.clientHeight) {
             span.style.top = `${y}px`;
             onTop[id] = false;
-            span.children[2].style.maxHeight = '100px';
+            if(!expanded) span.children[2].style.maxHeight = '100px';
         } else {
             span.children[2].style.minHeight = '';
             span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
@@ -128,7 +121,7 @@ function mouseOverHandle(e, id) {
             span.children[2].style.maxHeight = '';
         }
 
-        if (!textIsShown(span) && !onTop[id]) {
+        if (!expanded && !onTop[id]) {
             removeIconShowMore(span);
             if (isOverflown(span.children[2])) {
                 createIconShowMore(span);
@@ -138,14 +131,12 @@ function mouseOverHandle(e, id) {
 }
 
 function removeSpan(id) {
-    console.log(id);
     const span = document.getElementById(`${id}-parent`);
     span.style.display = "none";
     span.style.visibility = 'hidden';
 }
 
 function handleMouseLeaveAnchor(e, id) {
-    console.log('call');
     let newElement = e.toElement || e.relatedTarget;
     let children = e.target.children;
     let original = null;
@@ -219,14 +210,12 @@ function arrowClick(e, isLeft) {
     const id = e.toElement.id;
     //find other arrow and reset margin
     e.toElement.style.marginTop = '0px';
-    console.log(e.toElement);
     let otherArrow;
     let otherArrows = document.getElementsByClassName(isLeft ? 'rightArrow' : 'leftArrow');
     for (var i = 0; i < otherArrows.length; i++) {
         if(otherArrows[i].id === id) otherArrow = otherArrows[i];
     }
     otherArrow.style.marginTop = '0px';
-    console.log(otherArrow);
 
     //change data
     const entry = idToData[id];
@@ -236,7 +225,6 @@ function arrowClick(e, isLeft) {
     idToData[id][0] = newIndex;
     const span = document.getElementById(`${id}-parent`);
     const spanHeight = span.clientHeight;
-    console.log(spanHeight);
     span.style.minHeight = '';
     span.children[0].innerHTML = array[newIndex]['title']
     span.children[2].innerHTML = array[newIndex]['content'];
@@ -286,15 +274,17 @@ function adjustSpansBasedOnHeight() {
         let y = positions.y + anchor.clientHeight;
         if (anchor) {
             let span = spans[i];
+            let id = span.id;
+            id = id.substring(0, id.indexOf('-'));
             if (anchor.offsetTop <= span.clientHeight || anchor.getBoundingClientRect().top <= span.clientHeight) {
                 span.style.top = `${y}px`;
                 onTop[id] = false;
-                span.style.children[2].maxHeight = '100px';
+                span.children[2].style.maxHeight = '100px';
             } else {
                 span.children[2].style.minHeight = '';
                 span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
                 onTop[id] = true;
-                span.style.children[2].maxHeight = '';
+                span.children[2].style.maxHeight = '';
             }
          }
     }
@@ -331,7 +321,6 @@ function createIconShowMore(span) {
     br.id= NEW_LINE_ID;
     innerLink.parentNode.insertBefore(icon, innerLink);
     innerLink.parentNode.insertBefore(br, innerLink);
-    console.log(height);
     return height;
 }
 

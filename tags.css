@@ -30,25 +30,30 @@
     text-align: center !important;
     padding: 5px 0 !important;
     border-radius: 6px !important;
-    font-size: 1vw !important;
     padding: 1rem;
     display: none;
     position: absolute !important;
     z-index: 1000000 !important;
     left: 30px;
     top: 10px;
+
+    font-size: 1vw !important;
     font-weight: normal !important;
     font-family: 'Times New Roman' !important;
     font-style: normal !important;
     line-height: normal !important;
     overflow-y:auto;
-
-
 }
 .edicratic-tooltip .edicratic-paragraph-classname {
   height: auto;
   overflow-y: hidden;
   margin-bottom: 0.5rem;
+  font-size: 1vw !important;
+  font-weight: normal !important;
+  font-family: 'Times New Roman' !important;
+  font-style: normal !important;
+  line-height: normal !important;
+  overflow-y:auto;
 
 }
 
@@ -240,6 +245,9 @@
 
 /*media queries*/
   @media screen and (max-width: 992px) {
+    .edicratic-tooltip .edicratic-paragraph-classname {
+      font-size: 2vw !important;
+    }
     .edicratic-tooltip {
       font-size: 2vw !important;
     }
