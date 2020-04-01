@@ -5,6 +5,8 @@ CHECK_CLASS_NAME = 'fa fa-check fa-2x edicratic-yes';
 X_CLASS_NAME = 'fa fa-times fa-2x edicratic-no';
 
 function analyzeTextForSending() {
+    if(!window.getSelection) return;
+    if(window.getSelection().toString() === '') return;
     const range = window.getSelection().getRangeAt(0);
     let text = window.getSelection().toString();
     if (range.startOffset === range.endOffset) return;
@@ -23,9 +25,26 @@ function analyzeTextForSending() {
     tooltip.style.top = `${window.pageYOffset + span.getBoundingClientRect().top -span.clientHeight - 10}px`;
     tooltip.style.left = `${span.getBoundingClientRect().left - text.length}px`
     document.body.prepend(tooltip);
+    let x = document.getElementsByClassName(X_CLASS_NAME)[0];
+    let check = document.getElementsByClassName(CHECK_CLASS_NAME)[0];
+    console.log(x);
+    console.log(check);
+    x.onclick = (e) => {
+        console.log('click');
+        e.preventDefault();
+        clearSelection();
+        removeHighlightedSpans()
+    };
+    check.onclick = (e) => {
+        console.log('click');
+        e.preventDefault();
+        clearSelection();
+        removeHighlightedSpans();
+    }
 }
 
 function removeHighlightedSpans() {
+    window.getSelection().removeAllRanges();
     remove(document.getElementsByClassName(TOOL_TIP_CLASSNAME));
 }
 
@@ -33,4 +52,9 @@ function remove(collection) {
     for (var i = 0; i < collection.length; i++) {
         collection[i].parentNode.removeChild(collection[i]);
     }
+}
+
+function clearSelection() {
+    console.log("removing");
+    window.getSelection().removeAllRanges();
 }
