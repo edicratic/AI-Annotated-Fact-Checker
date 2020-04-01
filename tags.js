@@ -217,13 +217,18 @@ function arrowClick(e, isLeft) {
     e.preventDefault();
     e.stopPropagation();
     const id = e.toElement.id;
-    e.toElement.style.marginTop = '';
+    //find other arrow and reset margin
+    e.toElement.style.marginTop = '0px';
+    console.log(e.toElement);
     let otherArrow;
     let otherArrows = document.getElementsByClassName(isLeft ? 'rightArrow' : 'leftArrow');
     for (var i = 0; i < otherArrows.length; i++) {
         if(otherArrows[i].id === id) otherArrow = otherArrows[i];
     }
-    otherArrow.style.marginTop = '';
+    otherArrow.style.marginTop = '0px';
+    console.log(otherArrow);
+
+    //change data
     const entry = idToData[id];
     var previousIndex = entry[0];
     var array = entry[1];
@@ -231,20 +236,16 @@ function arrowClick(e, isLeft) {
     idToData[id][0] = newIndex;
     const span = document.getElementById(`${id}-parent`);
     const spanHeight = span.clientHeight;
-    //span.children[2].style.minHeight = '';
+    console.log(spanHeight);
     span.style.minHeight = '';
     span.children[0].innerHTML = array[newIndex]['title']
-    let height = 0;
-    console.log(span.clientHeight);
     span.children[2].innerHTML = array[newIndex]['content'];
+    //find link and reset
     let indexOfLink = 3;
     for (var i = 0; i < span.children.length; i++) {
         if(span.children[i].className === INNER_LINK) indexOfLink = i;
-        if(span.children[i].className === SHOW_LESS_ICON_CLASS || span.children[i].className === SHOW_MORE_ICON_CLASS
-            || span.children[i].id === NEW_LINE_ID) height += span.children[i].clientHeight;
     }
     span.children[indexOfLink].outerHTML = `<i onclick="window.open('${array[newIndex]['link']}', '_blank');" class="inner-link">Learn More Here</i>`
-    let distance = e.toElement.getBoundingClientRect().y - e.toElement.parentElement.getBoundingClientRect().y - e.toElement.clientHeight;
     //keep padding constant when on top
     removeIconShowMore(span);
     if (onTop[id]) {
@@ -255,29 +256,19 @@ function arrowClick(e, isLeft) {
         span.children[2].style.minHeight = '';
 
     } else {
-        let change = spanHeight - span.clientHeight;
-        console.log(change);
-        span.style.minHeight =  `${spanHeight}px`;
+        // span.style.height =  `${spanHeight}px`;
+        span.style.minHeight =  `${spanHeight - 10}px`;
+        //add show more icon if necessary
         if (isOverflown(span.children[2])) {
             span.children[2].style.paddingBottom = '';
             createIconShowMore(span);
         } 
-        // else {
-        //     span.children[2].style.paddingBottom = `${change}px`;
-        // }
+        //place arrows properly
         let arr = e.toElement;
         let offset = arr.offsetParent.clientHeight - arr.offsetTop - arr.clientHeight;
         arr.style.marginTop = `${offset}px`;
         otherArrow.style.marginTop = `${offset}px`;
     }
-
-    
-
-
-    // if (span.clientHeight < spanHeight) {
-    //     span.children[2].style.minHeight = `${span.children[2].clientHeight +spanHeight - span.clientHeight}px`;
-    // }
-    span.scrollTop = 0;
 }
 
 function preventSpanDefaultBehaviour() {
@@ -327,6 +318,7 @@ function isOverflown(element) {
 }
 
 function createIconShowMore(span) {
+    span.children[2].style.marginBottom = '0rem';
     let innerLink = span.children[3];
     let icon = document.createElement('i');
     icon.className = SHOW_MORE_ICON_CLASS;
@@ -344,6 +336,7 @@ function createIconShowMore(span) {
 }
 
 function removeIconShowMore(span) {
+    span.children[2].style.marginBottom = '';
     for (var i = 0; i < span.children.length; i++) {
         if (span.children[i].className === SHOW_MORE_ICON_CLASS || span.children[i].id === NEW_LINE_ID) {
             span.children[i].parentNode.removeChild(span.children[i]);
