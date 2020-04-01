@@ -1,0 +1,53 @@
+::-moz-selection { background: #fff59d }
+::selection { background: #fff59d }
+
+.edicratic-add-library-tooltip {
+    display: inline-block !important;
+    border-bottom: 1px black !important;
+    position: relative !important;
+    background-color: darkgray;
+    height: auto;
+    min-height: 120px;
+    min-width: 150px;
+    background-color: #f5f5f5 !important;
+    z-index: 100000;
+}
+
+.edicratic-add-library-tooltip .tooltiptext {
+    color: black !important;
+    text-align: center;
+    padding: 1rem;
+    border-radius: 6px;
+
+    font-size: 1vw !important;
+    font-weight: normal !important;
+    font-family: 'Times New Roman' !important;
+    font-style: normal !important;
+    line-height: normal !important;
+  }
+
+.edicratic-add-library-tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -10px;
+    border-width: 10px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+  }
+
+.edicratic-yes {
+    float:right;
+}
+
+.edicratic-no {
+    float:left;
+}
+.edicratic-no:hover {
+    background-color: #15c39a !important;
+}
+
+.edicratic-yes:hover {
+    background-color: #15c39a !important;
+}

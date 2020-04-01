@@ -31,6 +31,8 @@ function init(data) {
     preventSpanDefaultBehaviour();
     adjustSpansBasedOnHeight();
     document.body.onscroll = (e) => adjustSpansBasedOnHeight();
+    document.body.onmouseup =(e) => analyzeTextForSending();
+    document.body.onmousedown = (e) => removeHighlightedSpans();
 }
 
 function modifyAllText(regex, link, entity, data, childList, set) {
