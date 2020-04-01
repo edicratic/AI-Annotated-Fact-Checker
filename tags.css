@@ -45,17 +45,18 @@
 
 
 }
+
+.blur {
+  color: transparent;
+  text-shadow: 0 0 3px #000;
+}
+
 .edicratic-tooltip .edicratic-paragraph-classname {
   height: auto;
   overflow-y: hidden;
   margin-bottom: 0.5rem;
 
 }
-
-/* .edicratic-anchor-tag-style:hover .edicratic-tooltip {
-    visibility: visible !important;
-    opacity: 1 !important;
-} */
 
 .edicratic-tooltip .rightArrow {
     float: right !important;

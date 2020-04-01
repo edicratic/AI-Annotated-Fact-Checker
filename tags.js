@@ -9,9 +9,7 @@ NEW_LINE_ID = "please-remove-me";
 idToData = {};
 onTop = {};
 
-//addFontAwesome();
 makePostRequest();
-//document.body.onmousemove = (e) => mouseMoveEvent(e);
 function init(data) {
     data.forEach((obj) => {
         let entity = Object.keys(obj)[0];
@@ -36,13 +34,6 @@ function init(data) {
 }
 
 function modifyAllText(regex, link, entity, data, childList, set) {
-    /*
-        var p = document.getElementById(parentId);
-    var newElement = document.createElement(elementTag);
-    newElement.setAttribute('id', elementId);
-    newElement.innerHTML = html;
-    p.appendChild(newElement);
-     */
     for (var i = 0; i < childList.length; i++) {
         const child = childList[i];
         if(!set.has(child) && child.className !== ANCHOR_CLASS_NAME && child.className !== TOOL_TIP_CLASS_NAME) {
@@ -319,6 +310,7 @@ function isOverflown(element) {
 
 function createIconShowMore(span) {
     span.children[2].style.marginBottom = '0rem';
+    span.children[2].classList.add("blur");
     let innerLink = span.children[3];
     let icon = document.createElement('i');
     icon.className = SHOW_MORE_ICON_CLASS;
@@ -337,6 +329,7 @@ function createIconShowMore(span) {
 
 function removeIconShowMore(span) {
     span.children[2].style.marginBottom = '';
+    span.children[2].classList.remove("blur");
     for (var i = 0; i < span.children.length; i++) {
         if (span.children[i].className === SHOW_MORE_ICON_CLASS || span.children[i].id === NEW_LINE_ID) {
             span.children[i].parentNode.removeChild(span.children[i]);
@@ -353,6 +346,7 @@ function showHiddenText(e) {
     let id = e.toElement.id;
     id = id.substring(0, id.indexOf('-'));
     let span = document.getElementById(`${id}-parent`);
+    span.children[2].classList.remove("blur");
     span.children[2].style.maxHeight = '1000000px';
     let newIcon = document.createElement('i');
     newIcon.id = `${id}-icon`;
@@ -377,6 +371,7 @@ function hideText(e) {
     let id = e.toElement.id;
     id = id.substring(0, id.indexOf('-'));
     let span = document.getElementById(`${id}-parent`);
+    span.children[2].classList.add("blur");
     span.children[2].style.maxHeight = '100px';
     let newIcon = document.createElement('i');
     newIcon.className = SHOW_MORE_ICON_CLASS;
