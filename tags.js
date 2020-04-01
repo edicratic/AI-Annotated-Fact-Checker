@@ -9,9 +9,7 @@ NEW_LINE_ID = "please-remove-me";
 idToData = {};
 onTop = {};
 
-//addFontAwesome();
 makePostRequest();
-//document.body.onmousemove = (e) => mouseMoveEvent(e);
 function init(data) {
     data.forEach((obj) => {
         let entity = Object.keys(obj)[0];
@@ -20,7 +18,7 @@ function init(data) {
         for (var i = 0; i < items.length; i++) {
             let item = items[i];
             let data = {'link': item.wikilink,'full_html': `<b>${item.title}</b>` + `<hr style="color:black"/><p class=${PARAGRAPH_CLASS_NAME}>` + (stripHtml(item.extract) || item.description) + `</p><i onclick="window.open('${item.wikilink}', '_blank');" class="inner-link">Learn More Here</i>`, 'title': item.title, 'content': (stripHtml(item.extract) || item.description)}
-            itemsArray.push(data);
+            if(data['content'] !== undefined) itemsArray.push(data);
         }
         entity = removeNonAlphaNumeric(entity);
         let link = 'www.google.com';
@@ -31,7 +29,7 @@ function init(data) {
     });
     addListeners();
     preventSpanDefaultBehaviour();
-    //adjustSpansBasedOnHeight();
+    adjustSpansBasedOnHeight();
     document.body.onscroll = (e) => adjustSpansBasedOnHeight();
 }
 
@@ -110,23 +108,24 @@ function mouseOverHandle(e, id) {
         span.style.display = 'block';
         let expanded = textIsShown(span);
 
-        if (anchor.offsetTop <= span.clientHeight || anchor.getBoundingClientRect().top <= span.clientHeight) {
+        let distance = getPosition(anchor).y - window.pageYOffset;
+        if (distance <= span.clientHeight) {
             span.style.top = `${y}px`;
             onTop[id] = false;
-            if(!expanded) span.children[2].style.maxHeight = '100px';
+            if(!expanded) {
+                span.children[2].style.maxHeight = '100px';
+                removeIconShowMore(span);
+                if (isOverflown(span.children[2])) {
+                    createIconShowMore(span);
+                }
+            } 
         } else {
             span.children[2].style.minHeight = '';
             span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
             onTop[id] = true;
             span.children[2].style.maxHeight = '';
+            removeAllTextConstraints(span, id);
         }
-
-        if (!expanded && !onTop[id]) {
-            removeIconShowMore(span);
-            if (isOverflown(span.children[2])) {
-                createIconShowMore(span);
-            }
-    }
     }
 }
 
@@ -244,14 +243,11 @@ function arrowClick(e, isLeft) {
         span.children[2].style.minHeight = '';
 
     } else {
-        // span.style.height =  `${spanHeight}px`;
         span.style.minHeight =  `${spanHeight - 10}px`;
-        //add show more icon if necessary
         if (isOverflown(span.children[2])) {
             span.children[2].style.paddingBottom = '';
             createIconShowMore(span);
         } 
-        //place arrows properly
         let arr = e.toElement;
         let offset = arr.offsetParent.clientHeight - arr.offsetTop - arr.clientHeight;
         arr.style.marginTop = `${offset}px`;
@@ -270,21 +266,30 @@ function adjustSpansBasedOnHeight() {
     const spans = document.getElementsByClassName(TOOL_TIP_CLASS_NAME);
     for (var i = 0; i < spans.length; i++) {
         const anchor = document.getElementById(`${spans[i].id}-parent`);
-        var positions = getPosition(anchor);
-        let y = positions.y + anchor.clientHeight;
         if (anchor) {
+            var positions = getPosition(anchor);
+            let y = positions.y + anchor.clientHeight;
             let span = spans[i];
             let id = span.id;
             id = id.substring(0, id.indexOf('-'));
-            if (anchor.offsetTop <= span.clientHeight || anchor.getBoundingClientRect().top <= span.clientHeight) {
+            let distance = getPosition(anchor).y - window.pageYOffset;
+            let expanded = textIsShown(span);
+            if (distance <= span.clientHeight) {
                 span.style.top = `${y}px`;
                 onTop[id] = false;
-                span.children[2].style.maxHeight = '100px';
+                if(!expanded) {
+                    span.children[2].style.maxHeight = '100px';
+                    removeIconShowMore(span);
+                    if (isOverflown(span.children[2])) {
+                        createIconShowMore(span);
+                    }
+                } 
             } else {
                 span.children[2].style.minHeight = '';
                 span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
                 onTop[id] = true;
                 span.children[2].style.maxHeight = '';
+                removeAllTextConstraints(span, id);
             }
          }
     }
@@ -390,4 +395,24 @@ function textIsShown(span) {
         if (span.children[i].className === SHOW_LESS_ICON_CLASS) return true;
     }
     return false;
+}
+
+function removeAllTextConstraints(span, id) {
+    let arr = span.children;
+    span.children[2].style.marginBottom = '';
+    for (var i = 0; i < arr.length; i++) {
+        let curr = arr[i];
+        if(curr.className === SHOW_MORE_ICON_CLASS || curr.className === SHOW_LESS_ICON_CLASS || curr.id === NEW_LINE_ID) {
+            curr.parentNode.removeChild(curr);
+        }
+    }
+    //add arrows
+    let leftArrows= document.getElementsByClassName('leftArrow');
+    let rightArrows = document.getElementsByClassName('rightArrow');
+    for (var i = 0; i < leftArrows.length; i++) {
+        if (leftArrows[i].id === id) leftArrows[i].style.display = '';
+    }
+    for (var i = 0; i < rightArrows.length; i++) {
+        if(rightArrows[i].id === id) rightArrows[i].style.display = '';
+    }
 }
