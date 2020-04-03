@@ -23,7 +23,7 @@ function init(data) {
         entity = removeNonAlphaNumeric(entity);
         let link = 'www.google.com';
         var regex = new RegExp(entity, "i");
-        let childList = document.body.children
+        let childList = document.body.childNodes;
         const set = new Set();
         if(itemsArray.length > 0) modifyAllText(regex, link, entity, itemsArray, childList, set);
     });
@@ -36,11 +36,12 @@ function init(data) {
 }
 
 function modifyAllText(regex, link, entity, data, childList, set) {
+    //using element.childNodes
     for (var i = 0; i < childList.length; i++) {
         const child = childList[i];
         if(!set.has(child) && child.className !== ANCHOR_CLASS_NAME && child.className !== TOOL_TIP_CLASS_NAME) {
             set.add(child);
-            const nextList = child.children;
+            const nextList = child.childNodes;
             const length = nextList.length;
             var text = child.text || child.textContent;
             if (length === 0 && text !== "" && text !== undefined && text.toLowerCase().includes(entity.toLowerCase())) {
@@ -53,7 +54,14 @@ function modifyAllText(regex, link, entity, data, childList, set) {
                 newElement.innerHTML = text;
                 newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId);
                 newElement.onmouseleave = (e) => handleMouseLeaveAnchor(e, uniqueId);
-                child.appendChild(newElement);
+                console.log(child.nodeName);
+                if(child.nodeName === '#comment') continue;
+                if(child.nodeName !== "#text") {
+                    child.appendChild(newElement);
+                } else {
+                    child.parentElement.appendChild(newElement);
+                    child.parentElement.removeChild(child);
+                }
                 set.add(newElement);
 
                 //create span
@@ -166,7 +174,7 @@ function makePostRequest() {
     const spinner = document.createElement('div');
     spinner.className = "loading";
     document.body.appendChild(spinner);
-    let data = {"blob": document.body.innerText.substring(0, 1000)};
+    let data = {"blob": document.body.innerText.substring(0, 5000)};
     console.log(JSON.stringify(data));
     fetch(POST_URL, {
         method: "POST",
