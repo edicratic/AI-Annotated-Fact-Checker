@@ -54,7 +54,6 @@ function modifyAllText(regex, link, entity, data, childList, set) {
                 newElement.innerHTML = text;
                 newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId);
                 newElement.onmouseleave = (e) => handleMouseLeaveAnchor(e, uniqueId);
-                console.log(child.nodeName);
                 if(child.nodeName === '#comment') continue;
                 if(child.nodeName !== "#text") {
                     child.appendChild(newElement);
@@ -146,16 +145,28 @@ function removeSpan(id) {
 
 function handleMouseLeaveAnchor(e, id) {
     let newElement = e.toElement || e.relatedTarget;
-    let children = e.target.children;
-    let original = null;
-    for (var i = 0; i < children.length; i++) {
-        if (children[i].className === ANCHOR_CLASS_NAME) {
-            original = children[i].id;
-    }
-    id = original.substring(0, original.indexOf('-'));
+    // let children = e.target.children;
+    // let original = null;
+    // for (var i = 0; i < children.length; i++) {
+    //     if (children[i].className === ANCHOR_CLASS_NAME) {
+    //         original = children[i].id;
+    // }
+    // id = original.substring(0, original.indexOf('-'));
+    // console.log(id);
+    // console.log(newElement);
+    // console.log(original);
+    console.log(id);
+    console.log(newElement);
 
-    if (newElement === null || newElement.id !== `${id}-parent`) removeSpan(id);
-}
+
+    if (newElement === null || newElement.className !== TOOL_TIP_CLASS_NAME) {
+        tooltips = document.getElementsByClassName(TOOL_TIP_CLASS_NAME);
+        for (var i = 0; i < tooltips.length; i++) {
+            let id = tooltips[i].id;
+            id = id.substring(0, id.indexOf('-'));
+            removeSpan(id);
+        }
+    }
 }
 
 function isOverLap(span, anchor, x, y, id) {
