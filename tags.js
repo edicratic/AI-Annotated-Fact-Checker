@@ -43,7 +43,7 @@ function modifyAllText(regex, link, entity, data, childList, set) {
             set.add(child);
             const nextList = child.childNodes;
             const length = nextList.length;
-            var text = child.text || child.textContent;
+            var text = child.textContent || child.textContent;
             if (length === 0 && text !== "" && text !== undefined && text.toLowerCase().includes(entity.toLowerCase())) {
                 child.innerText = "";
                 var uniqueId = "d" + i + Math.floor(Math.random() * 1000000);
@@ -59,8 +59,7 @@ function modifyAllText(regex, link, entity, data, childList, set) {
                 if(child.nodeName !== "#text") {
                     child.appendChild(newElement);
                 } else {
-                    child.parentElement.appendChild(newElement);
-                    child.parentElement.removeChild(child);
+                    child.parentElement.replaceChild(newElement, child);
                 }
                 set.add(newElement);
 
@@ -174,7 +173,7 @@ function makePostRequest() {
     const spinner = document.createElement('div');
     spinner.className = "loading";
     document.body.appendChild(spinner);
-    let data = {"blob": document.body.innerText.substring(0, 5000)};
+    let data = {"blob": document.body.innerText.substring(0, 50000)};
     console.log(JSON.stringify(data));
     fetch(POST_URL, {
         method: "POST",
