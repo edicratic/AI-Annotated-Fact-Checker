@@ -20,12 +20,17 @@ function init(data) {
             let data = {'link': item.wikilink,'full_html': `<b>${item.title}</b>` + `<hr style="color:black"/><p class=${PARAGRAPH_CLASS_NAME}>` + (stripHtml(item.extract) || item.description) + `</p><i onclick="window.open('${item.wikilink}', '_blank');" class="inner-link">Learn More Here</i>`, 'title': item.title, 'content': (stripHtml(item.extract) || item.description)}
             if(data['content'] !== undefined) itemsArray.push(data);
         }
-        entity = removeNonAlphaNumeric(entity);
+        //entity = removeNonAlphaNumeric(entity);
         let link = 'www.google.com';
-        var regex = new RegExp(entity, "i");
+        var regex = undefined;
+        try {
+            var regex = new RegExp(entity, "i");
+        } catch(e) {
+            console.log(e);
+        }
         let childList = document.body.childNodes;
         const set = new Set();
-        if(itemsArray.length > 0) modifyAllText(regex, link, entity, itemsArray, childList, set);
+        if(itemsArray.length > 0 && regex) modifyAllText(regex, link, entity, itemsArray, childList, set);
     });
     addListeners();
     preventSpanDefaultBehaviour();
@@ -36,7 +41,6 @@ function init(data) {
 }
 
 function modifyAllText(regex, link, entity, data, childList, set) {
-    //using element.childNodes
     for (var i = 0; i < childList.length; i++) {
         const child = childList[i];
         if(!set.has(child) && child.className !== ANCHOR_CLASS_NAME && child.className !== TOOL_TIP_CLASS_NAME) {
@@ -44,7 +48,7 @@ function modifyAllText(regex, link, entity, data, childList, set) {
             const nextList = child.childNodes;
             const length = nextList.length;
             var text = child.textContent || child.textContent;
-            if (length === 0 && text !== "" && text !== undefined && text.toLowerCase().includes(entity.toLowerCase())) {
+            if (length === 0 && text !== "" && text !== undefined && checkMatch(text, entity, regex)) {
                 child.innerText = "";
                 var uniqueId = "d" + i + Math.floor(Math.random() * 1000000);
                 text = text.replace(regex, `<div id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text.match(regex)}</div>`);
@@ -145,20 +149,6 @@ function removeSpan(id) {
 
 function handleMouseLeaveAnchor(e, id) {
     let newElement = e.toElement || e.relatedTarget;
-    // let children = e.target.children;
-    // let original = null;
-    // for (var i = 0; i < children.length; i++) {
-    //     if (children[i].className === ANCHOR_CLASS_NAME) {
-    //         original = children[i].id;
-    // }
-    // id = original.substring(0, original.indexOf('-'));
-    // console.log(id);
-    // console.log(newElement);
-    // console.log(original);
-    console.log(id);
-    console.log(newElement);
-
-
     if (newElement === null || newElement.className !== TOOL_TIP_CLASS_NAME) {
         tooltips = document.getElementsByClassName(TOOL_TIP_CLASS_NAME);
         for (var i = 0; i < tooltips.length; i++) {
@@ -195,9 +185,34 @@ function makePostRequest() {
     }).then(res => res.json()).then(data => {
         spinner.style.display = "none";
         console.log(data);
-        init(data);
+        var data2 = [...data];
+        sortEntities(data2);
+        console.log(data2);
+        init(data2);
     }).catch(e => console.log(e));
 
+}
+
+function sortEntities(data) {
+    var numberOfSubEntites = {};
+    for (var i = 0; i < data.length; i++) {
+        var currEntity = Object.keys(data[i])[0];
+        var count = 0;
+        for (var j = 0; j < data.length; j++) {
+            var compareEntity = Object.keys(data[j])[0];
+            if(currEntity.toLowerCase().includes(compareEntity.toLowerCase())) {
+                count++;
+            }
+        }
+        numberOfSubEntites[currEntity] = count;
+    }
+    console.log(numberOfSubEntites);
+    data.sort((a, b) => {
+        var entity1 = Object.keys(a)[0];
+        var entity2 = Object.keys(b)[0];
+        return numberOfSubEntites[entity2] - numberOfSubEntites[entity1];
+    });
+    return data;
 }
 
 function removeNonAlphaNumeric(word) {
@@ -435,4 +450,19 @@ function removeAllTextConstraints(span, id) {
     for (var i = 0; i < rightArrows.length; i++) {
         if(rightArrows[i].id === id) rightArrows[i].style.display = '';
     }
+}
+
+function checkMatch(text, entity, regex) {
+    //replace with regex
+    var first = text.toLowerCase();
+    var second = entity.toLowerCase();
+    if (first === second) {
+        return true;
+    }
+    var matchArray = text.match(regex);
+    if (!matchArray) return false;
+    let previousCharacter = first[matchArray.index - 1];
+    let nextCharacter = first[matchArray.index + matchArray[0].length];
+    if (!previousCharacter && !nextCharacter) return true;
+    return first.includes(second) && (!previousCharacter || !previousCharacter.match(/[a-z\-]/i)) && (!nextCharacter || !nextCharacter.match(/[a-z\-]/i));
 }
