@@ -20,12 +20,17 @@ function init(data) {
             let data = {'link': item.wikilink,'full_html': `<b>${item.title}</b>` + `<hr style="color:black"/><p class=${PARAGRAPH_CLASS_NAME}>` + (stripHtml(item.extract) || item.description) + `</p><i onclick="window.open('${item.wikilink}', '_blank');" class="inner-link">Learn More Here</i>`, 'title': item.title, 'content': (stripHtml(item.extract) || item.description)}
             if(data['content'] !== undefined) itemsArray.push(data);
         }
-        entity = removeNonAlphaNumeric(entity);
+        //entity = removeNonAlphaNumeric(entity);
         let link = 'www.google.com';
-        var regex = new RegExp(entity, "i");
+        var regex = undefined;
+        try {
+            var regex = new RegExp(entity, "i");
+        } catch(e) {
+            console.log(e);
+        }
         let childList = document.body.childNodes;
         const set = new Set();
-        if(itemsArray.length > 0) modifyAllText(regex, link, entity, itemsArray, childList, set);
+        if(itemsArray.length > 0 && regex) modifyAllText(regex, link, entity, itemsArray, childList, set);
     });
     addListeners();
     preventSpanDefaultBehaviour();
@@ -36,7 +41,6 @@ function init(data) {
 }
 
 function modifyAllText(regex, link, entity, data, childList, set) {
-    //using element.childNodes
     for (var i = 0; i < childList.length; i++) {
         const child = childList[i];
         if(!set.has(child) && child.className !== ANCHOR_CLASS_NAME && child.className !== TOOL_TIP_CLASS_NAME) {
@@ -450,7 +454,6 @@ function removeAllTextConstraints(span, id) {
 
 function checkMatch(text, entity, regex) {
     //replace with regex
-    //text = removeNonAlphaNumeric(text);
     var first = text.toLowerCase();
     var second = entity.toLowerCase();
     if (first === second) {
