@@ -101,7 +101,7 @@
     display: none;
   }
 
-  hr { display: block !important;
+  .edicratic-tooltip hr { display: block !important;
     height: 1px !important;
     border: 0 !important;
     border-top: 5px solid black !important;

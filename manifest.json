@@ -8,11 +8,9 @@
     },
     "permissions": [
         "background", 
-        "tabs", 
+        "tabs",
         "http://*/*",
         "https://*/*",
-        "activeTab", 
-        "declarativeContent", 
         "storage"
     ],
     "browser_action": {
