@@ -1,23 +1,22 @@
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.1.8/components/icon.min.css">
+</head>
+
 <div class="ui raised very padded text container segment parent">
     <div class="edicratic-header-block">
         <img class="ui left floated circular image" src="/images/logo48.png">
         <h2 class="right floated ui header edicratic-header">WebCheck AI</h2>
       </div>
-      <h2 class="ui header edicratic-header-block">
-        <i class="show-more fa fa-angle-down fa-3x edicratic-image"></i>
-        <div class="content edicratic-option edicratic-header">
-          Uptime Guarantee
+      <div class="ui segments">
+        <div class="ui segment edicratic-segment">
+          <p><i class="lock icon"></i><a class="edicratic-option">Login</a></p>
         </div>
-    </h2>
-      <div id ="changeColor" class="ui raised segments">
-        <div class="ui segment">
+        <div class="ui segment edicratic-segment">
+          <p><i class="info circle icon"></i><a class="edicratic-option">How It Works</a></p>
         </div>
-        <div class="ui segment">
-          <p>Middle</p>
-        </div>
-        <div class="ui segment">
-          <p>Bottom</p>
-        </div>
+      </div>
+      <div class="button">
+        <i class="edit icon"></i>Fact Check This Page
       </div>
 </div>
 <style>
@@ -30,6 +29,35 @@
     }
     .edicratic-image {
         float: left;
+    }
+    .edicratic-header-2 {
+        float: right;
+        margin-left: 0.25rem;
+    }
+    .factCheck:hover {
+        background-color: #d3d3d3;
+
+    }
+    .button {
+        margin-top: -1rem;
+        border: none;
+        float: right;
+        display: inline-block;
+        padding: 8px 16px;
+        vertical-align: middle;
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        background-color: inherit;
+        text-align: center;
+        cursor: pointer;
+        white-space: nowrap;
+        color: black;
+        background-color: #d3d3d3;
+    }
+    .edicratic-option {
+        color: #0645ad;
+        cursor: pointer;
     }
 </style>
 <script src="validPage.js"></script>
