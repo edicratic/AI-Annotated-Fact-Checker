@@ -12,3 +12,5 @@
     //     }]);
     // });
 // });
+
+chrome.cookies.getAll({}, res => console.log(res));

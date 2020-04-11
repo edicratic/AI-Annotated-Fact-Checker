@@ -13,3 +13,24 @@ changeColor.onclick = function(element) {
         window.close();
     });
 };
+const LOGIN_BODY = 'login.html';
+checkLogggedIn = function () {
+  chrome.storage.local.get("edicratic_user_info", (res) =>
+      {
+        console.log(res);
+        if(res == null || res == undefined){
+          document.body.innerHTML = `<object type="text/html" data="${LOGIN_BODY}"></object>`;
+        }else{
+          console.log(res);
+        }
+      })
+}
+
+
+let loginTag =  document.getElementById('edicraticLogin');
+console.log(loginTag);
+loginTag.onclick = () => {
+  console.log("hello");
+  document.body.innerHTML = `<object type="text/html" data="${LOGIN_BODY}"></object>`;
+}
+checkLogggedIn();

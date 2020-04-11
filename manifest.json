@@ -7,11 +7,13 @@
         "persistent": false
     },
     "permissions": [
-        "background", 
+        "background",
         "tabs",
         "http://*/*",
         "https://*/*",
-        "storage"
+        "storage",
+        "cookies",
+        "https://*.edicratic.com/*"
     ],
     "browser_action": {
         "default_popup": "popup.html",
