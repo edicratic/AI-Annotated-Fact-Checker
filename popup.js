@@ -3,25 +3,32 @@
 // found in the LICENSE file.
 
 'use strict';
+const VALID_PAGE_HTML = 'validPage.html';
+const INVALID_PAGE_HTML = 'invalidPage.html';
 
-let changeColor = document.getElementById('changeColor');
+const INVALID_SEARCH_URLS = [
+    'www.google.com/search', 
+    'www.bing.com/search', 
+    'duckduckgo.com/',
+    'www.facebook.com/',
+]
 
-// chrome.storage.sync.get('color', function(data) {
-//   changeColor.style.backgroundColor = data.color;
-//   changeColor.setAttribute('value', data.color);
-// });
+checkCurrentPage();
 
-changeColor.onclick = function(element) {
-    chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
-        var specTab = tabs[0];
-        // document.getElementById("changeColor").style.diplay = "none";
-        // document.getElementById("info").style.display = "";
-        chrome.tabs.insertCSS(specTab.id, {file: 'tags.css'});
-        chrome.tabs.insertCSS(specTab.id, {file: 'fontawesome.css'});
-        chrome.tabs.insertCSS(specTab.id, {file: 'expandLibrary.css'});
-        chrome.tabs.executeScript(specTab.id, {file: 'fontawesome.js'}, () => console.log("DONE"));
-        chrome.tabs.executeScript(specTab.id, {file: 'expandLibrary.js'}, () => console.log("DONE"));
-        chrome.tabs.executeScript(specTab.id, {file: 'tags.js'}, () => console.log("DONE"));
-        window.close();
+
+function checkCurrentPage() {
+    chrome.tabs.query({active: true, lastFocusedWindow: true}, tabs => {
+        let url = tabs[0].url;
+        var isValidPage = true;
+        INVALID_SEARCH_URLS.forEach(invalid => {
+            if (url.includes(invalid)) isValidPage = false;
+        })
+        load(isValidPage);
+
     });
-};
+}
+
+function load(isValidPage) {
+    console.log(isValidPage)
+    document.body.innerHTML = `<object type="text/html" data="${isValidPage ? VALID_PAGE_HTML : INVALID_PAGE_HTML}"></object>`;
+}
