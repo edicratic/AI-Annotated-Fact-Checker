@@ -6,32 +6,60 @@
         background-color: #008CBA;
         border: none;
         color: white;
-        padding: 15px 32px;
+        margin-left: .8rem;
+        margin-right:  .8rem;
         text-align: center;
         text-decoration: none;
         display: inline-block;
-        font-size: 16px;
-        float: right;
-        margin-bottom: 0.5rem;
+        font-size: 1rem;
+        float: center;
+        margin-bottom: 0;
       }
       .popup {
-          width: 95vw;
-          height: 70vh;
+          background-color: white;
+          border: 0;
+          display: flex;
+          flex-direction: column;
+          margin: 0;
+          opacity: 1;
+          overflow: hidden;
+          padding: 0;
+          white-space: nowrap;
+          width: fit-content;
       }
       .header {
-        color: #6f7287;
-        line-height: 2rem;
-        font-size: 1.1rem;
-        margin-bottom: 1rem;
-        margin-top: 0rem;
+          align-items: flex-end;
+          background-color: #444;
+          border: 0;
+          color: #bbb;
+          display: flex;
+          font-size: smaller;
+          justify-content: center;
+          margin: 0;
+          padding: 1px 0;
+          width: 10rem;
       }
+      .contents{
+        display: flex;
+        flex-direction: row-reverse;
+      }
+
     </style>
   </head>
-
   <body class="popup">
-    <h3 class="header">AI Powered Fact Checker</h1>  
-    <button id="changeColor">Fact Check</button>
+    <div class="header">
+      <span href="https://factcheck.edicratic.com">WebCheck AI</span>
+    </div>
+    <br/>
+    <br/>
+    <button id="changeColor">Check This Page</button>
+    <br/>
+    <br/>
+    <br/>
     <p id="info" style="display: none">Reload page to fact check again</p>
-    <script src="popup.js"></script>
+    <div class="header">
+      <span href="https://factcheck.edicratic.com">Bottom Text</span>
+    </div>
   </body>
+  <script src="popup.js"></script>
 </html>
