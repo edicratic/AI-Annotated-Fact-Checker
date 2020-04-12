@@ -3,13 +3,9 @@
 // found in the LICENSE file.
 
 'use strict';
-const VALID_PAGE_HTML = 'validPage.html';
-const INVALID_PAGE_HTML = 'invalidPage.html';
+const VALID_PAGE_HTML = 'extensionbox.html';
 
 const INVALID_SEARCH_URLS = [
-    'www.google.com/search', 
-    'www.bing.com/search', 
-    'duckduckgo.com/',
     'www.facebook.com/',
 ]
 
@@ -29,6 +25,6 @@ function checkCurrentPage() {
 }
 
 function load(isValidPage) {
-    console.log(isValidPage)
-    document.body.innerHTML = `<object type="text/html" data="${isValidPage ? VALID_PAGE_HTML : INVALID_PAGE_HTML}"></object>`;
+    localStorage['valid'] = isValidPage;
+    document.body.innerHTML = `<object type="text/html" data="${VALID_PAGE_HTML}"></object>`;
 }

@@ -1,11 +1,16 @@
 let changeColor = document.getElementById('changeColor');
 let check = document.getElementById('edicratic-check');
+let invalidMessage = document.getElementById('edicratic-invalid');
 check.style.display = "none";
+var isValid = localStorage['valid'];
+if (isValid === 'true') {
+    invalidMessage.style.display = 'none';
+} else {
+    changeColor.style.display = 'none';
+}
 changeColor.onclick = function(element) {
     chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
-        var specTab = tabs[0];
-        // document.getElementById("changeColor").style.diplay = "none";
-        // document.getElementById("info").style.display = "";
+        var specTab = tabs[0];;
         chrome.tabs.insertCSS(specTab.id, {file: 'tags.css'});
         chrome.tabs.insertCSS(specTab.id, {file: 'fontawesome.css'});
         chrome.tabs.insertCSS(specTab.id, {file: 'expandLibrary.css'});
