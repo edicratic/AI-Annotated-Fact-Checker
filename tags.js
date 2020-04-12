@@ -8,6 +8,7 @@ PARAGRAPH_CLASS_NAME = 'edicratic-paragraph-classname'
 NEW_LINE_ID = "please-remove-me";
 idToData = {};
 onTop = {};
+OPEN_SPAN = undefined;
 
 makePostRequest();
 function init(data) {
@@ -38,6 +39,7 @@ function init(data) {
     document.body.onscroll = (e) => adjustSpansBasedOnHeight();
     document.body.onmouseup =(e) => analyzeTextForSending();
     document.body.onmousedown = (e) => removeHighlightedSpans();
+    document.body.onmousemove = e => handleMouseMove(e);
 }
 
 function modifyAllText(regex, link, entity, data, childList, set) {
@@ -91,24 +93,14 @@ function modifyAllText(regex, link, entity, data, childList, set) {
 
 }
 
-function mouseMoveEvent(e) {
-    var x = event.clientX, y = event.clientY,
-    elementMouseIsOver = document.elementFromPoint(x, y);
-    if (elementMouseIsOver.className !== ANCHOR_CLASS_NAME && elementMouseIsOver.className !== TOOL_TIP_CLASS_NAME
-        && elementMouseIsOver.parentElement.className !== TOOL_TIP_CLASS_NAME && elementMouseIsOver.className !== INNER_LINK) {
-        let spans = document.getElementsByClassName(TOOL_TIP_CLASS_NAME);
-        for (var i = 0; i < spans.length; i++) {
-            let id = spans[i].id;
-            id = id.substring(0, id.indexOf('-'));
-            removeSpan(id);
-        }
-    }
-}
-
 function mouseOverHandle(e, id) {
     if (e.target && e.target.id) {
         id = e.target.id;
         id = id.substring(0, id.indexOf('-'));
+        if (OPEN_SPAN) {
+            removeSpan(OPEN_SPAN);
+        }
+        OPEN_SPAN = id;
         const span = document.getElementById(`${id}-parent`);
         const anchor = document.getElementById(`${id}-parent-parent`);
         var positions = getPosition(anchor);
@@ -148,15 +140,15 @@ function removeSpan(id) {
 }
 
 function handleMouseLeaveAnchor(e, id) {
-    let newElement = e.toElement || e.relatedTarget;
-    if (newElement === null || newElement.className !== TOOL_TIP_CLASS_NAME) {
-        tooltips = document.getElementsByClassName(TOOL_TIP_CLASS_NAME);
-        for (var i = 0; i < tooltips.length; i++) {
-            let id = tooltips[i].id;
-            id = id.substring(0, id.indexOf('-'));
-            removeSpan(id);
-        }
-    }
+    // let newElement = e.toElement || e.relatedTarget;
+    // if (newElement === null || newElement.className !== TOOL_TIP_CLASS_NAME) {
+    //     tooltips = document.getElementsByClassName(TOOL_TIP_CLASS_NAME);
+    //     for (var i = 0; i < tooltips.length; i++) {
+    //         let id = tooltips[i].id;
+    //         id = id.substring(0, id.indexOf('-'));
+    //         removeSpan(id);
+    //     }
+    // }
 }
 
 function isOverLap(span, anchor, x, y, id) {
@@ -465,4 +457,19 @@ function checkMatch(text, entity, regex) {
     let nextCharacter = first[matchArray.index + matchArray[0].length];
     if (!previousCharacter && !nextCharacter) return true;
     return first.includes(second) && (!previousCharacter || !previousCharacter.match(/[a-z\-]/i)) && (!nextCharacter || !nextCharacter.match(/[a-z\-]/i));
+}
+
+function handleMouseMove(e) {
+    const element = e.target;
+    const elementParent = e.target.parentElement;
+    if (element.className !== TOOL_TIP_CLASS_NAME && elementParent.className !== TOOL_TIP_CLASS_NAME
+        && element.className !== ANCHOR_CLASS_NAME) {
+        let spans = document.getElementsByClassName(TOOL_TIP_CLASS_NAME);
+        for (var i = 0; i < spans.length; i++) {
+            let id = spans[i].id;
+            id = id.substring(0, id.indexOf('-'));
+            removeSpan(id);
+        }
+        OPEN_SPAN = undefined;
+    }
 }
