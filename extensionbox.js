@@ -2,7 +2,7 @@ let changeColor = document.getElementById('changeColor');
 let check = document.getElementById('edicratic-check');
 let invalidMessage = document.getElementById('edicratic-invalid');
 check.style.display = "none";
-var isValid = localStorage['valid'];
+var isValid = "true"
 if (isValid === 'true') {
     invalidMessage.style.display = 'none';
 } else {

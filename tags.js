@@ -104,15 +104,16 @@ function mouseOverHandle(e, id) {
         const span = document.getElementById(`${id}-parent`);
         const anchor = document.getElementById(`${id}-parent-parent`);
         var positions = getPosition(anchor);
+        var isSticky = determineSticky(anchor);
         let x = positions.x;
-        let y = positions.y + anchor.clientHeight;
+        let y = isSticky ? positions.y + anchor.clientHeight +  window.pageYOffset : positions.y + anchor.clientHeight;
         span.style.visibility = 'visible';
         span.style.width = `${anchor.clientWidth}px`;
         span.style.left = `${x}px`;
         span.style.display = 'block';
         let expanded = textIsShown(span);
 
-        let distance = getPosition(anchor).y - window.pageYOffset;
+        let distance = isSticky ? getPosition(anchor).y : getPosition(anchor).y - window.pageYOffset;
         if (distance <= span.clientHeight) {
             span.style.top = `${y}px`;
             onTop[id] = false;
@@ -295,11 +296,12 @@ function adjustSpansBasedOnHeight() {
         const anchor = document.getElementById(`${spans[i].id}-parent`);
         if (anchor) {
             var positions = getPosition(anchor);
-            let y = positions.y + anchor.clientHeight;
+            var isSticky = determineSticky(anchor);
+            let y = isSticky ? positions.y + anchor.clientHeight +  window.pageYOffset : positions.y + anchor.clientHeight;
             let span = spans[i];
             let id = span.id;
             id = id.substring(0, id.indexOf('-'));
-            let distance = getPosition(anchor).y - window.pageYOffset;
+            let distance = isSticky ? getPosition(anchor).y : getPosition(anchor).y - window.pageYOffset;
             let expanded = textIsShown(span);
             if (distance <= span.clientHeight) {
                 span.style.top = `${y}px`;
@@ -472,4 +474,15 @@ function handleMouseMove(e) {
         }
         OPEN_SPAN = undefined;
     }
+}
+
+function determineSticky(el) {
+    while(el) {
+        const position = getComputedStyle(el)["position"];
+        if(position === 'fixed' || position === 'sticky') {
+            return true;
+        }
+        el = el.parentElement;
+    }
+    return false;
 }
