@@ -6,7 +6,7 @@
 const VALID_PAGE_HTML = 'extensionbox.html';
 
 const INVALID_SEARCH_URLS = [
-    'www.facebook.com/',
+    // 'www.facebook.com/',
 ]
 
 checkCurrentPage();
