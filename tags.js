@@ -266,7 +266,8 @@ function arrowClick(e, isLeft) {
     if (onTop[id]) {
         const anchor = document.getElementById(`${id}-parent-parent`);
         var positions = getPosition(anchor);
-        let y = positions.y + anchor.clientHeight;
+        var isSticky = determineSticky(anchor);
+        let y = isSticky ? positions.y + anchor.clientHeight +  window.pageYOffset : positions.y + anchor.clientHeight;
         span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
         span.children[2].style.minHeight = '';
 
