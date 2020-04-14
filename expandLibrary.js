@@ -9,43 +9,37 @@ function analyzeTextForSending() {
     if(window.getSelection().toString() === '') return;
     const range = window.getSelection().getRangeAt(0);
     let text = window.getSelection().toString();
+    const rect = range.getBoundingClientRect()
     if (range.startOffset === range.endOffset) return;
-    if (text.length > 30) return;
-    const selectedText = range.extractContents();
-    const span = document.createElement('span');
-    span.className = EDICRATIC_HIGHLIGHTED_TEXT_CLASS;
-    span.appendChild(selectedText);
-    range.insertNode(span);
+    //if (text.length > 100) return;
 
     let tooltip = document.createElement('span');
     tooltip.className = TOOL_TIP_CLASSNAME;
-    tooltip.innerHTML = `<p class="${TOOL_TIP_TEXT_CLASSNAME}">Would you like to add this entity to our library?<br/><br/><i class="${X_CLASS_NAME}"></i><i class="${CHECK_CLASS_NAME}"></i></p>`
+    tooltip.innerHTML = `<p class="${TOOL_TIP_TEXT_CLASSNAME}">Do you want us to look this up highlighted text for you?</p><br/><br/><i class="${X_CLASS_NAME}"></i><i class="${CHECK_CLASS_NAME}"></i></p>`
     tooltip.setAttribute('data-content', text);
-    tooltip.style.width = `${span.clientWidth}px`
-    tooltip.style.top = `${window.pageYOffset + span.getBoundingClientRect().top -span.clientHeight - 10}px`;
-    tooltip.style.left = `${span.getBoundingClientRect().left - text.length}px`
+    tooltip.style.width = `${rect.right - rect.left}px`
+    tooltip.style.top = `${window.pageYOffset + rect.top - 60}px`;
+    tooltip.style.left = `${rect.left}px`
     document.body.prepend(tooltip);
     let x = document.getElementsByClassName(X_CLASS_NAME)[0];
     let check = document.getElementsByClassName(CHECK_CLASS_NAME)[0];
-    console.log(x);
-    console.log(check);
     x.onclick = (e) => {
-        console.log('click');
         e.preventDefault();
         clearSelection();
-        removeHighlightedSpans()
+        removeHighlightedSpans();
     };
     check.onclick = (e) => {
-        console.log('click');
         e.preventDefault();
+        lookUpTerm(text);
         clearSelection();
         removeHighlightedSpans();
     }
 }
 
 function removeHighlightedSpans() {
-    window.getSelection().removeAllRanges();
-    remove(document.getElementsByClassName(TOOL_TIP_CLASSNAME));
+    // window.getSelection().removeAllRanges();
+    // remove(document.getElementsByClassName(TOOL_TIP_CLASSNAME));
+
 }
 
 function remove(collection) {
@@ -57,4 +51,41 @@ function remove(collection) {
 function clearSelection() {
     console.log("removing");
     window.getSelection().removeAllRanges();
+}
+
+function lookUpTerm(term) {
+    console.log(term);
+    console.log('looking up');
+    //need help here
+
+    const params = new URLSearchParams({
+	"action": "query",
+	"format": "json",
+	"prop": "description|extracts",
+	"list": "",
+	"generator": "search",
+	"exsentences": "2",
+	"exlimit": "5",
+	"exintro": 1,
+	"gsrsearch": term,
+    "gsrlimit": 5,
+    "gsrinfo": "totalhits",
+	"gsrsort": "relevance"
+    })
+    const URL = `https://en.wikipedia.org/w/api.php?${params.toString()}`
+    console.log(URL);
+    fetch(URL, {
+        method: 'GET',
+        mode: 'no-cors',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then((response) => {
+        return response.text();
+    })
+    .then((data) => {
+    console.log(data);
+  }).catch((e) => console.log(e));
+
 }
