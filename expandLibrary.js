@@ -15,7 +15,7 @@ function analyzeTextForSending() {
 
     let tooltip = document.createElement('span');
     tooltip.className = TOOL_TIP_CLASSNAME;
-    tooltip.innerHTML = `<p class="${TOOL_TIP_TEXT_CLASSNAME}">Do you want us to look this up highlighted text for you?</p><br/><br/><i class="${X_CLASS_NAME}"></i><i class="${CHECK_CLASS_NAME}"></i></p>`
+    tooltip.innerHTML = `<p class="${TOOL_TIP_TEXT_CLASSNAME}">Do you want us to look up this highlighted text for you?</p><br/><br/><i class="${X_CLASS_NAME}"></i><i class="${CHECK_CLASS_NAME}"></i></p>`
     tooltip.setAttribute('data-content', text);
     tooltip.style.width = `${rect.right - rect.left}px`
     tooltip.style.top = `${window.pageYOffset + rect.top - 60}px`;
@@ -53,7 +53,7 @@ function clearSelection() {
     window.getSelection().removeAllRanges();
 }
 
-function lookUpTerm(term) {
+async function lookUpTerm(term) {
     console.log(term);
     console.log('looking up');
     //need help here
@@ -72,20 +72,29 @@ function lookUpTerm(term) {
     "gsrinfo": "totalhits",
 	"gsrsort": "relevance"
     })
-    const URL = `https://en.wikipedia.org/w/api.php?${params.toString()}`
-    console.log(URL);
-    fetch(URL, {
-        method: 'GET',
-        mode: 'no-cors',
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    })
-    .then((response) => {
-        return response.text();
-    })
-    .then((data) => {
-    console.log(data);
-  }).catch((e) => console.log(e));
-
+    var URL = `https://en.wikipedia.org/w/api.php?${params.toString()}`
+    var result = await fetchWiki(URL);
+    console.log(result);
+    console.log(result.body);
+    let res = await result.json();
+    console.log(res);
 }
+
+function fetchWiki(input) {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({input, init}, messageResponse => {
+          console.log(messageResponse);
+        const [response, error] = messageResponse;
+        if (response === null) {
+          reject(error);
+        } else {
+          // Use undefined on a 204 - No Content
+          const body = response.body ? new Blob([response.body]) : undefined;
+          resolve(new Response(body, {
+            status: response.status,
+            statusText: response.statusText,
+          }));
+        }
+      });
+    });
+  }
