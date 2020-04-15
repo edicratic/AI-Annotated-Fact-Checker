@@ -10,6 +10,10 @@ idToData = {};
 onTop = {};
 OPEN_SPAN = undefined;
 
+document.body.onscroll = (e) => adjustSpansBasedOnHeight();
+document.body.onmouseup =(e) => analyzeTextForSending();
+//document.body.onmousedown = (e) => removeHighlightedSpans();
+document.body.onmousemove = e => handleMouseMove(e);
 makePostRequest();
 function init(data) {
     data.forEach((obj) => {
@@ -33,13 +37,8 @@ function init(data) {
         const set = new Set();
         if(itemsArray.length > 0 && regex) modifyAllText(regex, link, entity, itemsArray, childList, set);
     });
-    addListeners();
-    preventSpanDefaultBehaviour();
-    adjustSpansBasedOnHeight();
-    document.body.onscroll = (e) => adjustSpansBasedOnHeight();
-    document.body.onmouseup =(e) => analyzeTextForSending();
-    //document.body.onmousedown = (e) => removeHighlightedSpans();
-    document.body.onmousemove = e => handleMouseMove(e);
+    console.log('done' + data);
+    //preventSpanDefaultBehaviour();
 }
 
 function modifyAllText(regex, link, entity, data, childList, set) {
@@ -82,6 +81,9 @@ function modifyAllText(regex, link, entity, data, childList, set) {
                 }
                 document.body.prepend(tooltip)
                 set.add(tooltip);
+                tooltip.onclick = e => e.preventDefault();
+                tooltip.children[6].addEventListener('click', (e) => arrowClick(e, true), true);
+                tooltip.children[7].addEventListener('click', (e) => arrowClick(e, false), true);
 
             }
             if (length !== 0) {

@@ -84,8 +84,9 @@ async function lookUpTerm(term) {
     // console.log(matches);
     var pairs = {};
     pairs[term] = matches;
+    //console.log(pairs);
     // console.log([pairs]);
-    init([pairs]);
+   init([pairs]);
     
 }
 
