@@ -37,8 +37,8 @@ function analyzeTextForSending() {
 }
 
 function removeHighlightedSpans() {
-    // window.getSelection().removeAllRanges();
-    // remove(document.getElementsByClassName(TOOL_TIP_CLASSNAME));
+    window.getSelection().removeAllRanges();
+    remove(document.getElementsByClassName(TOOL_TIP_CLASSNAME));
 
 }
 
@@ -74,10 +74,19 @@ async function lookUpTerm(term) {
     })
     var URL = `https://en.wikipedia.org/w/api.php?${params.toString()}`
     var result = await fetchWiki(URL);
-    console.log(result);
-    console.log(result.body);
-    let res = await result.json();
-    console.log(res);
+    var data = await result.json();
+    var matches = [];
+    var pages = data.query.pages;
+    console.log(pages);
+    Object.keys(pages).forEach(key => {
+        if(key) matches.push(pages[key]);
+    })
+    console.log(matches);
+    var pairs = {};
+    pairs[term] = matches;
+    console.log([pairs]);
+    init([pairs]);
+    
 }
 
 function fetchWiki(input) {

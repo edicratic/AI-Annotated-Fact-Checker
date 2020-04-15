@@ -38,7 +38,7 @@ function init(data) {
     adjustSpansBasedOnHeight();
     document.body.onscroll = (e) => adjustSpansBasedOnHeight();
     document.body.onmouseup =(e) => analyzeTextForSending();
-    document.body.onmousedown = (e) => removeHighlightedSpans();
+    //document.body.onmousedown = (e) => removeHighlightedSpans();
     document.body.onmousemove = e => handleMouseMove(e);
 }
 
