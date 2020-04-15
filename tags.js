@@ -1,6 +1,6 @@
 ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
 TOOL_TIP_CLASS_NAME = 'edicratic-tooltip';
-POST_URL = 'https://factcheck.edicratic.com/bycontents';
+POST_URL = 'https://factcheck.edicratic.com/';
 INNER_LINK = 'inner-link';
 SHOW_MORE_ICON_CLASS = "show-more fa fa-angle-down fa-3x";
 SHOW_LESS_ICON_CLASS = "show-more fa fa-angle-up fa-3x";
@@ -167,7 +167,7 @@ function makePostRequest() {
     const spinner = document.createElement('div');
     spinner.className = "loading";
     document.body.appendChild(spinner);
-    let data = {"blob": document.body.innerText.substring(0, 50000)};
+    let data = {"blob": document.body.innerText.substring(0, 50000), sort: true};
     console.log(JSON.stringify(data));
     fetch(POST_URL, {
         method: "POST",
@@ -177,35 +177,34 @@ function makePostRequest() {
         }
     }).then(res => res.json()).then(data => {
         spinner.style.display = "none";
-        console.log(data);
+        //console.log(data);
         var data2 = [...data];
         sortEntities(data2);
-        console.log(data2);
-        init(data2);
+        //console.log(data2);
+        processEntities(data2);
     }).catch(e => console.log(e));
+}
 
+function processEntities(entities) {
+    entities.forEach((ent) => {
+        lookUpTerm(ent.entity);
+    });
 }
 
 function sortEntities(data) {
-    var numberOfSubEntites = {};
+    var counts = {};
     for (var i = 0; i < data.length; i++) {
-        var currEntity = Object.keys(data[i])[0];
-        var count = 0;
+        var curr = data[i];
+        counts[curr.entity] = 0;
         for (var j = 0; j < data.length; j++) {
-            var compareEntity = Object.keys(data[j])[0];
-            if(currEntity.toLowerCase().includes(compareEntity.toLowerCase())) {
-                count++;
-            }
+            var compare = data[j];
+            if (curr.entity.includes(compare.entity)) counts[curr.entity] += 1;
         }
-        numberOfSubEntites[currEntity] = count;
     }
-    console.log(numberOfSubEntites);
     data.sort((a, b) => {
-        var entity1 = Object.keys(a)[0];
-        var entity2 = Object.keys(b)[0];
-        return numberOfSubEntites[entity2] - numberOfSubEntites[entity1];
+        var diff = counts[a.entity] - counts[b.entity];
+        return diff === 0 ? a.block - b.block : diff;
     });
-    return data;
 }
 
 function removeNonAlphaNumeric(word) {

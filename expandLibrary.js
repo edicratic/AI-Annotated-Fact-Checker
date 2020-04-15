@@ -54,9 +54,8 @@ function clearSelection() {
 }
 
 async function lookUpTerm(term) {
-    console.log(term);
-    console.log('looking up');
-    //need help here
+    // console.log(term);
+    // console.log('looking up');
 
     const params = new URLSearchParams({
 	"action": "query",
@@ -76,15 +75,16 @@ async function lookUpTerm(term) {
     var result = await fetchWiki(URL);
     var data = await result.json();
     var matches = [];
+    if(!data || !data.query) return;
     var pages = data.query.pages;
-    console.log(pages);
+    // console.log(pages);
     Object.keys(pages).forEach(key => {
         if(key) matches.push(pages[key]);
     })
-    console.log(matches);
+    // console.log(matches);
     var pairs = {};
     pairs[term] = matches;
-    console.log([pairs]);
+    // console.log([pairs]);
     init([pairs]);
     
 }
@@ -92,7 +92,7 @@ async function lookUpTerm(term) {
 function fetchWiki(input) {
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({input, init}, messageResponse => {
-          console.log(messageResponse);
+        //   console.log(messageResponse);
         const [response, error] = messageResponse;
         if (response === null) {
           reject(error);
