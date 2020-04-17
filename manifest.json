@@ -9,8 +9,9 @@
     "permissions": [
         "background",
         "tabs",
-        "http://*/*",
-        "https://*/*",
+        "https://factcheck.edicratic.com/*",
+        "https://webcheck.edicratic.com/*",
+        "https://en.wikipedia.org/*",
         "storage"
     ],
     "browser_action": {
