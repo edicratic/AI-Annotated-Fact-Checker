@@ -1,13 +1,13 @@
 {
-    "name": "Edicratic FactCheck",
+    "name": "WebCheck AI",
     "version": "1.0",
-    "description": "An AI-powered smart lookup tool for browsing the web.",
+    "description": "An AI-powered smart lookup tool for browsing the web, by Edicratic LLC",
     "background": {
         "scripts": ["background.js"],
         "persistent": false
     },
     "permissions": [
-        "background", 
+        "background",
         "tabs",
         "http://*/*",
         "https://*/*",
