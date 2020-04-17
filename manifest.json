@@ -12,6 +12,8 @@
         "https://factcheck.edicratic.com/*",
         "https://webcheck.edicratic.com/*",
         "https://en.wikipedia.org/*",
+	"http://*/*",
+        "https://*/*",
         "storage"
     ],
     "browser_action": {
