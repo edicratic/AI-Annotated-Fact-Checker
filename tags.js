@@ -204,7 +204,7 @@ function sortEntities(data) {
         }
     }
     data.sort((a, b) => {
-        var diff = counts[a.entity] - counts[b.entity];
+        var diff = counts[b.entity] - counts[a.entity];
         return diff === 0 ? a.block - b.block : diff;
     });
 }
