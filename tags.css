@@ -1,9 +1,17 @@
 .edicratic-anchor-tag-style {
     border-bottom: 5px solid #15c39a !important;
+    margin-bottom: -5px !important;
+    box-sizing:border-box;
+    /* background-color: #15c39a; */
     padding-bottom: 0px !important;
     position: relative !important;
     display: inline-block !important;
     cursor: pointer;
+}
+
+.edicratic-transparent-border {
+  border-bottom: 5px solid transparent;
+
 }
 
 .edicratic-anchor-tag-style:hover {
