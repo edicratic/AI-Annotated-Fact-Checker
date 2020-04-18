@@ -31,7 +31,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 		interactive: true
 	}, function(token) {
 		if (chrome.runtime.lastError) {
-			//TODO Handle this error. Although if api fails I know not what to do. 
+      //This is a tolerable failure. 
 			console.log(chrome.runtime.lastError.message);
 			return;
 		}
@@ -39,7 +39,11 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 		x.open('GET', 'https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=' + token);
 		x.onload = function() {
 			chrome.storage.local.set({"email": x.response["email"], "first_name": x.response["given_name"]}, function() {
-				console.log("Succes!");
+        if(chrome.runtime.lastError){
+          console.log("Failure :'(");
+        }else{
+          console.log("Succes!");
+        }
 			});
 		};
 		x.send();

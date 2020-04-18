@@ -16,7 +16,8 @@ document.body.onscroll = (e) => adjustSpansBasedOnHeight();
 document.body.onmouseup =(e) => analyzeTextForSending();
 document.body.onmousedown = (e) => checkAndRemoveSpans(e);
 document.body.onmousemove = e => handleMouseMove(e);
-makePostRequest();
+secureWebCheck(makePostRequest);
+//makePostRequest();
 function init(data) {
     data.forEach((obj) => {
         let entity = Object.keys(obj)[0];
@@ -127,7 +128,7 @@ function mouseOverHandle(e, id) {
                 if (isOverflown(span.children[2])) {
                     createIconShowMore(span);
                 }
-            } 
+            }
         } else {
             span.children[2].style.minHeight = '';
             span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
@@ -167,12 +168,44 @@ function isOverLap(span, anchor, x, y, id) {
 
 }
 
-function makePostRequest() {
+function secureWebCheck(callback){
+  chrome.identity.getAuthToken({
+   interactive: true
+ }, function(token) {
+   if (chrome.runtime.lastError) {
+     //TODO handle failure to authenticate
+     //Tell the user something went wrong
+     console.log(chrome.runtime.lastError.message);
+     return;
+   }
+   chrome.storage.local.get(['email', 'first_name'], (res) => {
+     if(chrome.runtime.lastError){
+       var x = new XMLHttpRequest();
+       x.open('GET', 'https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=' + token);
+       x.onload = function() {
+         chrome.storage.local.set({"email": x.response["email"], "first_name": x.response["given_name"]}, function() {
+           if(chrome.runtime.lastError){
+             callback(token, "failedAuth@mail.com");
+             console.log("failed to write to localstorage ... what do we do?");
+           }else{
+             callback(token, x.response["email"]);
+           }
+         });
+       };
+       x.send();
+     }else{
+       callback(token,res.email);
+     }
+   });
+ });
+}
+
+function makePostRequest(authToken, email) {
     const spinner = document.createElement('div');
     spinner.className = "loading";
     spinner.classList.add('loading-edicratic');
     document.body.appendChild(spinner);
-    let data = {"blob": document.body.innerText.substring(0, 50000), sort: true};
+    let data = {"blob": document.body.innerText.substring(0, 50000), sort: true, email: email, auth: {token: authToken, type: "Google"}};
     console.log(JSON.stringify(data));
     fetch(POST_URL, {
         method: "POST",
@@ -284,7 +317,7 @@ function arrowClick(e, isLeft) {
         if (isOverflown(span.children[2])) {
             span.children[2].style.paddingBottom = '';
             createIconShowMore(span);
-        } 
+        }
         let arr = e.toElement;
         let offset = arr.offsetParent.clientHeight - arr.offsetTop - arr.clientHeight;
         arr.style.marginTop = `${offset}px`;
@@ -321,7 +354,7 @@ function adjustSpansBasedOnHeight() {
                     if (isOverflown(span.children[2])) {
                         createIconShowMore(span);
                     }
-                } 
+                }
             } else {
                 span.children[2].style.minHeight = '';
                 span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
