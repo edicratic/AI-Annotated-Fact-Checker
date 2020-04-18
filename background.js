@@ -12,7 +12,6 @@
     //     }]);
     // });
 // });
-console.log('fuck');
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     fetch(request.input).then(function(response) {
       return response.text().then(function(text) {
@@ -27,3 +26,22 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     });
     return true;
   });
+ chrome.runtime.onInstalled.addListener(function(details){
+	 chrome.identity.getAuthToken({
+		interactive: true
+	}, function(token) {
+		if (chrome.runtime.lastError) {
+			//TODO Handle this error. Although if api fails I know not what to do. 
+			console.log(chrome.runtime.lastError.message);
+			return;
+		}
+		var x = new XMLHttpRequest();
+		x.open('GET', 'https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=' + token);
+		x.onload = function() {
+			chrome.storage.local.set({"email": x.response["email"], "first_name": x.response["given_name"]}, function() {
+				console.log("Succes!");
+			});
+		};
+		x.send();
+	});
+});
