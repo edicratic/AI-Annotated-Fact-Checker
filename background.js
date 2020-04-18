@@ -31,14 +31,15 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 		interactive: true
 	}, function(token) {
 		if (chrome.runtime.lastError) {
-      //This is a tolerable failure. 
+      //This is a tolerable failure.
 			console.log(chrome.runtime.lastError.message);
 			return;
 		}
 		var x = new XMLHttpRequest();
 		x.open('GET', 'https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=' + token);
 		x.onload = function() {
-			chrome.storage.local.set({"email": x.response["email"], "first_name": x.response["given_name"]}, function() {
+      let response = JSON.parse(x.response);
+			chrome.storage.local.set({"email": response["email"], "first_name": response["given_name"]}, function() {
         if(chrome.runtime.lastError){
           console.log("Failure :'(");
         }else{
