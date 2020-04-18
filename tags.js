@@ -9,10 +9,12 @@ NEW_LINE_ID = "please-remove-me";
 idToData = {};
 onTop = {};
 OPEN_SPAN = undefined;
+DATA_LOADED = 'DATA_LOADED'
+BUTTON_PRESSED = 'BUTTON_PRESSED';
 
 document.body.onscroll = (e) => adjustSpansBasedOnHeight();
 document.body.onmouseup =(e) => analyzeTextForSending();
-//document.body.onmousedown = (e) => removeHighlightedSpans();
+document.body.onmousedown = (e) => checkAndRemoveSpans(e);
 document.body.onmousemove = e => handleMouseMove(e);
 makePostRequest();
 function init(data) {
@@ -168,6 +170,7 @@ function isOverLap(span, anchor, x, y, id) {
 function makePostRequest() {
     const spinner = document.createElement('div');
     spinner.className = "loading";
+    spinner.classList.add('loading-edicratic');
     document.body.appendChild(spinner);
     let data = {"blob": document.body.innerText.substring(0, 50000), sort: true};
     console.log(JSON.stringify(data));
@@ -181,9 +184,12 @@ function makePostRequest() {
         spinner.style.display = "none";
         //console.log(data);
         var data2 = [...data];
-        sortEntities(data2);
-        //console.log(data2);
+        //sortEntities(data2);
+        console.log(data2);
         processEntities(data2);
+        chrome.runtime.sendMessage({
+            data: DATA_LOADED
+        });
     }).catch(e => console.log(e));
 }
 
@@ -203,6 +209,7 @@ function sortEntities(data) {
             if (curr.entity.includes(compare.entity)) counts[curr.entity] += 1;
         }
     }
+    console.log(counts);
     data.sort((a, b) => {
         var diff = counts[b.entity] - counts[a.entity];
         return diff === 0 ? a.block - b.block : diff;

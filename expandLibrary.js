@@ -1,12 +1,14 @@
 EDICRATIC_HIGHLIGHTED_TEXT_CLASS = 'edicratic-highlighted-text-class'
 TOOL_TIP_CLASSNAME = 'edicratic-add-library-tooltip'
-TOOL_TIP_TEXT_CLASSNAME = 'tooltiptext';
+TOOL_TIP_TEXT_CLASSNAME_TOP = 'tooltiptext-top';
+TOOL_TIP_TEXT_CLASSNAME_BOTTOM = 'tooltiptext-bottom'
 CHECK_CLASS_NAME = 'fa fa-check fa-2x edicratic-yes';
 X_CLASS_NAME = 'fa fa-times fa-2x edicratic-no';
 
 function analyzeTextForSending() {
     if(!window.getSelection) return;
     if(window.getSelection().toString() === '') return;
+    closeAllTooltips();
     const range = window.getSelection().getRangeAt(0);
     let text = window.getSelection().toString();
     const rect = range.getBoundingClientRect()
@@ -15,12 +17,15 @@ function analyzeTextForSending() {
 
     let tooltip = document.createElement('span');
     tooltip.className = TOOL_TIP_CLASSNAME;
-    tooltip.innerHTML = `<p class="${TOOL_TIP_TEXT_CLASSNAME}">Do you want us to look up this highlighted text for you?</p><br/><br/><i class="${X_CLASS_NAME}"></i><i class="${CHECK_CLASS_NAME}"></i></p>`
+    tooltip.innerHTML = `<p class="${TOOL_TIP_TEXT_CLASSNAME_TOP}">Do you want us to look up this highlighted text for you?</p><br/><br/><i class="${X_CLASS_NAME}"></i><i class="${CHECK_CLASS_NAME}"></i></p>`
     tooltip.setAttribute('data-content', text);
-    tooltip.style.width = `${rect.right - rect.left}px`
-    tooltip.style.top = `${window.pageYOffset + rect.top - 60}px`;
-    tooltip.style.left = `${rect.left}px`
     document.body.prepend(tooltip);
+    let paragraph = tooltip.children[0];
+    var onBottom = rect.top >= tooltip.clientHeight ;
+    tooltip.style.width = `${rect.right - rect.left}px`
+    tooltip.style.top = onBottom ? `${window.pageYOffset + rect.top - tooltip.clientHeight - 20}px` : `${window.pageYOffset + rect.bottom + 30}px`;
+    tooltip.style.left = `${rect.left}px`
+    if(onBottom) paragraph.classList.replace(TOOL_TIP_TEXT_CLASSNAME_TOP, TOOL_TIP_TEXT_CLASSNAME_BOTTOM);
     let x = document.getElementsByClassName(X_CLASS_NAME)[0];
     let check = document.getElementsByClassName(CHECK_CLASS_NAME)[0];
     x.onclick = (e) => {
@@ -39,7 +44,21 @@ function analyzeTextForSending() {
 function removeHighlightedSpans() {
     window.getSelection().removeAllRanges();
     remove(document.getElementsByClassName(TOOL_TIP_CLASSNAME));
+}
 
+function checkAndRemoveSpans(e) {
+    let element = e.toElement;
+    if (element.className !== TOOL_TIP_CLASSNAME && element.parentElement.className !== TOOL_TIP_CLASSNAME) {
+        window.getSelection().removeAllRanges();
+        closeAllTooltips();
+    }
+}
+
+function closeAllTooltips() {
+    let tooltips = document.getElementsByClassName(TOOL_TIP_CLASSNAME);
+    for (var i = 0; i < tooltips.length; i++) {
+        tooltips[i].parentElement.removeChild(tooltips[i]);
+    }
 }
 
 function remove(collection) {
@@ -81,11 +100,13 @@ async function lookUpTerm(term) {
     Object.keys(pages).forEach(key => {
         if(key) matches.push(pages[key]);
     })
+    matches.sort((a,b) => a.index - b.index);
     // console.log(matches);
     var pairs = {};
     pairs[term] = matches;
     //console.log(pairs);
     // console.log([pairs]);
+    console.log(pairs);
    init([pairs]);
     
 }

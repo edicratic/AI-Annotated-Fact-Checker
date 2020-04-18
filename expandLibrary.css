@@ -4,7 +4,7 @@
 .edicratic-add-library-tooltip {
     display: inline-block !important;
     border-bottom: 1px black !important;
-    position: relative !important;
+    position: absolute!important;
     background-color: darkgray;
     height: auto;
     min-width: 100px;
@@ -14,7 +14,7 @@
     z-index: 100000;
 }
 
-.edicratic-add-library-tooltip .tooltiptext {
+.edicratic-add-library-tooltip .tooltiptext-top {
     color: black !important;
     text-align: center;
     padding: 1rem;
@@ -35,7 +35,31 @@
     padding: 0 !important;
   }
 
-.edicratic-add-library-tooltip .tooltiptext::after {
+.edicratic-add-library-tooltip .tooltiptext-top::after {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -10px;
+    border-width: 10px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+  }
+
+  .edicratic-add-library-tooltip .tooltiptext-bottom {
+    color: black !important;
+    text-align: center;
+    padding: 1rem;
+    border-radius: 6px;
+
+    font-size: 1vw !important;
+    font-weight: normal !important;
+    font-family: 'Times New Roman' !important;
+    font-style: normal !important;
+    line-height: normal !important;
+  }
+
+  .edicratic-add-library-tooltip .tooltiptext-bottom::after {
     content: "";
     position: absolute;
     top: 100%;
@@ -45,6 +69,9 @@
     border-style: solid;
     border-color: #555 transparent transparent transparent;
   }
+
+
+
 
 .edicratic-yes {
     padding: 0.2rem;
