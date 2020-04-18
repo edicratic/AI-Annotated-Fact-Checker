@@ -14,6 +14,17 @@
         <div class="ui segment edicratic-segment">
           <p><i class="info circle icon"></i><a class="edicratic-option">How It Works</a></p>
         </div>
+        <div class="ui segment edicratic-segment">
+            <div style="display:inline">
+            <div class="ui toggle checkbox">
+                <i id ="info-icon-edicratic" class="question circle icon popup">
+                    <span class="popuptext" id="myPopup">Quickly look up words by highlighting them!</span>
+                </i>
+                <label class="edicratic-option">Auto Lookup</label>
+                <input checked="checked" id="enable-quick-look-up" type="checkbox" name="example">
+              </div>
+              </p>
+          </div>
       </div>
       <div id="changeColor" class="button">
         <i class="edit icon"></i>WebCheck This
@@ -43,7 +54,7 @@
 
     }
     .button {
-        margin-top: -1rem;
+        margin-top: -2rem;
         border: none;
         float: right;
         display: inline-block;
@@ -83,6 +94,47 @@
     .inner-link {
         color: #0645ad;
     }
+    /* Popup container */
+.popup {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+/* The actual popup (appears on top) */
+.popup .popuptext {
+  visibility: hidden;
+  width: 160px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px 0;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 10%;
+  /* margin-left: -80px; */
+}
+/* Toggle this class when clicking on the popup container (hide and show the popup) */
+.popup .show {
+  visibility: visible;
+  -webkit-animation: fadeIn 1s;
+  animation: fadeIn 1s
+}
+
+/* Add animation (fade in the popup) */
+@-webkit-keyframes fadeIn {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+
+@keyframes fadeIn {
+  from {opacity: 0;}
+  to {opacity:1 ;}
+}
 </style>
 <script src="extensionbox.js"></script>
+<script src="https://code.jquery.com/jquery-3.1.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
 
