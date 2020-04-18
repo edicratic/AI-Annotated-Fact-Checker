@@ -4,11 +4,14 @@ TOOL_TIP_TEXT_CLASSNAME_TOP = 'tooltiptext-top';
 TOOL_TIP_TEXT_CLASSNAME_BOTTOM = 'tooltiptext-bottom'
 CHECK_CLASS_NAME = 'fa fa-check fa-2x edicratic-yes';
 X_CLASS_NAME = 'fa fa-times fa-2x edicratic-no';
+//Chris, modify this as you please
+NUMBER_OF_CHARCATERS_IN_PARAGRAPH = 500;
 
 function analyzeTextForSending() {
     if(!window.getSelection) return;
     if(window.getSelection().toString() === '') return;
     closeAllTooltips();
+    let node = window.getSelection().anchorNode;
     const range = window.getSelection().getRangeAt(0);
     let text = window.getSelection().toString();
     const rect = range.getBoundingClientRect()
@@ -35,6 +38,7 @@ function analyzeTextForSending() {
     };
     check.onclick = (e) => {
         e.preventDefault();
+        sendBackData(node, text);
         lookUpTerm(text);
         clearSelection();
         removeHighlightedSpans();
@@ -70,6 +74,14 @@ function remove(collection) {
 function clearSelection() {
     console.log("removing");
     window.getSelection().removeAllRanges();
+}
+
+function sendBackData(paragraph, text) {
+    while(paragraph.textContent.length < NUMBER_OF_CHARCATERS_IN_PARAGRAPH) {
+        paragraph = paragraph.parentElement;
+    }
+    console.log(paragraph);
+    //Chris send back data for analysis here
 }
 
 async function lookUpTerm(term) {
