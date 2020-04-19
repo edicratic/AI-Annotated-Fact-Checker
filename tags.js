@@ -338,6 +338,14 @@ function adjustSpansBasedOnHeight() {
             id = id.substring(0, id.indexOf('-'));
             let distance = isSticky ? getPosition(anchor).y : getPosition(anchor).y - window.pageYOffset;
             let expanded = textIsShown(span);
+
+            //normalize for height
+            removeAllTextConstraints(span, id);
+            span.children[2].style.maxHeight = '';
+            span.children[2].style.minHeight = '';
+
+
+
             if (distance <= span.clientHeight) {
                 span.style.top = `${y}px`;
                 onTop[id] = false;
@@ -349,11 +357,8 @@ function adjustSpansBasedOnHeight() {
                     }
                 } 
             } else {
-                span.children[2].style.minHeight = '';
                 span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
                 onTop[id] = true;
-                span.children[2].style.maxHeight = '';
-                removeAllTextConstraints(span, id);
             }
          }
     }
