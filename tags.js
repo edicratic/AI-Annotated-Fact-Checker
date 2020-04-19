@@ -71,6 +71,10 @@ function modifyAllText(regex, link, entity, data, childList, set) {
             const length = nextList.length;
             var text = child.textContent || child.textContent;
             if (length === 0 && text !== "" && text !== undefined && checkMatch(text, entity, regex)) {
+                if (!noNearbyTags(child, regex)) {
+                    console.log(entity);
+                    return;
+                }
                 child.innerText = "";
                 var uniqueId = "d" + i + Math.floor(Math.random() * 1000000);
                 text = text.replace(regex, `<div id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text.match(regex)}</div>`);
@@ -487,6 +491,30 @@ function checkMatch(text, entity, regex) {
     let nextCharacter = first[matchArray.index + matchArray[0].length];
     if (!previousCharacter && !nextCharacter) return true;
     return first.includes(second) && (!previousCharacter || !previousCharacter.match(/[a-z\-]/i)) && (!nextCharacter || !nextCharacter.match(/[a-z\-]/i));
+}
+
+function noNearbyTags(child, regex) {
+    let previousChild = child;
+    while(child.textContent && child.textContent.length < 300) {
+        previousChild = child;
+        child = child.parentElement;
+    }
+    if(!child.textContent) child = previousChild;
+    if (child.textContent.length > 400) child == previousChild;
+    if (child.nodeName[0] === '#') return true;
+    let noMatches = true;
+    let matchingTags = child.getElementsByClassName(ANCHOR_CLASS_NAME);
+    if(!matchingTags) return true;
+    for(var i = 0; i < matchingTags.length; i++) {
+        let text = matchingTags[i].innerText || matchingTags[i].textContent;
+        if (regex.test(text)) {
+            console.log(regex);
+            console.log(text);
+            noMatches = false;
+            break;
+        }
+    }
+    return noMatches;
 }
 
 function handleMouseMove(e) {
