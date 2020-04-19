@@ -207,12 +207,15 @@ function makePostRequest() {
             'Content-Type': 'application/json',
         }
     }).then(res => res.json()).then(data => {
-        spinner.style.display = "none";
         //console.log(data);
         var data2 = [...data];
         //sortEntities(data2);
         console.log(data2);
         processEntities(data2);
+        setTimeout(function () {
+            //feel free to mess around with timer
+            spinner.style.display = "none";
+        }, 4000);
         chrome.runtime.sendMessage({
             data: DATA_LOADED
         });
