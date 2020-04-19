@@ -140,8 +140,14 @@ function mouseOverHandle(e, id) {
         span.style.display = 'block';
         let expanded = textIsShown(span);
 
+        //normalize for height
+        removeAllTextConstraints(span, id);
+        span.children[2].style.maxHeight = '';
+        span.children[2].style.minHeight = '';
+
+
         let distance = isSticky ? getPosition(anchor).y : getPosition(anchor).y - window.pageYOffset;
-        if (distance <= span.clientHeight) {
+        if (distance <= span.clientHeight - 20) {
             span.style.top = `${y}px`;
             onTop[id] = false;
             if(!expanded) {
@@ -152,11 +158,8 @@ function mouseOverHandle(e, id) {
                 }
             } 
         } else {
-            span.children[2].style.minHeight = '';
             span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
             onTop[id] = true;
-            span.children[2].style.maxHeight = '';
-            removeAllTextConstraints(span, id);
         }
     }
 }
