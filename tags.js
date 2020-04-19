@@ -215,7 +215,7 @@ function makePostRequest() {
         setTimeout(function () {
             //feel free to mess around with timer
             spinner.style.display = "none";
-        }, 4000);
+        }, 1000);
         chrome.runtime.sendMessage({
             data: DATA_LOADED
         });
