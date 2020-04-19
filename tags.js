@@ -12,6 +12,7 @@ OPEN_SPAN = undefined;
 DATA_LOADED = 'DATA_LOADED'
 BUTTON_PRESSED = 'BUTTON_PRESSED';
 
+sendBackUrl(location.href);
 document.body.onscroll = (e) => adjustSpansBasedOnHeight();
 if(sendVal) {
     document.body.onmouseup =(e) => analyzeTextForSending();
@@ -552,4 +553,8 @@ function determineSticky(el) {
         el = el.parentElement;
     }
     return false;
+}
+
+function sendBackUrl(url) {
+    
 }
