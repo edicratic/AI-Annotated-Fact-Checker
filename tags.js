@@ -12,17 +12,35 @@ OPEN_SPAN = undefined;
 DATA_LOADED = 'DATA_LOADED'
 BUTTON_PRESSED = 'BUTTON_PRESSED';
 
+sendBackUrl(location.href);
 document.body.onscroll = (e) => adjustSpansBasedOnHeight();
-document.body.onmouseup =(e) => analyzeTextForSending();
-document.body.onmousedown = (e) => checkAndRemoveSpans(e);
+if(sendVal) {
+    document.body.onmouseup =(e) => analyzeTextForSending();
+    document.body.onmousedown = (e) => checkAndRemoveSpans(e);
+}
 document.body.onmousemove = e => handleMouseMove(e);
-chrome.runtime.onMessage.addListener(function(auth, sender, sendResponse){
-  if (auth.isAuth){
-    makePostRequest(auth);
-  }else{
-   //TODO display something
-  }
-});
+
+chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse) {
+      if( request.message === "checkHighlight" ) {
+          console.log(request);
+          if(request.enable) {
+            document.body.onmouseup =(e) => analyzeTextForSending();
+            document.body.onmousedown = (e) => checkAndRemoveSpans(e);
+          } else {
+            document.body.onmouseup = undefined;
+            document.body.onmousedown = undefined;
+          }
+
+        }
+    }else if (request.message === "authCredentials"){
+      if (request.isAuth){
+        makePostRequest(auth);
+      }else{
+      //TODO display something
+      }
+    }
+  );
 
 function init(data) {
     data.forEach((obj) => {
@@ -59,6 +77,10 @@ function modifyAllText(regex, link, entity, data, childList, set) {
             const length = nextList.length;
             var text = child.textContent || child.textContent;
             if (length === 0 && text !== "" && text !== undefined && checkMatch(text, entity, regex)) {
+                if (!noNearbyTags(child, regex)) {
+                    console.log(entity);
+                    return;
+                }
                 child.innerText = "";
                 var uniqueId = "d" + i + Math.floor(Math.random() * 1000000);
                 text = text.replace(regex, `<div id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text.match(regex)}</div>`);
@@ -124,8 +146,14 @@ function mouseOverHandle(e, id) {
         span.style.display = 'block';
         let expanded = textIsShown(span);
 
+        //normalize for height
+        removeAllTextConstraints(span, id);
+        span.children[2].style.maxHeight = '';
+        span.children[2].style.minHeight = '';
+
+
         let distance = isSticky ? getPosition(anchor).y : getPosition(anchor).y - window.pageYOffset;
-        if (distance <= span.clientHeight) {
+        if (distance <= span.clientHeight - 20) {
             span.style.top = `${y}px`;
             onTop[id] = false;
             if(!expanded) {
@@ -136,11 +164,8 @@ function mouseOverHandle(e, id) {
                 }
             }
         } else {
-            span.children[2].style.minHeight = '';
             span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
             onTop[id] = true;
-            span.children[2].style.maxHeight = '';
-            removeAllTextConstraints(span, id);
         }
     }
 }
@@ -188,12 +213,15 @@ function makePostRequest(auth) {
             'Content-Type': 'application/json',
         }
     }).then(res => res.json()).then(data => {
-        spinner.style.display = "none";
         //console.log(data);
         var data2 = [...data];
         //sortEntities(data2);
         console.log(data2);
         processEntities(data2);
+        setTimeout(function () {
+            //feel free to mess around with timer
+            spinner.style.display = "none";
+        }, 1000);
         chrome.runtime.sendMessage({
             data: DATA_LOADED
         });
@@ -319,6 +347,14 @@ function adjustSpansBasedOnHeight() {
             id = id.substring(0, id.indexOf('-'));
             let distance = isSticky ? getPosition(anchor).y : getPosition(anchor).y - window.pageYOffset;
             let expanded = textIsShown(span);
+
+            //normalize for height
+            removeAllTextConstraints(span, id);
+            span.children[2].style.maxHeight = '';
+            span.children[2].style.minHeight = '';
+
+
+
             if (distance <= span.clientHeight) {
                 span.style.top = `${y}px`;
                 onTop[id] = false;
@@ -330,11 +366,8 @@ function adjustSpansBasedOnHeight() {
                     }
                 }
             } else {
-                span.children[2].style.minHeight = '';
                 span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
                 onTop[id] = true;
-                span.children[2].style.maxHeight = '';
-                removeAllTextConstraints(span, id);
             }
          }
     }
@@ -477,6 +510,30 @@ function checkMatch(text, entity, regex) {
     return first.includes(second) && (!previousCharacter || !previousCharacter.match(/[a-z\-]/i)) && (!nextCharacter || !nextCharacter.match(/[a-z\-]/i));
 }
 
+function noNearbyTags(child, regex) {
+    let previousChild = child;
+    while(child.textContent && child.textContent.length < 300) {
+        previousChild = child;
+        child = child.parentElement;
+    }
+    if(!child.textContent) child = previousChild;
+    if (child.textContent.length > 400) child == previousChild;
+    if (child.nodeName[0] === '#') return true;
+    let noMatches = true;
+    let matchingTags = child.getElementsByClassName(ANCHOR_CLASS_NAME);
+    if(!matchingTags) return true;
+    for(var i = 0; i < matchingTags.length; i++) {
+        let text = matchingTags[i].innerText || matchingTags[i].textContent;
+        if (regex.test(text)) {
+            console.log(regex);
+            console.log(text);
+            noMatches = false;
+            break;
+        }
+    }
+    return noMatches;
+}
+
 function handleMouseMove(e) {
     const element = e.target;
     const elementParent = e.target.parentElement;
@@ -501,4 +558,8 @@ function determineSticky(el) {
         el = el.parentElement;
     }
     return false;
+}
+
+function sendBackUrl(url) {
+    
 }

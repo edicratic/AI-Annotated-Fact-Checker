@@ -7,7 +7,7 @@ const VALID_PAGE_HTML = 'extensionbox.html';
 const DATA_LOADED = 'DATA_LOADED';
 const BUTTON_PRESSED = 'BUTTON_PRESSED';
 const ALREADY_CHECKED = 'ALREADY_CHECKED';
-localStorage['isLoaded'] = false;
+localStorage['isLoadedEdicratic'] = false;
 
 const INVALID_SEARCH_URLS = [
     // 'www.facebook.com/',
@@ -18,10 +18,10 @@ checkCurrentPage();
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     if(message.data === DATA_LOADED) {
-        localStorage['isLoaded'] = true;
+        localStorage['isLoadedEdicratic'] = true;
         window.close();
     } else if (message.data === ALREADY_CHECKED) {
-        localStorage['isLoaded'] = true;
+        localStorage['isLoadedEdicratic'] = true;
         load(true);
     }
 });
@@ -40,7 +40,7 @@ function checkCurrentPage() {
 }
 
 function load(isValidPage) {
-    localStorage['valid'] = isValidPage;
+    localStorage['validEdicratic'] = isValidPage;
     document.body.innerHTML = `<object type="text/html" data="${VALID_PAGE_HTML}"></object>`;
 }
 
@@ -48,6 +48,5 @@ function evaluatePageForChecked() {
     chrome.tabs.query({active: true, currentWindow: true}, function(arrayOfTabs) {
         var activeTab = arrayOfTabs[0];
         chrome.tabs.executeScript(activeTab.id, {file: "checker.js"});
-        console.log(localStorage['isLoaded'])
     });
 }

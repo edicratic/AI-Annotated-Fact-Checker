@@ -1,24 +1,63 @@
+QUICK_LOOK_UP_ENABLED = 'edicratic-quick-look-up-enabled';
 let changeColor = document.getElementById('changeColor');
 let check = document.getElementById('edicratic-check');
 let invalidMessage = document.getElementById('edicratic-invalid');
-if (localStorage['isLoaded'] === 'true') {
+let icon = document.getElementById('info-icon-edicratic');
+let checkBox = document.getElementById("enable-quick-look-up");
+let isQuickLookUpEnabled = localStorage[QUICK_LOOK_UP_ENABLED];
+let sendVal = isQuickLookUpEnabled === 'true' || isQuickLookUpEnabled === undefined;
+updateBox(checkBox);
+checkBox.onclick = () => handleCheckBoxClick();
+icon.addEventListener("mouseover", (e) => {
+    let popup = document.getElementById("myPopup");
+    popup.classList.toggle("show");
+});
+if (localStorage['isLoadedEdicratic'] === 'true') {
     check.style.display = "";
     changeColor.style.display = "none";
 } else {
     check.style.display = "none";
 }
-var isValid = localStorage['valid'];
+var isValid = localStorage['validEdicratic'];
 if (isValid === 'true') {
     invalidMessage.style.display = 'none';
 } else {
     changeColor.style.display = 'none';
 }
 
+function handleCheckBoxClick() {
+    let val = localStorage['edicratic-quick-look-up-enabled'];
+    let enable = undefined;
+    if (!val || val === 'true') {
+        localStorage['edicratic-quick-look-up-enabled'] = false;
+        enable = false;
+    } else {
+        localStorage['edicratic-quick-look-up-enabled'] = true;
+        enable = true;
+    }
+    chrome.tabs.query({currentWindow: true, active: true}, function (tabs){
+        var activeTab = tabs[0];
+        chrome.tabs.sendMessage(activeTab.id, {"message": "checkHighlight", "enable": enable});
+    });
+}
+
+function updateBox(checkBox) {
+    let val = localStorage['edicratic-quick-look-up-enabled'];
+    let enable = undefined;
+    if (!val || val === 'true') {
+        checkBox.checked = true;
+        enable = true;
+    } else {
+        checkBox.checked = false;
+        enable = false;
+    }
+}
+
 function secureWebCheck(element, callback){
   chrome.identity.getAuthToken({
    interactive: true
  }, function(token) {
-   auth = {type:"Google", token: token, isAuth: true}
+   auth = {type:"Google", token: token, isAuth: true, message:"authCredentials"}
    if (chrome.runtime.lastError) {
      //TODO handle failure to authenticate
      //Tell the user something went wrong
@@ -63,10 +102,14 @@ function performWebCheck(element, auth){
       chrome.tabs.insertCSS(specTab.id, {file: 'expandLibrary.css'});
       chrome.tabs.executeScript(specTab.id, {file: 'fontawesome.js'}, () => console.log("DONE"));
       chrome.tabs.executeScript(specTab.id, {file: 'expandLibrary.js'}, () => console.log("DONE"));
-      chrome.tabs.executeScript(specTab.id, {file: 'tags.js'}, () => {
-        chrome.tabs.sendMessage(specTab.id, auth);
-        console.log("sentMessage");
-      });
+      chrome.tabs.executeScript(specTab.id, {
+            code: 'var sendVal = ' + JSON.stringify(sendVal)
+        }, function() {
+            chrome.tabs.executeScript(specTab.id, {file: 'tags.js'}, () => {
+              chrome.tabs.sendMessage(specTab.id, auth);
+              console.log("sentMessage");
+           });
+        });
       changeColor.style.display = "none"
       check.style.display = "";
       window.close();
