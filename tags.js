@@ -20,7 +20,6 @@ if(sendVal) {
 }
 document.body.onmousemove = e => handleMouseMove(e);
 
-
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
       if( request.message === "checkHighlight" ) {
@@ -34,9 +33,15 @@ chrome.runtime.onMessage.addListener(
           }
 
         }
+    }else if (request.message === "authCredentials"){
+      if (request.isAuth){
+        makePostRequest(auth);
+      }else{
+      //TODO display something
+      }
     }
   );
-makePostRequest();
+
 function init(data) {
     data.forEach((obj) => {
         let entity = Object.keys(obj)[0];
@@ -157,7 +162,7 @@ function mouseOverHandle(e, id) {
                 if (isOverflown(span.children[2])) {
                     createIconShowMore(span);
                 }
-            } 
+            }
         } else {
             span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
             onTop[id] = true;
@@ -194,12 +199,12 @@ function isOverLap(span, anchor, x, y, id) {
 
 }
 
-function makePostRequest() {
+function makePostRequest(auth) {
     const spinner = document.createElement('div');
     spinner.className = "loading";
     spinner.classList.add('loading-edicratic');
     document.body.appendChild(spinner);
-    let data = {"blob": document.body.innerText.substring(0, 50000), sort: true};
+    let data = {"blob": document.body.innerText.substring(0, 50000), sort: true, auth: auth};
     console.log(JSON.stringify(data));
     fetch(POST_URL, {
         method: "POST",
@@ -314,7 +319,7 @@ function arrowClick(e, isLeft) {
         if (isOverflown(span.children[2])) {
             span.children[2].style.paddingBottom = '';
             createIconShowMore(span);
-        } 
+        }
         let arr = e.toElement;
         let offset = arr.offsetParent.clientHeight - arr.offsetTop - arr.clientHeight;
         arr.style.marginTop = `${offset}px`;
@@ -359,7 +364,7 @@ function adjustSpansBasedOnHeight() {
                     if (isOverflown(span.children[2])) {
                         createIconShowMore(span);
                     }
-                } 
+                }
             } else {
                 span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
                 onTop[id] = true;
