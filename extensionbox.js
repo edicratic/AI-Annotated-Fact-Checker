@@ -94,7 +94,6 @@ function secureWebCheck(element, callback){
 }
 
 function performWebCheck(element, auth){
-  console.log(auth);
   chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
       var specTab = tabs[0];;
       chrome.tabs.insertCSS(specTab.id, {file: 'tags.css'});
@@ -107,7 +106,6 @@ function performWebCheck(element, auth){
         }, function() {
             chrome.tabs.executeScript(specTab.id, {file: 'tags.js'}, () => {
               chrome.tabs.sendMessage(specTab.id, auth);
-              console.log("sentMessage");
            });
         });
       changeColor.style.display = "none"

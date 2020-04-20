@@ -12,18 +12,17 @@ OPEN_SPAN = undefined;
 DATA_LOADED = 'DATA_LOADED'
 BUTTON_PRESSED = 'BUTTON_PRESSED';
 
-sendBackUrl(location.href);
 document.body.onscroll = (e) => adjustSpansBasedOnHeight();
-if(sendVal) {
-    document.body.onmouseup =(e) => analyzeTextForSending();
-    document.body.onmousedown = (e) => checkAndRemoveSpans(e);
-}
-document.body.onmousemove = e => handleMouseMove(e);
 
+if(sendVal){
+  document.body.onmouseup =(e) => analyzeTextForSending();
+  document.body.onmousedown = (e) => checkAndRemoveSpans(e);
+}
+
+document.body.onmousemove = e => handleMouseMove(e);
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
       if( request.message === "checkHighlight" ) {
-          console.log(request);
           if(request.enable) {
             document.body.onmouseup =(e) => analyzeTextForSending();
             document.body.onmousedown = (e) => checkAndRemoveSpans(e);
@@ -31,16 +30,15 @@ chrome.runtime.onMessage.addListener(
             document.body.onmouseup = undefined;
             document.body.onmousedown = undefined;
           }
-
-        }
     }else if (request.message === "authCredentials"){
       if (request.isAuth){
-        makePostRequest(auth);
+        sendBackUrl(location.href);
+        makePostRequest(request);
       }else{
       //TODO display something
       }
     }
-  );
+  });
 
 function init(data) {
     data.forEach((obj) => {
@@ -561,5 +559,5 @@ function determineSticky(el) {
 }
 
 function sendBackUrl(url) {
-    
+
 }
