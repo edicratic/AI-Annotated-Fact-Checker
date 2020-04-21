@@ -42,12 +42,14 @@ function handleFeedbackButtonClick() {
     let text = textAreaFeedback.value;
     console.log(currentUrl);
     console.log(text);
+    //Add endpoint here :)
     removeModal();
 }
 
 function removeModal() {
     let feedbackModal = document.getElementById(MODAL);
     feedbackModal.parentElement.removeChild(feedbackModal);
+    document.body.removeEventListener('mousedown', checkForModalClose);
 }
 
 function checkForModalClose(e) {
