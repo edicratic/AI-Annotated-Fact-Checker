@@ -7,6 +7,7 @@ const VALID_PAGE_HTML = 'extensionbox.html';
 const DATA_LOADED = 'DATA_LOADED';
 const BUTTON_PRESSED = 'BUTTON_PRESSED';
 const ALREADY_CHECKED = 'ALREADY_CHECKED';
+const MODAL_OPENED = 'MODAL_OPENED';
 localStorage['isLoadedEdicratic'] = false;
 
 const INVALID_SEARCH_URLS = [
@@ -23,6 +24,8 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     } else if (message.data === ALREADY_CHECKED) {
         localStorage['isLoadedEdicratic'] = true;
         load(true);
+    } else if(message.data === MODAL_OPENED) {
+        window.close();
     }
 });
 

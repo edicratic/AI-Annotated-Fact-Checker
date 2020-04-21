@@ -2,15 +2,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.1.8/components/icon.min.css">
 </head>
 
+<body class="top">
 <div class="ui raised very padded text container segment parent">
     <div class="edicratic-header-block">
         <img class="ui left floated circular image" src="/images/logo48.png">
         <h2 class="right floated ui header edicratic-header">WebCheck AI</h2>
       </div>
       <div class="ui segments">
-        <div class="ui segment edicratic-segment">
-          <p><i class="lock icon"></i><a class="edicratic-option">Login</a></p>
-        </div>
         <div class="ui segment edicratic-segment">
           <p><i class="info circle icon"></i><a class="edicratic-option">How It Works</a></p>
         </div>
@@ -25,6 +23,9 @@
               </div>
               </p>
           </div>
+          <div class="ui segment edicratic-segment last-segment">
+            <p><i class="bug icon"></i><a id="edicratic-bug-report" class="edicratic-option">Anything Wrong?</a></p>
+          </div>
       </div>
       <div id="changeColor" class="button">
         <i class="edit icon"></i>WebCheck This
@@ -34,7 +35,11 @@
         </h2>
       <i id="edicratic-check" class="green big check icon edicratic-check"></i>
 </div>
+</body>
 <style>
+  .top {
+    overflow: hidden;
+  }
     .edicratic-header-block {
         display: flex;
     }

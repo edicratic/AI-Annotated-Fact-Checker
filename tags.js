@@ -219,7 +219,7 @@ function makePostRequest(auth) {
         setTimeout(function () {
             //feel free to mess around with timer
             spinner.style.display = "none";
-        }, 1000);
+        }, 3000);
         chrome.runtime.sendMessage({
             data: DATA_LOADED
         });
