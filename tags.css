@@ -252,11 +252,20 @@
   }
 
 /*media queries*/
-  @media screen and (max-width: 992px) {
-    .edicratic-tooltip .edicratic-paragraph-classname {
-      font-size: 2vw !important;
-    }
-    .edicratic-tooltip {
-      font-size: 2vw !important;
-    }
+@media screen and (max-width: 992px) {
+  .edicratic-tooltip .edicratic-paragraph-classname {
+    font-size: 1.7vw !important;
   }
+  .edicratic-tooltip {
+    font-size: 1.7vw !important;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .edicratic-tooltip .edicratic-paragraph-classname {
+    font-size: 2.2vw !important;
+  }
+  .edicratic-tooltip {
+    font-size: 2.2vw !important;
+  }
+}

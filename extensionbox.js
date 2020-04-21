@@ -4,10 +4,12 @@ let check = document.getElementById('edicratic-check');
 let invalidMessage = document.getElementById('edicratic-invalid');
 let icon = document.getElementById('info-icon-edicratic');
 let checkBox = document.getElementById("enable-quick-look-up");
+let bugReport = document.getElementById('edicratic-bug-report');
 let isQuickLookUpEnabled = localStorage[QUICK_LOOK_UP_ENABLED];
 let sendVal = isQuickLookUpEnabled === 'true' || isQuickLookUpEnabled === undefined;
 updateBox(checkBox);
 checkBox.onclick = () => handleCheckBoxClick();
+bugReport.onclick = () => handleBugReport();
 icon.addEventListener("mouseover", (e) => {
     let popup = document.getElementById("myPopup");
     popup.classList.toggle("show");
@@ -114,4 +116,15 @@ function performWebCheck(element, auth){
   });
 }
 
+function handleBugReport() {
+  chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
+    var specTab = tabs[0];
+    chrome.tabs.insertCSS(specTab.id, {file: 'bugReport.css'});
+    chrome.tabs.executeScript(specTab.id, {file: 'bugReport.js'}, () => console.log("DONE"));
+
+  });
+
+}
+
 changeColor.onclick = (element) => secureWebCheck(element, performWebCheck);
+
