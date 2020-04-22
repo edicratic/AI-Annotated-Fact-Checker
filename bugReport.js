@@ -7,14 +7,14 @@ createModal();
 function createModal() {
     if(!document.getElementById(MODAL)) {
         let div = document.createElement('div');
-        div.className = 'modal';
+        div.className = 'edicratic-modal';
         div.id = MODAL;
         div.innerHTML = `
             <span id="close-icon" class="close">&times;</span>
             <img id='logo-id' class="edicratic-logo">
             <h2 class="modal-header-2">Bug Report</h2>
             <hr/>
-    <div class="modal-body">
+    <div class="modal-body-edicratic">
         <textarea id="feedback-edicratic-text" placeholder="Please let us know what problems you are experiencing here." class="edicratic-textarea"></textarea>
         <p class="edicratic-text-style">Thank you for your feedback! Users like you motivate our developers.</p>
         <div id="edicratic-feedback-button" class="edicratic-button">Submit Report</div>
@@ -57,8 +57,8 @@ function checkForModalClose(e) {
     if(!elementFirst) return;
     let parentElement = e.target.parentElement;
     if(!parentElement) return;
-    if(parentElement.className !== 'modal-body' && parentElement.className !== 'modal' &&
-    elementFirst.className !== 'modal-body' && elementFirst.className !== 'modal') {
+    if(parentElement.className !== 'modal-body-edicratic' && parentElement.className !== 'edicratic-modal' &&
+    elementFirst.className !== 'modal-body-edicratic' && elementFirst.className !== 'edicratic-modal') {
         removeModal();
     }
 
