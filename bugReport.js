@@ -15,8 +15,8 @@ function createModal() {
             <h2 class="modal-header-2">Bug Report</h2>
             <hr/>
     <div class="modal-body-edicratic">
-        <textarea id="feedback-edicratic-text" placeholder="Please let us know what problems you are experiencing here." class="edicratic-textarea"></textarea>
-        <p class="edicratic-text-style">Thank you for your feedback! Users like you motivate our developers.</p>
+        <textarea id="feedback-edicratic-text" placeholder="Enter feedback here..." class="edicratic-textarea"></textarea>
+        <h4 class="edicratic-text-style">Thank you for your feedback! Users like you motivate our developers.</h4>
         <div id="edicratic-feedback-button" class="edicratic-button">Submit Report</div>
         <br/>
     </div>
