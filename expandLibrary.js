@@ -120,12 +120,13 @@ async function lookUpTerm(term) {
     // console.log([pairs]);
     console.log(pairs);
    init([pairs]);
-    
+
 }
 
 function fetchWiki(input) {
     return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({input, init}, messageResponse => {
+      let params = {method: "GET"}
+      chrome.runtime.sendMessage({input,params,init}, messageResponse => {
         //   console.log(messageResponse);
         const [response, error] = messageResponse;
         if (response === null) {

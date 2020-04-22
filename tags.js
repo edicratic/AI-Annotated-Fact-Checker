@@ -1,6 +1,6 @@
 ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
 TOOL_TIP_CLASS_NAME = 'edicratic-tooltip';
-POST_URL = 'https://webcheck-api.edicratic.com/';
+POST_URL = 'https://webcheck-api.edicratic.com/process';
 INNER_LINK = 'inner-link';
 SHOW_MORE_ICON_CLASS = "show-more fa fa-angle-down fa-3x";
 SHOW_LESS_ICON_CLASS = "show-more fa fa-angle-up fa-3x";
@@ -197,6 +197,31 @@ function isOverLap(span, anchor, x, y, id) {
 
 }
 
+function fetchWebCheck(input, params) {
+    console.log("hi");
+    console.log(input);
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({input,params}, messageResponse => {
+        //   console.log(messageResponse);
+        const [response, error] = messageResponse;
+        if (response === null) {
+          reject(error);
+        } else {
+          // Use undefined on a 204 - No Content
+          //TODO @ Yukt halp??
+          //response = JSON.parse(response.body);
+          //console.log(response);
+          //This is a bit hacky
+          const body = response.body ?  new Blob([response.body]) : undefined;
+          resolve(new Response(body, {
+            status: response.status,
+            statusText: response.statusText,
+          }));
+        }
+      });
+    });
+  }
+
 function makePostRequest(auth) {
     const spinner = document.createElement('div');
     spinner.className = "loading";
@@ -204,16 +229,20 @@ function makePostRequest(auth) {
     document.body.appendChild(spinner);
     let data = {"blob": document.body.innerText.substring(0, 50000), details: {sort: true, url: window.location.href}};
     console.log(JSON.stringify(data));
-    fetch(POST_URL + "process", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: {
-            'Content-Type': 'application/json',
-            "authorizationToken": auth["token"]
-        }
-    }).then(res => res.json()).then(data => {
-        //console.log(data);
-        var data2 = [...data];
+    fetchWebCheck(POST_URL,  {
+                      method: "POST",
+                      body: JSON.stringify({body: data}),
+                      //mode: 'cors',
+                      headers: {
+                          'Content-Type': 'application/json',
+                          "authorizationToken": auth["token"]
+    }}).then(result => result.json()).then(data =>{
+      //well so is thius hacky
+      if(data == undefined){
+        console.log("errr");
+      }else{
+        body = JSON.parse(data.body);
+        var data2 = [...body];
         //sortEntities(data2);
         console.log(data2);
         processEntities(data2);
@@ -224,7 +253,8 @@ function makePostRequest(auth) {
         chrome.runtime.sendMessage({
             data: DATA_LOADED
         });
-    }).catch(e => console.log(e));
+      }
+    });
 }
 
 function processEntities(entities) {

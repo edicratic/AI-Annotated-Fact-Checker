@@ -28,7 +28,10 @@ var url = 'https://accounts.google.com/o/oauth2/auth' +
 
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    fetch(request.input).then(function(response) {
+    console.log("hre");
+    console.log(request);
+    fetch(request.input, request.params).then(function(response) {
+      console.log("a response");
       return response.text().then(function(text) {
         sendResponse([{
           body: text,
@@ -37,6 +40,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         }, null]);
       });
     }, function(error) {
+      console.log("here?");
+      console.log(error);
       sendResponse([null, error]);
     });
     return true;

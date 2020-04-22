@@ -17,6 +17,7 @@
         "https://factcheck.edicratic.com/*",
         "https://webcheck.edicratic.com/*",
         "https://en.wikipedia.org/*",
+        "https://webcheck-api.edicratic.com/*",
 		    "http://*/*",
         "https://*/*",
         "storage",
