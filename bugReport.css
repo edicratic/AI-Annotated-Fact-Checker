@@ -55,7 +55,7 @@
     border-bottom: none !important;
     margin-top: 5% !important;
     color: #6f7287 !important;
-    line-height: 1.1rem !important;
+    line-height: normal !important;
     font-size: 1.5rem !important;
     padding-top: 2% !important;
   }
