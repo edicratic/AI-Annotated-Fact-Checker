@@ -238,6 +238,10 @@ function makePostRequest(auth) {
                           "authorizationToken": auth["token"]
     }}).then(result => result.json()).then(data =>{
       //well so is thius hacky
+      setTimeout(function () {
+          //feel free to mess around with timer
+          spinner.style.display = "none";
+      }, 3000);
       if(data == undefined){
         console.log("errr");
       }else{
@@ -246,10 +250,6 @@ function makePostRequest(auth) {
         //sortEntities(data2);
         console.log(data2);
         processEntities(data2);
-        setTimeout(function () {
-            //feel free to mess around with timer
-            spinner.style.display = "none";
-        }, 3000);
         chrome.runtime.sendMessage({
             data: DATA_LOADED
         });
