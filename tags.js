@@ -1,6 +1,6 @@
 ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
 TOOL_TIP_CLASS_NAME = 'edicratic-tooltip';
-POST_URL = 'https://factcheck.edicratic.com/';
+POST_URL = 'https://webcheck-api.edicratic.com/';
 INNER_LINK = 'inner-link';
 SHOW_MORE_ICON_CLASS = "show-more fa fa-angle-down fa-3x";
 SHOW_LESS_ICON_CLASS = "show-more fa fa-angle-up fa-3x";
@@ -202,13 +202,14 @@ function makePostRequest(auth) {
     spinner.className = "loading";
     spinner.classList.add('loading-edicratic');
     document.body.appendChild(spinner);
-    let data = {"blob": document.body.innerText.substring(0, 50000), sort: true, auth: auth};
+    let data = {"blob": document.body.innerText.substring(0, 50000), details: {sort: true, url: window.location.href}};
     console.log(JSON.stringify(data));
-    fetch(POST_URL, {
+    fetch(POST_URL + "process", {
         method: "POST",
         body: JSON.stringify(data),
         headers: {
             'Content-Type': 'application/json',
+            "authorizationToken": auth["token"]
         }
     }).then(res => res.json()).then(data => {
         //console.log(data);
