@@ -69,44 +69,43 @@ function updateBox(checkBox) {
 }
 
 function secureWebCheck(element, callback){
-  chrome.identity.launchWebAuthFlow(
-   {  'url': oauth_url,
-       'interactive':true
-   }, function(redirectedTo) {
-     if (chrome.runtime.lastError) {
-       //This is a tolerable failure.
-       console.log(chrome.runtime.lastError.message);
-       return;
+  chrome.identity.getAuthToken({
+   interactive: true
+ }, function(token) {
+   auth = {type:"Google", token: token, isAuth: true, message:"authCredentials"}
+   if (chrome.runtime.lastError) {
+     //TODO handle failure to authenticate
+     //Tell the user something went wrong
+     console.log(chrome.runtime.lastError.message);
+     return;
+   }
+   chrome.storage.local.get(['email'], (res) => {
+     console.log(Object.entries(res));
+     console.log(Object.entries(res).length);
+     console.log(Object.entries(res).length == 0);
+     if(chrome.runtime.lastError || Object.entries(res).length == 0){
+       var x = new XMLHttpRequest();
+       x.open('GET', 'https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=' + token);
+       x.onload = function() {
+         let response = JSON.parse(x.response);
+         chrome.storage.local.set({"email": response["email"], "first_name": response["given_name"]}, function() {
+           if(chrome.runtime.lastError){
+             auth["email"] = "failedToGet@mail.com";
+             callback(element,auth);
+             console.log("failed to write to localstorage ... what do we do?");
+           }else{
+             auth["email"] = response["email"];
+             callback(element,auth);
+           }
+         });
+       };
+       x.send();
+     }else{
+       auth["email"] = res.email
+       callback(element,auth);
      }
-     var token_response = redirectedTo.split('#', 2)[1];
-     var id_token = new URLSearchParams(token_response).get('id_token')
-
-     let auth = {type:"Google", token: id_token, isAuth: true, message:"authCredentials"}
-
-     chrome.storage.local.get(['email'], (res) => {
-       if(chrome.runtime.lastError || Object.entries(res).length == 0){
-         var x = new XMLHttpRequest();
-         x.open('GET', 'https://oauth2.googleapis.com/tokeninfo?id_token=' + id_token);
-         x.onload = function() {
-           let response = JSON.parse(x.response);
-           chrome.storage.local.set({"email": response["email"]}, function() {
-             if(chrome.runtime.lastError){
-               auth["email"] = "failedToGet@mail.com";
-               callback(element,auth);
-               console.log("failed to write to localstorage ... what do we do?");
-             }else{
-               auth["email"] = response["email"];
-               callback(element,auth);
-             }
-           });
-         };
-         x.send();
-       }else{
-         auth["email"] = res.email
-         callback(element,auth);
-       }
-     });
    });
+ });
 }
 
 function performWebCheck(element, auth){
@@ -141,4 +140,3 @@ function handleBugReport() {
 }
 
 changeColor.onclick = (element) => secureWebCheck(element, performWebCheck);
-
