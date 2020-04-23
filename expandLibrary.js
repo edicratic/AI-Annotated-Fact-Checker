@@ -4,10 +4,11 @@ TOOL_TIP_TEXT_CLASSNAME_TOP = 'tooltiptext-top';
 TOOL_TIP_TEXT_CLASSNAME_BOTTOM = 'tooltiptext-bottom'
 CHECK_CLASS_NAME = 'fa fa-check fa-2x edicratic-yes';
 X_CLASS_NAME = 'fa fa-times fa-2x edicratic-no';
+LOG_URL = "https://webcheck-api.edicratic.com/log"
 //Chris, modify this as you please
 NUMBER_OF_CHARCATERS_IN_PARAGRAPH = 500;
 
-function analyzeTextForSending() {
+function analyzeTextForSending(auth) {
     if(!window.getSelection) return;
     if(window.getSelection().toString() === '') return;
     closeAllTooltips();
@@ -38,7 +39,7 @@ function analyzeTextForSending() {
     };
     check.onclick = (e) => {
         e.preventDefault();
-        sendBackData(node, text);
+        sendBackData(auth, node, text);
         lookUpTerm(text);
         clearSelection();
         removeHighlightedSpans();
@@ -76,12 +77,18 @@ function clearSelection() {
     window.getSelection().removeAllRanges();
 }
 
-function sendBackData(paragraph, text) {
+function sendBackData(auth, paragraph, text) {
     while(paragraph.textContent.length < NUMBER_OF_CHARCATERS_IN_PARAGRAPH) {
         paragraph = paragraph.parentElement;
     }
-    console.log(paragraph);
-    //Chris send back data for analysis here
+    let body = {
+      type: "Annotation",
+      subject: text,
+      raw_annotated_html: paragraph,
+      url: window.location.href,
+      annotation_type: "missing"
+    }
+    sendData(auth, LOG_URL, body)
 }
 
 async function lookUpTerm(term) {
@@ -142,3 +149,31 @@ function fetchWiki(input) {
       });
     });
   }
+
+  function sendData(auth, url, body) {
+      return new Promise((resolve, reject) => {
+        params = {
+                  method: "POST",
+                  body: JSON.stringify({body: body}),
+                  headers: {
+                     'Content-Type': 'application/json',
+                     "authorizationToken": auth["token"]
+                 }
+               }
+        chrome.runtime.sendMessage({input: url,params}, messageResponse => {
+          //   console.log(messageResponse);
+          const [response, error] = messageResponse;
+          if (response === null) {
+            reject(error);
+          } else {
+            const body = response.body ?  new Blob([response.body]) : undefined;
+            resolve(new Response(body, {
+              status: response.status,
+              statusText: response.statusText,
+            }));
+          }
+        });
+      });
+    }
+
+//function sendAnnotation

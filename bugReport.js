@@ -1,10 +1,25 @@
 MODAL = 'edicratic-modal'
+LOG_URL = "https://webcheck-api.edicratic.com/log"
 MODAL_OPENED = 'MODAL_OPENED'
 document.body.addEventListener('mousedown', checkForModalClose);
-createModal();
 
 
-function createModal() {
+chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse) {
+      console.log(request);
+      if (request.message === "authCredentials"){
+        if (request.isAuth){
+          createModal(request);
+        }else{
+        //TODO display something
+        }
+    }
+  });
+
+
+
+function createModal(auth) {
+    console.log("creating a modal");
     if(!document.getElementById(MODAL)) {
         let div = document.createElement('div');
         div.className = 'edicratic-modal';
@@ -30,19 +45,46 @@ function createModal() {
     document.getElementById('logo-id').src = imgURL;
     let feedbackButton = document.getElementById('edicratic-feedback-button');
     let close = document.getElementById('close-icon');
-    feedbackButton.onclick = () => handleFeedbackButtonClick();
+    feedbackButton.onclick = () => handleFeedbackButtonClick(auth);
     close.onclick = () => removeModal();
 }
 
 }
 
-function handleFeedbackButtonClick() {
+function sendLog(auth, url, body) {
+    return new Promise((resolve, reject) => {
+      params = {
+                method: "POST",
+                body: JSON.stringify({body: body}),
+                headers: {
+                   'Content-Type': 'application/json',
+                   "authorizationToken": auth["token"]
+               }
+             }
+      chrome.runtime.sendMessage({input: url,params}, messageResponse => {
+        //   console.log(messageResponse);
+        const [response, error] = messageResponse;
+        if (response === null) {
+          reject(error);
+        } else {
+          const body = response.body ?  new Blob([response.body]) : undefined;
+          resolve(new Response(body, {
+            status: response.status,
+            statusText: response.statusText,
+          }));
+        }
+      });
+    });
+  }
+
+function handleFeedbackButtonClick(auth) {
     let currentUrl = window.location.href;
     let textAreaFeedback = document.getElementById('feedback-edicratic-text');
     let text = textAreaFeedback.value;
     console.log(currentUrl);
     console.log(text);
-    //Add endpoint here :)
+    params = {type: "Feedback", content: text, url: currentUrl};
+    sendLog(auth, LOG_URL, params);
     removeModal();
 }
 

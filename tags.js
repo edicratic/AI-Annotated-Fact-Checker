@@ -13,10 +13,11 @@ DATA_LOADED = 'DATA_LOADED'
 BUTTON_PRESSED = 'BUTTON_PRESSED';
 
 document.body.onscroll = (e) => adjustSpansBasedOnHeight();
-
+analyzeText = (e) => analyzeTextForSending();
+removeSpans =  (e) => checkAndRemoveSpans(e);
 if(sendVal){
-  document.body.onmouseup =(e) => analyzeTextForSending();
-  document.body.onmousedown = (e) => checkAndRemoveSpans(e);
+  document.body.onmouseup = analyzeText;
+  document.body.onmousedown =removeSpans;
 }
 
 document.body.onmousemove = e => handleMouseMove(e);
@@ -24,15 +25,14 @@ chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
       if( request.message === "checkHighlight" ) {
           if(request.enable) {
-            document.body.onmouseup =(e) => analyzeTextForSending();
-            document.body.onmousedown = (e) => checkAndRemoveSpans(e);
+            document.body.onmouseup =analyzeText;
+            document.body.onmousedown = removeSpans;
           } else {
             document.body.onmouseup = undefined;
             document.body.onmousedown = undefined;
           }
     }else if (request.message === "authCredentials"){
       if (request.isAuth){
-        sendBackUrl(location.href);
         makePostRequest(request);
       }else{
       //TODO display something
@@ -587,8 +587,4 @@ function determineSticky(el) {
         el = el.parentElement;
     }
     return false;
-}
-
-function sendBackUrl(url) {
-
 }

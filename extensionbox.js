@@ -9,20 +9,49 @@ let isQuickLookUpEnabled = localStorage[QUICK_LOOK_UP_ENABLED];
 let sendVal = isQuickLookUpEnabled === 'true' || isQuickLookUpEnabled === undefined;
 var manifest = chrome.runtime.getManifest();
 
-var clientId = encodeURIComponent(manifest.oauth2.client_id);
-var scopes = encodeURIComponent(manifest.oauth2.scopes.join(' '));
-var redirectUri = encodeURIComponent('https://' + chrome.runtime.id + '.chromiumapp.org');
-
-var oauth_url = 'https://accounts.google.com/o/oauth2/auth' +
-          '?client_id=' + clientId +
-          '&response_type=id_token' +
-          '&access_type=offline' +
-          '&redirect_uri=' + redirectUri +
-          '&scope=' + scopes;
+function secureCallback(element, callback){
+  chrome.identity.getAuthToken({
+   interactive: true
+ }, function(token) {
+   auth = {type:"Google", token: token, isAuth: true, message:"authCredentials"}
+   if (chrome.runtime.lastError) {
+     //TODO handle failure to authenticate
+     //Tell the user something went wrong
+     console.log(chrome.runtime.lastError.message);
+     return;
+   }
+   chrome.storage.local.get(['email'], (res) => {
+     console.log(Object.entries(res));
+     console.log(Object.entries(res).length);
+     console.log(Object.entries(res).length == 0);
+     if(chrome.runtime.lastError || Object.entries(res).length == 0){
+       var x = new XMLHttpRequest();
+       x.open('GET', 'https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=' + token);
+       x.onload = function() {
+         let response = JSON.parse(x.response);
+         chrome.storage.local.set({"email": response["email"], "first_name": response["given_name"]}, function() {
+           if(chrome.runtime.lastError){
+             auth["email"] = "failedToGet@mail.com";
+             callback(element,auth);
+             console.log("failed to write to localstorage ... what do we do?");
+           }else{
+             auth["email"] = response["email"];
+             callback(element,auth);
+           }
+         });
+       };
+       x.send();
+     }else{
+       auth["email"] = res.email
+       callback(element,auth);
+     }
+   });
+ });
+}
 
 updateBox(checkBox);
 checkBox.onclick = () => handleCheckBoxClick();
-bugReport.onclick = () => handleBugReport();
+bugReport.onclick = () => secureCallback(null, handleBugReport);
 icon.addEventListener("mouseover", (e) => {
     let popup = document.getElementById("myPopup");
     popup.classList.toggle("show");
@@ -67,7 +96,7 @@ function updateBox(checkBox) {
         enable = false;
     }
 }
-
+/*
 function secureWebCheck(element, callback){
   chrome.identity.getAuthToken({
    interactive: true
@@ -107,7 +136,7 @@ function secureWebCheck(element, callback){
    });
  });
 }
-
+*/
 function performWebCheck(element, auth){
   chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
       var specTab = tabs[0];;
@@ -129,14 +158,14 @@ function performWebCheck(element, auth){
   });
 }
 
-function handleBugReport() {
+function handleBugReport(element,auth) {
   chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
     var specTab = tabs[0];
     chrome.tabs.insertCSS(specTab.id, {file: 'bugReport.css'});
-    chrome.tabs.executeScript(specTab.id, {file: 'bugReport.js'}, () => console.log("DONE"));
-
+    chrome.tabs.executeScript(specTab.id, {file: 'bugReport.js'}, () => {
+      chrome.tabs.sendMessage(specTab.id, auth);
+    });
   });
-
 }
 
-changeColor.onclick = (element) => secureWebCheck(element, performWebCheck);
+changeColor.onclick = (element) => secureCallback(element, performWebCheck);
