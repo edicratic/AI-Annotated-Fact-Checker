@@ -9,11 +9,11 @@ let isQuickLookUpEnabled = localStorage[QUICK_LOOK_UP_ENABLED];
 let sendVal = isQuickLookUpEnabled === 'true' || isQuickLookUpEnabled === undefined;
 var manifest = chrome.runtime.getManifest();
 
-function secureCallback(element, callback){
+function secureCallback(element, callback, message){
   chrome.identity.getAuthToken({
    interactive: true
  }, function(token) {
-   auth = {type:"Google", token: token, isAuth: true, message:"authCredentials"}
+   auth = {type:"Google", token: token, isAuth: true, message:message}
    if (chrome.runtime.lastError) {
      //TODO handle failure to authenticate
      //Tell the user something went wrong
@@ -51,7 +51,7 @@ function secureCallback(element, callback){
 
 updateBox(checkBox);
 checkBox.onclick = () => handleCheckBoxClick();
-bugReport.onclick = () => secureCallback(null, handleBugReport);
+bugReport.onclick = () => secureCallback(null, handleBugReport, "authToBugReport");
 icon.addEventListener("mouseover", (e) => {
     let popup = document.getElementById("myPopup");
     popup.classList.toggle("show");
@@ -171,4 +171,4 @@ function handleBugReport(element,auth) {
   });
 }
 
-changeColor.onclick = (element) => secureCallback(element, performWebCheck);
+changeColor.onclick = (element) => secureCallback(element, performWebCheck, "authCredentialsWebCheck");

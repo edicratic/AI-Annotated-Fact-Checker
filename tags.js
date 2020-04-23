@@ -25,7 +25,7 @@ chrome.runtime.onMessage.addListener(
             document.body.onmouseup = undefined;
             document.body.onmousedown = undefined;
           }
-    }else if (request.message === "authCredentials"){
+    }else if (request.message === "authCredentialsWebCheck"){
       if (request.isAuth){
         makePostRequest(request);
         if(sendVal){

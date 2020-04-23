@@ -7,7 +7,7 @@ document.body.addEventListener('mousedown', checkForModalClose);
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
       console.log(request);
-      if (request.message === "authCredentials"){
+      if (request.message === "authToBugReport"){
         if (request.isAuth){
           createModal(request);
         }else{
