@@ -13,20 +13,14 @@ DATA_LOADED = 'DATA_LOADED'
 BUTTON_PRESSED = 'BUTTON_PRESSED';
 
 document.body.onscroll = (e) => adjustSpansBasedOnHeight();
-analyzeText = (e) => analyzeTextForSending();
-removeSpans =  (e) => checkAndRemoveSpans(e);
-if(sendVal){
-  document.body.onmouseup = analyzeText;
-  document.body.onmousedown =removeSpans;
-}
 
 document.body.onmousemove = e => handleMouseMove(e);
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
       if( request.message === "checkHighlight" ) {
           if(request.enable) {
-            document.body.onmouseup =analyzeText;
-            document.body.onmousedown = removeSpans;
+            document.body.onmouseup = (e) => analyzeTextForSending(request.auth);
+            document.body.onmousedown = (e) => checkAndRemoveSpans(e);
           } else {
             document.body.onmouseup = undefined;
             document.body.onmousedown = undefined;
@@ -34,6 +28,10 @@ chrome.runtime.onMessage.addListener(
     }else if (request.message === "authCredentials"){
       if (request.isAuth){
         makePostRequest(request);
+        if(sendVal){
+          document.body.onmouseup = (e) => analyzeTextForSending(request);
+          document.body.onmousedown = (e) => checkAndRemoveSpans(e);
+        }
       }else{
       //TODO display something
       }

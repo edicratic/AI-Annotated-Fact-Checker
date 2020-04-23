@@ -78,16 +78,25 @@ function clearSelection() {
 }
 
 function sendBackData(auth, paragraph, text) {
-    while(paragraph.textContent.length < NUMBER_OF_CHARCATERS_IN_PARAGRAPH) {
+    //we dont want an infinite loop, now do we 
+    let i = 0;
+    while(paragraph.textContent.length < NUMBER_OF_CHARCATERS_IN_PARAGRAPH && i < 5) {
         paragraph = paragraph.parentElement;
+        i+=1;
     }
+    if(paragraph.textContent.length <= 100){
+      return
+    }
+    //TODO add processing
+    let raw = paragraph.innerHTML;
+
     let body = {
       type: "Annotation",
       subject: text,
-      raw_annotated_html: paragraph,
+      raw_annotated_html: raw,
       url: window.location.href,
       annotation_type: "missing"
-    }
+    };
     sendData(auth, LOG_URL, body)
 }
 

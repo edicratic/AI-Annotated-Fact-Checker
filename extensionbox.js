@@ -81,7 +81,10 @@ function handleCheckBoxClick() {
     }
     chrome.tabs.query({currentWindow: true, active: true}, function (tabs){
         var activeTab = tabs[0];
-        chrome.tabs.sendMessage(activeTab.id, {"message": "checkHighlight", "enable": enable});
+        secureCallback(null, (el, auth) => {
+          console.log(auth);
+          chrome.tabs.sendMessage(activeTab.id, {"message": "checkHighlight", "enable": enable, auth: auth});
+        });
     });
 }
 
