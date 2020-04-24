@@ -68,7 +68,7 @@ async function modifySingleNode(node, text) {
     var pages = data.query.pages;
     var matches = getMatches(pages);
     let itemsArray = proccessWikiData(matches);
-    var innerText = node.textContent;
+    var innerText = node.textContent.trim();
     var uniqueId = "d3" + Math.floor(Math.random() * 1000000);
     innerText = innerText.replace(text, `<div id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text}</div>`);
 
