@@ -12,7 +12,7 @@ OPEN_SPAN = undefined;
 DATA_LOADED = 'DATA_LOADED'
 BUTTON_PRESSED = 'BUTTON_PRESSED';
 
-document.body.onscroll = (e) => adjustSpansBasedOnHeight();
+//document.body.onscroll = (e) => adjustSpansBasedOnHeight();
 
 document.body.onmousemove = e => handleMouseMove(e);
 chrome.runtime.onMessage.addListener(
