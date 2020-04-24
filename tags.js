@@ -42,14 +42,7 @@ function init(data) {
     data.forEach((obj) => {
         let entity = Object.keys(obj)[0];
         let items = obj[entity];
-        let itemsArray = [];
-        for (var i = 0; i < items.length; i++) {
-            let item = items[i];
-            let data = {'link': item.wikilink,'full_html': `<b>${item.title}</b>` + `<hr style="color:black"/><p class=${PARAGRAPH_CLASS_NAME}>` + (stripHtml(item.extract) || item.description) + `</p><i onclick="window.open('${item.wikilink}', '_blank');" class="inner-link">Learn More Here</i>`, 'title': item.title, 'content': (stripHtml(item.extract) || item.description)}
-            if(data['content'] !== undefined) itemsArray.push(data);
-        }
-        //entity = removeNonAlphaNumeric(entity);
-        let link = 'www.google.com';
+        let itemsArray = proccessWikiData(items);
         var regex = undefined;
         try {
             var regex = new RegExp(entity, "i");
@@ -58,23 +51,64 @@ function init(data) {
         }
         let childList = document.body.childNodes;
         const set = new Set();
-        if(itemsArray.length > 0 && regex) modifyAllText(regex, link, entity, itemsArray, childList, set);
+        if(itemsArray.length > 0 && regex) modifyAllText(regex, entity, itemsArray, childList, set,);
     });
-    console.log('done' + data);
-    //preventSpanDefaultBehaviour();
 }
 
-function modifyAllText(regex, link, entity, data, childList, set) {
+async function modifySingleNode(node, text) {
+    var url = getWikiUrl(text);
+    var result = await fetchWiki(url);
+    var data = await result.json();
+
+    if(!data || !data.query) {
+        alert("Sorry, could not find a match for that :(. Try to highlight smaller terms");
+        return;
+    }
+    var pages = data.query.pages;
+    var matches = getMatches(pages);
+    let itemsArray = proccessWikiData(matches);
+    var innerText = node.textContent;
+    var uniqueId = "d3" + Math.floor(Math.random() * 1000000);
+    innerText = innerText.replace(text, `<div id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text}</div>`);
+
+    idToData[uniqueId] = [0, itemsArray]
+    var newElement = document.createElement('div');
+    newElement.style.display = "inline";
+    newElement.innerHTML = innerText;
+    newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId);
+    newElement.onmouseleave = (e) => handleMouseLeaveAnchor(e, uniqueId);
+    node.parentElement.replaceChild(newElement, node);
+
+    var tooltip = document.createElement('span');
+    tooltip.id = `${uniqueId}-parent`;
+    tooltip.className = TOOL_TIP_CLASS_NAME;
+    tooltip.innerHTML = `${itemsArray[0]['full_html']} <br/><br/> <div id="${uniqueId}" class="leftArrow fa fa-arrow-left fa-3x"></div> <div id="${uniqueId}" class="rightArrow fa fa-arrow-right fa-3x"></div>`
+    tooltip.onmouseleave = (e) => {
+        if(e.target) {
+            let id = e.target.id;
+            id = id.substring(0, id.indexOf('-'));
+            removeSpan(id);
+        }
+    }
+    document.body.prepend(tooltip)
+    tooltip.onclick = e => e.preventDefault();
+    tooltip.children[6].addEventListener('click', (e) => arrowClick(e, true), true);
+    tooltip.children[7].addEventListener('click', (e) => arrowClick(e, false), true);
+
+
+  
+}
+
+function modifyAllText(regex, entity, data, childList, set) {
     for (var i = 0; i < childList.length; i++) {
         const child = childList[i];
-        if(!set.has(child) && child.className !== ANCHOR_CLASS_NAME && child.className !== TOOL_TIP_CLASS_NAME) {
+        if(!set.has(child) && child.className !== ANCHOR_CLASS_NAME && child.className !== TOOL_TIP_CLASS_NAME && child.tagName !== 'NAV') {
             set.add(child);
             const nextList = child.childNodes;
             const length = nextList.length;
-            var text = child.textContent || child.textContent;
+            var text = child.textContent;
             if (length === 0 && text !== "" && text !== undefined && checkMatch(text, entity, regex)) {
-                if (!noNearbyTags(child, regex)) {
-                    console.log(entity);
+                if (!noNearbyTags(child, regex)) { 
                     return;
                 }
                 child.innerText = "";
@@ -114,7 +148,7 @@ function modifyAllText(regex, link, entity, data, childList, set) {
 
             }
             if (length !== 0) {
-                modifyAllText(regex, link, entity, data, nextList, set)
+                modifyAllText(regex, entity, data, nextList, set)
             }
     }
     }
@@ -552,8 +586,6 @@ function noNearbyTags(child, regex) {
     for(var i = 0; i < matchingTags.length; i++) {
         let text = matchingTags[i].innerText || matchingTags[i].textContent;
         if (regex.test(text)) {
-            console.log(regex);
-            console.log(text);
             noMatches = false;
             break;
         }
@@ -585,4 +617,15 @@ function determineSticky(el) {
         el = el.parentElement;
     }
     return false;
+}
+
+function proccessWikiData(items) {
+    let itemsArray = [];
+    for (var i = 0; i < items.length; i++) {
+        let item = items[i];
+        let data = {'link': item.wikilink,'full_html': `<b>${item.title}</b>` + `<hr style="color:black"/><p class=${PARAGRAPH_CLASS_NAME}>` + (stripHtml(item.extract) || item.description) + `</p><i onclick="window.open('${item.wikilink}', '_blank');" class="inner-link">Learn More Here</i>`, 'title': item.title, 'content': (stripHtml(item.extract) || item.description)}
+        if(data['content'] !== undefined) itemsArray.push(data);
+    }
+    return itemsArray;
+
 }

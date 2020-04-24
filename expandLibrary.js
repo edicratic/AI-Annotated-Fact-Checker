@@ -8,6 +8,7 @@ LOG_URL = "https://webcheck-api.edicratic.com/log"
 //Chris, modify this as you please
 NUMBER_OF_CHARCATERS_IN_PARAGRAPH = 500;
 
+
 function analyzeTextForSending(auth) {
     if(!window.getSelection) return;
     if(window.getSelection().toString() === '') return;
@@ -40,7 +41,7 @@ function analyzeTextForSending(auth) {
     check.onclick = (e) => {
         e.preventDefault();
         sendBackData(auth, node, text);
-        lookUpTerm(text);
+        modifySingleNode(node, text);
         clearSelection();
         removeHighlightedSpans();
     }
@@ -101,41 +102,16 @@ function sendBackData(auth, paragraph, text) {
 }
 
 async function lookUpTerm(term) {
-    // console.log(term);
-    // console.log('looking up');
 
-    const params = new URLSearchParams({
-	"action": "query",
-	"format": "json",
-	"prop": "description|extracts",
-	"list": "",
-	"generator": "search",
-	"exsentences": "2",
-	"exlimit": "5",
-	"exintro": 1,
-	"gsrsearch": term,
-    "gsrlimit": 5,
-    "gsrinfo": "totalhits",
-	"gsrsort": "relevance"
-    })
-    var URL = `https://en.wikipedia.org/w/api.php?${params.toString()}`
+    var URL = getWikiUrl(term);
     var result = await fetchWiki(URL);
     var data = await result.json();
-    var matches = [];
     if(!data || !data.query) return;
     var pages = data.query.pages;
-    // console.log(pages);
-    Object.keys(pages).forEach(key => {
-        if(key) matches.push(pages[key]);
-    })
-    matches.sort((a,b) => a.index - b.index);
-    // console.log(matches);
+    var matches = getMatches(pages);
     var pairs = {};
     pairs[term] = matches;
-    //console.log(pairs);
-    // console.log([pairs]);
-    console.log(pairs);
-   init([pairs]);
+    init([pairs]);
 
 }
 
@@ -185,4 +161,30 @@ function fetchWiki(input) {
       });
     }
 
-//function sendAnnotation
+function getWikiUrl(term) {
+    const params =  new URLSearchParams({
+        "action": "query",
+        "format": "json",
+        "prop": "description|extracts",
+        "list": "",
+        "generator": "search",
+        "exsentences": "2",
+        "exlimit": "5",
+        "exintro": 1,
+        "gsrsearch": term,
+        "gsrlimit": 5,
+        "gsrinfo": "totalhits",
+        "gsrsort": "relevance"
+    });
+    return `https://en.wikipedia.org/w/api.php?${params.toString()}`;
+}
+
+function getMatches(pages) {
+  var matches = [];
+  Object.keys(pages).forEach(key => {
+    if(key) matches.push(pages[key]);
+  })
+  matches.sort((a,b) => a.index - b.index);
+  return matches;
+  
+}
