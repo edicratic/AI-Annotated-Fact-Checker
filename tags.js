@@ -60,7 +60,6 @@ async function modifySingleNode(node, text) {
     var url = getWikiUrl(text);
     var result = await fetchWiki(url);
     var data = await result.json();
-    console.log(data);
 
     if(!data || !data.query) {
         alert("Sorry, could not find a match for that :(. Try to highlight smaller terms");
@@ -185,7 +184,7 @@ function mouseOverHandle(e, id) {
 
 
         let distance = isSticky ? getPosition(anchor).y : getPosition(anchor).y - window.pageYOffset;
-        if (distance <= span.clientHeight - 20) {
+        if (distance <= span.clientHeight) {
             span.style.top = `${y}px`;
             onTop[id] = false;
             if(!expanded) {
