@@ -33,6 +33,7 @@ chrome.runtime.onMessage.addListener(
           document.body.onmousedown = (e) => checkAndRemoveSpans(e);
         }
       }else{
+          alert("Oops something went wrong. Please try again later");
       //TODO display something
       }
     }
@@ -59,6 +60,7 @@ async function modifySingleNode(node, text) {
     var url = getWikiUrl(text);
     var result = await fetchWiki(url);
     var data = await result.json();
+    console.log(data);
 
     if(!data || !data.query) {
         alert("Sorry, could not find a match for that :(. Try to highlight smaller terms");
@@ -268,7 +270,13 @@ function makePostRequest(auth) {
                       headers: {
                           'Content-Type': 'application/json',
                           "authorizationToken": auth["token"]
-    }}).then(result => result.json()).then(data =>{
+    }}).then(result => {
+        if (result.ok) {
+            return result.json();
+        } else {
+            throw new Error('Something went wrong');
+        }
+    }).then(data =>{
       //well so is thius hacky
       setTimeout(function () {
           //feel free to mess around with timer
@@ -286,6 +294,9 @@ function makePostRequest(auth) {
             data: DATA_LOADED
         });
       }
+    }).catch(e => {
+        spinner.style.display = "none";
+        alert("Oops. Smething went wrong :(. Please try again.")
     });
 }
 
@@ -364,7 +375,7 @@ function arrowClick(e, isLeft) {
     for (var i = 0; i < span.children.length; i++) {
         if(span.children[i].className === INNER_LINK) indexOfLink = i;
     }
-    span.children[indexOfLink].outerHTML = `<i onclick="window.open('${array[newIndex]['link']}', '_blank');" class="inner-link">Learn More Here</i>`
+    span.children[indexOfLink].outerHTML = `<i onclick="window.open('${array[newIndex]['link']}', '_blank');" class="inner-link">Wikimedia Foundation</i>`
     //keep padding constant when on top
     removeIconShowMore(span);
     if (onTop[id]) {
@@ -623,7 +634,8 @@ function proccessWikiData(items) {
     let itemsArray = [];
     for (var i = 0; i < items.length; i++) {
         let item = items[i];
-        let data = {'link': item.wikilink,'full_html': `<b>${item.title}</b>` + `<hr style="color:black"/><p class=${PARAGRAPH_CLASS_NAME}>` + (stripHtml(item.extract) || item.description) + `</p><i onclick="window.open('${item.wikilink}', '_blank');" class="inner-link">Learn More Here</i>`, 'title': item.title, 'content': (stripHtml(item.extract) || item.description)}
+        let wikilink = `https://en.wikipedia.org/?curid=${item.pageid}`
+        let data = {'link': wikilink,'full_html': `<b>${item.title}</b>` + `<hr style="color:black"/><p class=${PARAGRAPH_CLASS_NAME}>` + (stripHtml(item.extract) || item.description) + `</p><i onclick="window.open('${wikilink}', '_blank');" class="inner-link">Wikimedia Foundation</i>`, 'title': item.title, 'content': (stripHtml(item.extract) || item.description)}
         if(data['content'] !== undefined) itemsArray.push(data);
     }
     return itemsArray;

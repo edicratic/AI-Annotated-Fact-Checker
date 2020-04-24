@@ -17,6 +17,7 @@ function secureCallback(element, callback, message){
    if (chrome.runtime.lastError) {
      //TODO handle failure to authenticate
      //Tell the user something went wrong
+     alert("Oops something went wrong. Please try again later.")
      console.log(chrome.runtime.lastError.message);
      return;
    }
