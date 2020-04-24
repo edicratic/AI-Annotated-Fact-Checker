@@ -277,10 +277,7 @@ function makePostRequest(auth) {
         }
     }).then(data =>{
       //well so is thius hacky
-      setTimeout(function () {
-          //feel free to mess around with timer
-          spinner.style.display = "none";
-      }, 3000);
+      spinner.style.display = "none";
       if(data == undefined){
         console.log("errr");
       }else{
@@ -299,10 +296,11 @@ function makePostRequest(auth) {
     });
 }
 
-function processEntities(entities) {
-    entities.forEach((ent) => {
-        lookUpTerm(ent.entity);
-    });
+async function processEntities(entities) {
+   for (var i = 0; i < entities.length; i++) {
+       lookUpTerm(entities[i].entity);
+       await sleep(10);
+   }
 }
 
 function sortEntities(data) {
@@ -640,3 +638,9 @@ function proccessWikiData(items) {
     return itemsArray;
 
 }
+
+const sleep = ms => {
+    return new Promise(resolve => {
+      setTimeout(resolve, ms);
+    });
+  }
