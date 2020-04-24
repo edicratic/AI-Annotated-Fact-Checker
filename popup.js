@@ -3,23 +3,53 @@
 // found in the LICENSE file.
 
 'use strict';
+const VALID_PAGE_HTML = 'extensionbox.html';
+const DATA_LOADED = 'DATA_LOADED';
+const BUTTON_PRESSED = 'BUTTON_PRESSED';
+const ALREADY_CHECKED = 'ALREADY_CHECKED';
+const MODAL_OPENED = 'MODAL_OPENED';
+localStorage['isLoadedEdicratic'] = false;
 
-let changeColor = document.getElementById('changeColor');
+const INVALID_SEARCH_URLS = [
+    // 'www.facebook.com/',
+]
 
-// chrome.storage.sync.get('color', function(data) {
-//   changeColor.style.backgroundColor = data.color;
-//   changeColor.setAttribute('value', data.color);
-// });
+evaluatePageForChecked();
+checkCurrentPage();
 
-changeColor.onclick = function(element) {
-    chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
-        var specTab = tabs[0];
-        // document.getElementById("changeColor").style.diplay = "none";
-        // document.getElementById("info").style.display = "";
-        chrome.tabs.insertCSS(specTab.id, {file: 'tags.css'});
-        chrome.tabs.insertCSS(specTab.id, {file: 'fontawesome.css'});
-        chrome.tabs.executeScript(specTab.id, {file: 'fontawesome.js'}, () => console.log("DONE"));
-        chrome.tabs.executeScript(specTab.id, {file: 'tags.js'}, () => console.log("DONE"));
+chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+    if(message.data === DATA_LOADED) {
+        localStorage['isLoadedEdicratic'] = true;
         window.close();
+    } else if (message.data === ALREADY_CHECKED) {
+        localStorage['isLoadedEdicratic'] = true;
+        load(true);
+    } else if(message.data === MODAL_OPENED) {
+        window.close();
+    }
+});
+
+
+function checkCurrentPage() {
+    chrome.tabs.query({active: true, lastFocusedWindow: true}, tabs => {
+        let url = tabs[0].url;
+        var isValidPage = true;
+        INVALID_SEARCH_URLS.forEach(invalid => {
+            if (url.includes(invalid)) isValidPage = false;
+        })
+        load(isValidPage);
+
     });
-};
+}
+
+function load(isValidPage) {
+    localStorage['validEdicratic'] = isValidPage;
+    document.body.innerHTML = `<object type="text/html" data="${VALID_PAGE_HTML}"></object>`;
+}
+
+function evaluatePageForChecked() {
+    chrome.tabs.query({active: true, currentWindow: true}, function(arrayOfTabs) {
+        var activeTab = arrayOfTabs[0];
+        chrome.tabs.executeScript(activeTab.id, {file: "checker.js"});
+    });
+}

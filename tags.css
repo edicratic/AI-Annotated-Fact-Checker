@@ -1,96 +1,115 @@
 .edicratic-anchor-tag-style {
     border-bottom: 5px solid #15c39a !important;
+    margin-bottom: -5px !important;
+    box-sizing:border-box;
+    /* background-color: #15c39a; */
     padding-bottom: 0px !important;
-    color: black !important;
-    background-color:#FFFF00 !important;
     position: relative !important;
     display: inline-block !important;
     cursor: pointer;
 }
 
-.edicratic-anchor-tag-style .tooltip {
+.edicratic-transparent-border {
+  border-bottom: 5px solid transparent;
+
+}
+
+.edicratic-anchor-tag-style:hover {
+  background-color:#d3d3d3 !important;
+}
+
+.show-more {
+  position: relative;
+}
+
+.show-more:hover {
+  background-color: darkgray;
+}
+
+.edicratic-tooltip {
     float: left !important;
     text-align: center;
-    visibility: hidden !important;
+    visibility: hidden;
     /*height: 30vh !important;*/
-    height: auto !important;
-    width: 100% !important;
-    min-width: 200px !important;
+    height: auto;
+    min-width: 200px;
     background-color: #f5f5f5 !important;
     color: black !important;
     text-align: center !important;
     padding: 5px 0 !important;
     border-radius: 6px !important;
-    font-size: 1vw !important;
     padding: 1rem;
-
+    display: none;
     position: absolute !important;
-    z-index: 99999 !important;
-    left: 0 !important;
-    /*margin-left: -60px !important; */
+    z-index: 1000000 !important;
+    left: 30px;
+    top: 10px;
 
-    /* Fade in tooltip */
-    opacity: 0 !important;
-    transition: opacity 0.3s !important;
-    /* word-break: break-all; */
+    font-size: 1vw !important;
     font-weight: normal !important;
     font-family: 'Times New Roman' !important;
     font-style: normal !important;
     line-height: normal !important;
-    overflow-y:auto !important;
-
+    overflow-y:auto;
+}
+.edicratic-tooltip .edicratic-paragraph-classname {
+  height: auto;
+  overflow-y: hidden;
+  margin-bottom: 0.5rem;
+  font-size: 1vw !important;
+  font-weight: normal !important;
+  font-family: 'Times New Roman' !important;
+  font-style: normal !important;
+  line-height: normal !important;
+  overflow-y:auto;
 
 }
 
-.edicratic-anchor-tag-style:hover .tooltip {
+/* .edicratic-anchor-tag-style:hover .edicratic-tooltip {
     visibility: visible !important;
     opacity: 1 !important;
-}
+} */
 
-.edicratic-anchor-tag-style .tooltip .rightArrow {
+.edicratic-tooltip .rightArrow {
     float: right !important;
     margin-right: 1rem !important;
     width: 4rem !important;
     height: auto !important;
-    top: 0 !important;
+    bottom: -2 !important;
     transition: top ease 0.5s !important;
+    margin-bottom: -1px;
 
 }
 
-.edicratic-anchor-tag-style .tooltip .leftArrow {
+.edicratic-tooltip .leftArrow {
     float: left !important;
     margin-left: 1rem !important;
     width: 4rem !important;
     height: auto !important;
-    top: 0 !important;
+    bottom: -2 !important;
     transition: top ease 0.5s !important;
+    margin-bottom: -1px;
 
 }
 
-.edicratic-anchor-tag-style .tooltip .leftArrow:hover {
+.edicratic-tooltip .leftArrow:hover {
     top: -10px !important;
     background-color: #15c39a !important;
 
 }
 
-.edicratic-anchor-tag-style .tooltip .rightArrow:hover {
+.edicratic-tooltip .rightArrow:hover {
     top: -10px !important;
     background-color: #15c39a !important;
 
 }
 
-/* .edicratic-anchor-tag-style .tooltip::after {
-    content: "" !important;
-    position: absolute !important;
-    top: 100% !important;
-    left: 50% !important;
-    margin-left: -5px !important;
-    border-width: 5px !important;
-    border-style: solid !important;
-    border-color: black transparent transparent transparent !important;
-  } */
+ .edicratic-anchor-tag-style .edicratic-tooltip::after {
+    visibility: hidden;
+    display: none;
+  }
 
-  hr { display: block !important;
+  .edicratic-tooltip hr { display: block !important;
     height: 1px !important;
     border: 0 !important;
     border-top: 5px solid black !important;
@@ -99,8 +118,10 @@
 }
 
 .inner-link {
+    margin-top: 4rem;
     color: #0645ad;
     cursor: pointer;
+    position: relative;
 }
 
 /* img {
@@ -123,7 +144,7 @@
     bottom: 0;
     right: 0;
   }
-  
+
   /* Transparent Overlay */
   .loading:before {
     content: '';
@@ -135,7 +156,7 @@
     height: 100%;
     background-color: rgba(0,0,0,0.3);
   }
-  
+
   /* :not(:required) hides these rules from IE9 and below */
   .loading:not(:required) {
     /* hide "loading..." text */
@@ -145,7 +166,7 @@
     background-color: transparent;
     border: 0;
   }
-  
+
   .loading:not(:required):after {
     content: '';
     display: block;
@@ -162,9 +183,9 @@
     -webkit-box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.5) -1.5em 0 0 0, rgba(0, 0, 0, 0.5) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
     box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) -1.5em 0 0 0, rgba(0, 0, 0, 0.75) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
   }
-  
+
   /* Animation */
-  
+
   @-webkit-keyframes spinner {
     0% {
       -webkit-transform: rotate(0deg);
@@ -229,3 +250,40 @@
       transform: rotate(360deg);
     }
   }
+
+/*media queries*/
+@media screen and (max-width: 1125px) {
+  .edicratic-tooltip .edicratic-paragraph-classname {
+    font-size: 1.3vw !important;
+  }
+  .edicratic-tooltip {
+    font-size: 1.3vw !important;
+  }
+}
+
+@media screen and (max-width: 900px) {
+  .edicratic-tooltip .edicratic-paragraph-classname {
+    font-size: 1.7vw !important;
+  }
+  .edicratic-tooltip {
+    font-size: 1.7vw !important;
+  }
+}
+
+@media screen and (max-width: 700px) {
+  .edicratic-tooltip .edicratic-paragraph-classname {
+    font-size: 2.3vw !important;
+  }
+  .edicratic-tooltip {
+    font-size: 2.3vw !important;
+  }
+}
+
+@media screen and (max-width: 400px) {
+  .edicratic-tooltip .edicratic-paragraph-classname {
+    font-size: 3vw !important;
+  }
+  .edicratic-tooltip {
+    font-size: 3vw !important;
+  }
+}

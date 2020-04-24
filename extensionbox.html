@@ -1,0 +1,142 @@
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.1.8/components/icon.min.css">
+</head>
+
+<body class="top">
+<div class="ui raised very padded text container segment parent">
+    <div class="edicratic-header-block">
+        <img class="ui left floated circular image" src="/images/logo48.png">
+        <h2 class="right floated ui header edicratic-header">WebCheck AI</h2>
+      </div>
+      <div class="ui segments">
+        <div class="ui segment edicratic-segment">
+          <p><i class="info circle icon"></i><a href="https://webcheck.edicratic.com/"  target="_blank" class="edicratic-option">How It Works</a></p>
+        </div>
+        <div class="ui segment edicratic-segment">
+            <div style="display:inline">
+            <div class="ui toggle checkbox">
+                <i id ="info-icon-edicratic" class="question circle icon popup">
+                    <span class="popuptext" id="myPopup">Quickly look up words by highlighting them!</span>
+                </i>
+                <label class="edicratic-option">Auto Lookup</label>
+                <input checked="checked" id="enable-quick-look-up" type="checkbox" name="example">
+              </div>
+          </div>
+          <div class="ui segment edicratic-segment last-segment">
+            <p><i class="bug icon"></i><a id="edicratic-bug-report" class="edicratic-option">Anything Wrong?</a></p>
+          </div>
+      </div>
+      <div id="changeColor" class="button">
+        <i class="edit icon"></i>WebCheck This
+      </div>
+        <h2 class="edicratic-invalid" id="edicratic-invalid">
+          Sorry, can't WebCheck this page. <a href='https://www.edicratic.com/home' target="_blank" class="inner-link">Here</a> are some good pages to WebCheck.
+        </h2>
+      <i id="edicratic-check" class="green big check icon edicratic-check"></i>
+</div>
+</body>
+<style>
+  .top {
+    overflow: hidden;
+  }
+    .edicratic-header-block {
+        display: flex;
+    }
+    .edicratic-header {
+        float: right;
+        margin-left: 0.5rem;
+    }
+    .edicratic-image {
+        float: left;
+    }
+    .edicratic-header-2 {
+        float: right;
+        margin-left: 0.25rem;
+    }
+    .factCheck:hover {
+        background-color: #d3d3d3;
+
+    }
+    .button {
+        margin-top: -2rem;
+        border: none;
+        float: right;
+        display: inline-block;
+        padding: 8px 16px;
+        vertical-align: middle;
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        background-color: inherit;
+        text-align: center;
+        cursor: pointer;
+        white-space: nowrap;
+        color: white;
+        background-color: #15c39a;
+        opacity: 0.8;
+    }
+    .edicratic-option {
+        color: #0645ad;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .edicratic-check {
+        margin-top: -2rem;
+        float: right;
+    }
+
+    .button:hover {
+        background-color: #006400;
+    }
+
+    .edicratic-invalid {
+        float: left;
+        margin-top: -0.3rem;
+        color: #6f7287;
+        line-height: 1.5;
+        font-size: 0.6rem;
+    }
+    .inner-link {
+        color: #0645ad;
+    }
+    /* Popup container */
+.popup {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+/* The actual popup (appears on top) */
+.popup .popuptext {
+  visibility: hidden;
+  width: 160px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px 0;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 10%;
+  /* margin-left: -80px; */
+}
+/* Toggle this class when clicking on the popup container (hide and show the popup) */
+.popup .show {
+  visibility: visible;
+  -webkit-animation: fadeIn 1s;
+  animation: fadeIn 1s
+}
+
+/* Add animation (fade in the popup) */
+@-webkit-keyframes fadeIn {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+
+@keyframes fadeIn {
+  from {opacity: 0;}
+  to {opacity:1 ;}
+}
+</style>
+<script src="extensionbox.js"></script>

@@ -1,0 +1,133 @@
+/* The Modal (background) */
+.edicratic-modal {
+        /* Hidden by default */
+        position: fixed !important;
+        display: block !important;
+        top: 35% !important;
+        left: 35% !important;
+        z-index: 100000 !important; /* Sit on top */
+        width: 30% !important;/* Full width */
+        height: auto !important; /* Full height */
+        overflow: auto !important; /* Enable scroll if needed */
+        background-color: #f5f5f5 !important;
+        padding-bottom: 1rem !important;
+        font-size: 15px !important;
+        transition: background .25s ease;
+        border: 1px solid grey;
+        background: plum;
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+        font-family: Arial, Helvetica, sans-serif !important;
+  }
+
+  .edicratic-logo {
+      float: left !important;
+      padding-left: 3% !important;
+      margin-right: 2% !important;
+      padding-top: 3% !important;
+      z-index: 1 !important;
+      height: 50% !important;
+  }
+  
+  /* Modal Content */
+  .modal-content {
+    position: relative !important;
+    background-color: #fefefe !important;
+    margin: auto !important;
+  }
+  /* The Close Button */
+  .close {
+    color: #15c39a !important;
+    float: right !important;
+    font-size: 28px !important;
+    font-weight: bold !important;
+    padding: 1rem !important;
+    padding-top: 0 !important;
+  }
+  
+  .close:hover,
+  .close:focus {
+    color: #000 !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+  }
+
+  .modal-header-2 {
+    border-bottom: none !important;
+    margin-top: 5% !important;
+    color: #6f7287 !important;
+    line-height: normal !important;
+    font-size: 1.5rem !important;
+    padding-top: 2% !important;
+  }
+  
+  .modal-body-edicratic {
+      padding: 2px 10px;
+    }
+
+  .edicratic-modal hr { display: block !important;
+    width: 100% !important;
+    height: 50% !important;
+    border: 0 !important;
+    margin-top: 6% !important;
+    border-top: 5px solid black !important;
+    margin-bottom: 4% !important;
+    padding: 0 !important;
+    z-index: 2 !important;
+}
+
+.edicratic-textarea {
+    resize: none !important;
+    padding: 0.5rem !important;
+    line-height: 1.3rem !important;
+    font-size: 12px !important;
+    color: #6f7287 !important;
+    width: 90% !important;
+
+
+}
+
+.edicratic-button {
+    border: none !important;
+    float: right !important;
+    display: inline-block !important;
+    padding: 8px 16px !important;
+    vertical-align: middle !important;
+    overflow: hidden !important;
+    text-decoration: none !important;
+    color: inherit !important;
+    background-color: inherit !important;
+    text-align: center !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    color: white !important;
+    background-color: #15c39a !important;
+    opacity: 0.8 !important;
+    padding-bottom: 0.5rem !important;
+}
+
+.edicratic-button:hover {
+    background-color: #006400 !important;
+}
+
+.edicratic-text-style {
+    color: #6f7287 !important;
+    line-height: 1.2rem !important;
+    font-size: 12px!important;
+    margin-top: 4% !important;
+    padding-right: 0.5rem !important;
+    margin-bottom: 4% !important;
+}
+
+@media screen and (max-width: 880px){
+    .edicratic-logo {
+        display: none !important;
+    }
+
+    .modal-header-2 {
+        text-align: center !important;
+        border-bottom: none !important;
+        margin-left: 0rem !important;
+        margin-top: 1rem !important;
+      }
+
+}

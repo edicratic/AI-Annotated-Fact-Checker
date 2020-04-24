@@ -1,35 +1,46 @@
 {
-    "name": "Edicratic Fact Checker",
-    "version": "1.0",
-    "description": "An AI Powered Annotated Fact Checker",
+    "name": "WebCheck AI",
+    "version": "1.01",
+    "description": "An AI-powered smart lookup tool for browsing the web, by Edicratic",
     "background": {
         "scripts": ["background.js"],
         "persistent": false
     },
+	"key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3xorrcZQEUp6Ags20bElFaLmLG/BeApy6NGCaFojb4MxA1NkWaSmvGvPXY/y7+bWnVEmt5aLOSbOv0v7bNl8552oIO89FULuU5/u3U6S7TFvklMy4ElSMuwLlmloGm9GUAn2FNRlKp6ElEhsQjb9w4VjKEKbwVYXMzzH3ojwxdQ8HSzQwJopJFQQaH6WO30guAEV9l+9RKlhWdxum18lN4Y9nrzatLJyTRAbbYMGZDeCf/GeEk4OHxFnIslIcvtte9zaaPYYge2OnxNMnh/WAk5rAzCk8rPvc7/y0M3BRoHyFZr3jKUwRoMN9aZsjBtG33LncQUt/x27tFAyn3PM5QIDAQAB",
+	"oauth2" : {
+		"client_id": "894173246263-g7mp4r734foof2gn4je7vstmmrv7fq4b.apps.googleusercontent.com",
+		"scopes": ["https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"]
+    },
+    "web_accessible_resources": [
+        "images/logo48.png"
+      ],
     "permissions": [
-        "background", 
-        "tabs", 
-        "http://*/*",
+        "background",
+        "tabs",
+        "https://factcheck.edicratic.com/*",
+        "https://webcheck.edicratic.com/*",
+        "https://en.wikipedia.org/*",
+        "https://webcheck-api.edicratic.com/*",
+		    "http://*/*",
         "https://*/*",
-        "activeTab", 
-        "declarativeContent", 
-        "storage"
+        "storage",
+		"identity"
     ],
     "browser_action": {
         "default_popup": "popup.html",
         "default_icon": {
-            "16": "images/get_started16.png",
-            "32": "images/get_started32.png",
-            "48": "images/get_started48.png",
-            "128": "images/get_started128.png"
+            "16": "images/logo16.png",
+            "32": "images/logo32.png",
+            "48": "images/logo48.png",
+            "128": "images/logo128.png"
         },
         "persistent": true
     },
     "icons": {
-        "16": "images/get_started16.png",
-        "32": "images/get_started32.png",
-        "48": "images/get_started48.png",
-        "128": "images/get_started128.png"
+        "16": "images/logo16.png",
+		"32": "images/logo32.png",
+		"48": "images/logo48.png",
+		"128": "images/logo128.png"
     },
     "manifest_version": 2
   }
