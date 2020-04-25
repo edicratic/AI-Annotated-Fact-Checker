@@ -1,6 +1,6 @@
 {
     "name": "WebCheck AI",
-    "version": "1.01",
+    "version": "1.02",
     "description": "An AI-powered smart lookup tool for browsing the web, by Edicratic",
     "background": {
         "scripts": ["background.js"],
@@ -16,7 +16,6 @@
       ],
     "permissions": [
         "background",
-        "tabs",
         "https://factcheck.edicratic.com/*",
         "https://webcheck.edicratic.com/*",
         "https://en.wikipedia.org/*",
