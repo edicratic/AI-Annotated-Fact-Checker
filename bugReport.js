@@ -7,19 +7,17 @@ document.body.addEventListener('mousedown', checkForModalClose);
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
       console.log(request);
-      if (request.message === "authToBugReport"){
-        if (request.isAuth){
-          createModal(request);
-        }else{
-            //TODO improve
-            alert("Please log in to report a bug");
+      if (request.message === "bugReport"){
+        //if auth set to true in local storage
+            createModal();
+            //TODO check Auth
+            //alert("Please log in to report a bug");
         }
-    }
   });
 
 
 
-function createModal(auth) {
+function createModal() {
     console.log("creating a modal");
     if(!document.getElementById(MODAL)) {
         let div = document.createElement('div');
@@ -46,23 +44,22 @@ function createModal(auth) {
     document.getElementById('logo-id').src = imgURL;
     let feedbackButton = document.getElementById('edicratic-feedback-button');
     let close = document.getElementById('close-icon');
-    feedbackButton.onclick = () => handleFeedbackButtonClick(auth);
+    feedbackButton.onclick = () => handleFeedbackButtonClick();
     close.onclick = () => removeModal();
 }
 
 }
 
-function sendLog(auth, url, body) {
+function sendLog(url, body) {
     return new Promise((resolve, reject) => {
       params = {
                 method: "POST",
                 body: JSON.stringify({body: body}),
                 headers: {
                    'Content-Type': 'application/json',
-                   "authorizationToken": auth["token"]
                }
              }
-      chrome.runtime.sendMessage({input: url,params}, messageResponse => {
+      chrome.runtime.sendMessage({input: url,params, message:"callInternet", needsAuthHeaders: true}, messageResponse => {
         //   console.log(messageResponse);
         const [response, error] = messageResponse;
         if (response === null) {
@@ -78,14 +75,14 @@ function sendLog(auth, url, body) {
     });
   }
 
-function handleFeedbackButtonClick(auth) {
+function handleFeedbackButtonClick() {
     let currentUrl = window.location.href;
     let textAreaFeedback = document.getElementById('feedback-edicratic-text');
     let text = textAreaFeedback.value;
     console.log(currentUrl);
     console.log(text);
     params = {type: "Feedback", content: text, url: currentUrl};
-    sendLog(auth, LOG_URL, params);
+    sendLog(LOG_URL, params);
     removeModal();
 }
 

@@ -13,29 +13,24 @@ DATA_LOADED = 'DATA_LOADED'
 BUTTON_PRESSED = 'BUTTON_PRESSED';
 
 //document.body.onscroll = (e) => adjustSpansBasedOnHeight();
+if(sendVal){
+  document.body.onmouseup = (e) => analyzeTextForSending();
+  document.body.onmousedown = (e) => checkAndRemoveSpans(e);
+}
 
 document.body.onmousemove = e => handleMouseMove(e);
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
       if( request.message === "checkHighlight" ) {
           if(request.enable) {
-            document.body.onmouseup = (e) => analyzeTextForSending(request.auth);
+            document.body.onmouseup = (e) => analyzeTextForSending();
             document.body.onmousedown = (e) => checkAndRemoveSpans(e);
           } else {
             document.body.onmouseup = undefined;
             document.body.onmousedown = undefined;
           }
-    }else if (request.message === "authCredentialsWebCheck"){
-      if (request.isAuth){
+    }else if (request.message === "runWebCheck"){
         makePostRequest(request);
-        if(sendVal){
-          document.body.onmouseup = (e) => analyzeTextForSending(request);
-          document.body.onmousedown = (e) => checkAndRemoveSpans(e);
-        }
-      }else{
-          alert("Oops something went wrong. Please try again later");
-      //TODO display something
-      }
     }
   });
 
@@ -97,7 +92,7 @@ async function modifySingleNode(node, text) {
     tooltip.children[7].addEventListener('click', (e) => arrowClick(e, false), true);
 
 
-  
+
 }
 
 function modifyAllText(regex, entity, data, childList, set) {
@@ -109,7 +104,7 @@ function modifyAllText(regex, entity, data, childList, set) {
             const length = nextList.length;
             var text = child.textContent;
             if (length === 0 && text !== "" && text !== undefined && checkMatch(text, entity, regex)) {
-                if (!noNearbyTags(child, regex)) { 
+                if (!noNearbyTags(child, regex)) {
                     return;
                 }
                 child.innerText = "";
@@ -234,8 +229,10 @@ function fetchWebCheck(input, params) {
     console.log("hi");
     console.log(input);
     return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({input,params}, messageResponse => {
-        //   console.log(messageResponse);
+      console.log("sending message");
+      chrome.runtime.sendMessage({input,params, message: "callInternet", needsAuthHeaders: true}, messageResponse => {
+        console.log("goet a response");
+        console.log(messageResponse);
         const [response, error] = messageResponse;
         if (response === null) {
           reject(error);
@@ -255,7 +252,7 @@ function fetchWebCheck(input, params) {
     });
   }
 
-function makePostRequest(auth) {
+function makePostRequest() {
     const spinner = document.createElement('div');
     spinner.className = "loading";
     spinner.classList.add('loading-edicratic');
@@ -265,10 +262,8 @@ function makePostRequest(auth) {
     fetchWebCheck(POST_URL,  {
                       method: "POST",
                       body: JSON.stringify({body: data}),
-                      //mode: 'cors',
                       headers: {
                           'Content-Type': 'application/json',
-                          "authorizationToken": auth["token"]
     }}).then(result => {
         if (result.ok) {
             return result.json();
@@ -291,6 +286,7 @@ function makePostRequest(auth) {
         });
       }
     }).catch(e => {
+        console.log(e);
         spinner.style.display = "none";
         alert("Oops. Smething went wrong :(. Please try again.")
     });

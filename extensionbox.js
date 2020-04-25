@@ -9,50 +9,10 @@ let isQuickLookUpEnabled = localStorage[QUICK_LOOK_UP_ENABLED];
 let sendVal = isQuickLookUpEnabled === 'true' || isQuickLookUpEnabled === undefined;
 var manifest = chrome.runtime.getManifest();
 
-function secureCallback(element, callback, message){
-  chrome.identity.getAuthToken({
-   interactive: true
- }, function(token) {
-   auth = {type:"Google", token: token, isAuth: true, message:message}
-   if (chrome.runtime.lastError) {
-     //TODO handle failure to authenticate
-     //Tell the user something went wrong
-     alert("Oops something went wrong. Please try again later.")
-     console.log(chrome.runtime.lastError.message);
-     return;
-   }
-   chrome.storage.local.get(['email'], (res) => {
-     console.log(Object.entries(res));
-     console.log(Object.entries(res).length);
-     console.log(Object.entries(res).length == 0);
-     if(chrome.runtime.lastError || Object.entries(res).length == 0){
-       var x = new XMLHttpRequest();
-       x.open('GET', 'https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=' + token);
-       x.onload = function() {
-         let response = JSON.parse(x.response);
-         chrome.storage.local.set({"email": response["email"], "first_name": response["given_name"]}, function() {
-           if(chrome.runtime.lastError){
-             auth["email"] = "failedToGet@mail.com";
-             callback(element,auth);
-             console.log("failed to write to localstorage ... what do we do?");
-           }else{
-             auth["email"] = response["email"];
-             callback(element,auth);
-           }
-         });
-       };
-       x.send();
-     }else{
-       auth["email"] = res.email
-       callback(element,auth);
-     }
-   });
- });
-}
 
 updateBox(checkBox);
 checkBox.onclick = () => handleCheckBoxClick();
-bugReport.onclick = () => secureCallback(null, handleBugReport, "authToBugReport");
+bugReport.onclick = handleBugReport;
 icon.addEventListener("mouseover", (e) => {
     let popup = document.getElementById("myPopup");
     popup.classList.toggle("show");
@@ -82,10 +42,7 @@ function handleCheckBoxClick() {
     }
     chrome.tabs.query({currentWindow: true, active: true}, function (tabs){
         var activeTab = tabs[0];
-        secureCallback(null, (el, auth) => {
-          console.log(auth);
-          chrome.tabs.sendMessage(activeTab.id, {"message": "checkHighlight", "enable": enable, auth: auth});
-        });
+        chrome.tabs.sendMessage(activeTab.id, {"message": "checkHighlight", "enable": enable});
     });
 }
 
@@ -141,7 +98,8 @@ function secureWebCheck(element, callback){
  });
 }
 */
-function performWebCheck(element, auth){
+function performWebCheck(){
+  request = {message: "runWebCheck"}
   chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
       var specTab = tabs[0];;
       chrome.tabs.insertCSS(specTab.id, {file: 'tags.css'});
@@ -153,7 +111,7 @@ function performWebCheck(element, auth){
             code: 'var sendVal = ' + JSON.stringify(sendVal)
         }, function() {
             chrome.tabs.executeScript(specTab.id, {file: 'tags.js'}, () => {
-              chrome.tabs.sendMessage(specTab.id, auth);
+              chrome.tabs.sendMessage(specTab.id, request);
            });
         });
       changeColor.style.display = "none"
@@ -162,14 +120,15 @@ function performWebCheck(element, auth){
   });
 }
 
-function handleBugReport(element,auth) {
+function handleBugReport() {
+  request = {message: "bugReport"}
   chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
     var specTab = tabs[0];
     chrome.tabs.insertCSS(specTab.id, {file: 'bugReport.css'});
     chrome.tabs.executeScript(specTab.id, {file: 'bugReport.js'}, () => {
-      chrome.tabs.sendMessage(specTab.id, auth);
+      chrome.tabs.sendMessage(specTab.id, request);
     });
   });
 }
 
-changeColor.onclick = (element) => secureCallback(element, performWebCheck, "authCredentialsWebCheck");
+changeColor.onclick = (element) => performWebCheck();

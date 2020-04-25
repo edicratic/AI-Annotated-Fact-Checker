@@ -9,7 +9,7 @@ LOG_URL = "https://webcheck-api.edicratic.com/log"
 NUMBER_OF_CHARCATERS_IN_PARAGRAPH = 500;
 
 
-function analyzeTextForSending(auth) {
+function analyzeTextForSending() {
     if(!window.getSelection) return;
     if(window.getSelection().toString() === '') return;
     closeAllTooltips();
@@ -40,7 +40,7 @@ function analyzeTextForSending(auth) {
     };
     check.onclick = (e) => {
         e.preventDefault();
-        sendBackData(auth, node, text);
+        sendBackData(node, text);
         modifySingleNode(node, text);
         clearSelection();
         removeHighlightedSpans();
@@ -78,8 +78,8 @@ function clearSelection() {
     window.getSelection().removeAllRanges();
 }
 
-function sendBackData(auth, paragraph, text) {
-    //we dont want an infinite loop, now do we 
+function sendBackData(paragraph, text) {
+    //we dont want an infinite loop, now do we
     let i = 0;
     while(paragraph.textContent.length < NUMBER_OF_CHARCATERS_IN_PARAGRAPH && i < 5) {
         paragraph = paragraph.parentElement;
@@ -98,7 +98,7 @@ function sendBackData(auth, paragraph, text) {
       url: window.location.href,
       annotation_type: "missing"
     };
-    sendData(auth, LOG_URL, body)
+    sendData(LOG_URL, body)
 }
 
 async function lookUpTerm(term) {
@@ -118,7 +118,7 @@ async function lookUpTerm(term) {
 function fetchWiki(input) {
     return new Promise((resolve, reject) => {
       let params = {method: "GET"}
-      chrome.runtime.sendMessage({input,params,init}, messageResponse => {
+      chrome.runtime.sendMessage({input,params,init,message: "callInternet"}, messageResponse => {
         //   console.log(messageResponse);
         const [response, error] = messageResponse;
         if (response === null) {
@@ -135,17 +135,16 @@ function fetchWiki(input) {
     });
   }
 
-  function sendData(auth, url, body) {
+  function sendData(url, body) {
       return new Promise((resolve, reject) => {
         params = {
                   method: "POST",
                   body: JSON.stringify({body: body}),
                   headers: {
                      'Content-Type': 'application/json',
-                     "authorizationToken": auth["token"]
                  }
                }
-        chrome.runtime.sendMessage({input: url,params}, messageResponse => {
+        chrome.runtime.sendMessage({input: url,params,message: "callInternet",needsAuthHeaders: true}, messageResponse => {
           //   console.log(messageResponse);
           const [response, error] = messageResponse;
           if (response === null) {
@@ -186,5 +185,5 @@ function getMatches(pages) {
   })
   matches.sort((a,b) => a.index - b.index);
   return matches;
-  
+
 }

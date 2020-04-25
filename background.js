@@ -12,62 +12,87 @@
     //     }]);
     // });
 // });
-var manifest = chrome.runtime.getManifest();
+//TODO Yukt add the caching
 
-var clientId = manifest.oauth2.client_id;
-var scopes = manifest.oauth2.scopes.join(' ');
-var redirectUri ='https://' + chrome.runtime.id + '.chromiumapp.org';
-
-const authParams = new URLSearchParams({
-  client_id: clientId,
-  response_type: 'code token id_token',
-  redirect_uri: redirectUri,
-  access_type: "offline",
-  scope: scopes,
+function getAuth(interactive){
+  return new Promise((resolve, reject) => {
+    chrome.identity.getAuthToken({
+      interactive: interactive
+     }, function(token) {
+       auth = {type:"Google", token: token}
+       if (chrome.runtime.lastError) {
+         reject(chrome.runtime.lastError.message);
+       }
+       chrome.storage.local.get(['email'], (res) => {
+         if(chrome.runtime.lastError || Object.entries(res).length == 0){
+           var x = new XMLHttpRequest();
+           x.open('GET', 'https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=' + token);
+           x.onload = function() {
+             let response = JSON.parse(x.response);
+             chrome.storage.local.set({"email": response["email"], "first_name": response["given_name"]}, function() {
+               if(chrome.runtime.lastError && showError){
+                 auth["email"] = "failedToGet@mail.com";
+                 console.log("failed to write to localstorage ... what do we do?");
+               }else{
+                 auth["email"] = response["email"];
+               }
+             });
+           };
+           x.send();
+         }else{
+           auth["email"] = res.email;
+         }
+       resolve(auth);
+     });
+  })
 });
-const url = `https://accounts.google.com/o/oauth2/auth?${authParams.toString()}`;
+}
+//TODO show the error
+function attachHeaders(request, interactive){
+  return new Promise((resolve, reject) =>{
+    if(!request.needsAuthHeaders){
+      resolve(request);
+    }
+    getAuth(interactive).then(auth => {
+      request.params.headers["authorizationToken"] = auth["token"];
+      resolve(request);
+    }).catch((err) => {
+      reject(err);
+    });
+ });
+}
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    console.log("hre");
-    console.log(request);
-    fetch(request.input, request.params).then(function(response) {
-      console.log("a response");
-      return response.text().then(function(text) {
-        sendResponse([{
-          body: text,
-          status: response.status,
-          statusText: response.statusText,
-        }, null]);
-      });
-    }, function(error) {
-      console.log("here?");
-      console.log(error);
-      sendResponse([null, error]);
+    console.log("wtf");
+    if (request.message === "callInternet"){
+      console.log("hello");
+      attachHeaders(request, false).then((readyRequest) => {
+        fetch(readyRequest.input, readyRequest.params).then(function(response) {
+          console.log("a response");
+          return response.text().then(function(text) {
+            sendResponse([{
+              body: text,
+              status: response.status,
+              statusText: response.statusText,
+            }, null]);
+          });
+        }, function(error) {
+          console.log("here?");
+          console.log(error);
+          sendResponse([null, error]);
+        });
+    }).catch(err => {
+        console.log("hello");
+        sendResponse([null, err]);
     });
     return true;
-  });
- chrome.runtime.onInstalled.addListener(function(details){
-   chrome.identity.getAuthToken({
-		interactive: true
-	}, function(token) {
-		if (chrome.runtime.lastError) {
-      //This is a tolerable failure.
-			console.log(chrome.runtime.lastError.message);
-			return;
-		}
-		var x = new XMLHttpRequest();
-		x.open('GET', 'https://www.googleapis.com/oauth2/v3/userinfo?alt=json&access_token=' + token);
-		x.onload = function() {
-      let response = JSON.parse(x.response);
-			chrome.storage.local.set({"email": response["email"], "first_name": response["given_name"]}, function() {
-        if(chrome.runtime.lastError){
-          console.log("Failure :'(");
-        }else{
-          console.log("Succes!");
-          console.log(response);
-        }
-			});
-		};
-		x.send();
-	});
+}
 });
+
+chrome.runtime.onInstalled.addListener(function(details){
+  getAuth(true).then(auth =>{
+    console.log(auth);
+  });
+});
+
+getAuth(false);
