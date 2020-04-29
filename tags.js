@@ -194,6 +194,10 @@ function mouseOverHandle(e, id) {
                 }
             }
         } else {
+            span.children[2].style.maxHeight = '';
+            span.style.minHeight = '';
+            span.getElementsByClassName('leftArrow')[0].style.marginTop = '';
+            span.getElementsByClassName('rightArrow')[0].style.marginTop = '';
             span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
             onTop[id] = true;
         }
@@ -422,9 +426,12 @@ function adjustSpansBasedOnHeight() {
             }
         } else {
             span.children[2].style.maxHeight = '';
+            span.style.minHeight = '';
             removeAllTextConstraints(span);
             span.style.top = `${y - anchor.clientHeight - span.clientHeight}px`;
             onTop[OPEN_SPAN] = true;
+            span.getElementsByClassName('leftArrow')[0].style.marginTop = '';
+            span.getElementsByClassName('rightArrow')[0].style.marginTop = '';
         }
     }
 }
