@@ -7,6 +7,7 @@ X_CLASS_NAME = 'fa fa-times fa-2x edicratic-no';
 LOG_URL = "https://webcheck-api.edicratic.com/log"
 //Chris, modify this as you please
 NUMBER_OF_CHARCATERS_IN_PARAGRAPH = 500;
+INVALID_DESCRIPTION = "Disambiguation page providing links to topics that could be referred to by the same search term";
 
 
 function analyzeTextForSending() {
@@ -41,7 +42,7 @@ function analyzeTextForSending() {
     check.onclick = (e) => {
         e.preventDefault();
         sendBackData(node, text);
-        modifySingleNode(node, text);
+        modifySingleNode(node, text.trim());
         clearSelection();
         removeHighlightedSpans();
     }
@@ -181,7 +182,7 @@ function getWikiUrl(term) {
 function getMatches(pages) {
   var matches = [];
   Object.keys(pages).forEach(key => {
-    if(key) matches.push(pages[key]);
+    if(key && pages[key].description !== INVALID_DESCRIPTION) matches.push(pages[key]);
   })
   matches.sort((a,b) => a.index - b.index);
   return matches;
