@@ -82,7 +82,15 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
           sendResponse([null, error]);
         });
     }).catch(err => {
-        console.log("hello");
+		err_log = {type: "Application Error", content: err, url: "None"};
+		param_stuff = {
+				method: "POST",
+				body: JSON.stringify({body: err_log}),
+				headers: {
+				   'Content-Type': 'application/json',
+			   }
+			 };
+		fetch("https://webcheck-api.edicratic.com/log", param_stuff);
         sendResponse([null, err]);
     });
     return true;
@@ -92,7 +100,17 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 chrome.runtime.onInstalled.addListener(function(details){
   getAuth(true).then(auth =>{
     console.log(auth);
-  });
+  }).catch(err => {
+		err_log = {type: "Application Error", content: err, url: "None"};
+		param_stuff = {
+				method: "POST",
+				body: JSON.stringify({body: err_log}),
+				headers: {
+				   'Content-Type': 'application/json',
+			   }
+			 };
+		fetch("https://webcheck-api.edicratic.com/log", param_stuff);
+    });
 });
 
 getAuth(false);
