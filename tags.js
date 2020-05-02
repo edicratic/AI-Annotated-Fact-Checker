@@ -11,9 +11,8 @@ onTop = {};
 OPEN_SPAN = undefined;
 DATA_LOADED = 'DATA_LOADED'
 BUTTON_PRESSED = 'BUTTON_PRESSED';
-PREVIOUS_HTML = "";
 PREVIOUS_TEXT = "";
-
+NEW_NODES = null;
 
 window.addEventListener('scroll', adjustSpansBasedOnHeight);
 window.addEventListener('scroll', checkForSizeChange);
@@ -51,7 +50,7 @@ function init(data) {
         }
         let childList = document.body.childNodes;
         const set = new Set();
-        if(itemsArray.length > 0 && regex) modifyAllText(regex, entity, itemsArray, childList, set,);
+        if(itemsArray.length > 0 && regex) modifyAllText(regex, entity, itemsArray, NEW_NODES || childList, set,);
     });
 }
 
@@ -253,7 +252,6 @@ function fetchWebCheck(input, params) {
   }
 
 function makePostRequest() {
-    PREVIOUS_HTML = document.body.innerHTML;
     PREVIOUS_TEXT = document.body.innerText;
     const spinner = document.createElement('div');
     spinner.className = "loading";
@@ -659,8 +657,9 @@ function checkForSizeChange() {
     let prevTextLength = PREVIOUS_TEXT.length;
     if(allText.length > prevTextLength + 50) {
         let difference = getDifference(PREVIOUS_TEXT, allText);
+        NEW_NODES = separateChildNodes(document.body.childNodes);
         PREVIOUS_TEXT = allText;
-        makePostRequestOnScroll(difference);
+        makePostRequestOnScroll(document.body.innerText);
     }
 }
 
@@ -695,5 +694,13 @@ function getDifference(a, b) {
         j++;
     }
     return result;
+}
+
+function separateChildNodes(newNodes) {
+    let updatedNodes = [];
+    newNodes.forEach(node => {
+        if(node.className !== TOOL_TIP_CLASS_NAME) updatedNodes.push(node);
+    });
+    return updatedNodes;
 }
 
