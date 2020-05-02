@@ -11,8 +11,12 @@ onTop = {};
 OPEN_SPAN = undefined;
 DATA_LOADED = 'DATA_LOADED'
 BUTTON_PRESSED = 'BUTTON_PRESSED';
+PREVIOUS_HTML = "";
+PREVIOUS_TEXT = "";
 
-document.body.onscroll = (e) => adjustSpansBasedOnHeight();
+
+window.addEventListener('scroll', adjustSpansBasedOnHeight);
+window.addEventListener('scroll', checkForSizeChange);
 if(sendVal){
   document.body.onmouseup = (e) => analyzeTextForSending();
   document.body.onmousedown = (e) => checkAndRemoveSpans(e);
@@ -249,6 +253,8 @@ function fetchWebCheck(input, params) {
   }
 
 function makePostRequest() {
+    PREVIOUS_HTML = document.body.innerHTML;
+    PREVIOUS_TEXT = document.body.innerText;
     const spinner = document.createElement('div');
     spinner.className = "loading";
     spinner.classList.add('loading-edicratic');
@@ -647,3 +653,47 @@ const sleep = ms => {
       setTimeout(resolve, ms);
     });
   }
+
+function checkForSizeChange() {
+    let allText = document.body.innerText;
+    let prevTextLength = PREVIOUS_TEXT.length;
+    if(allText.length > prevTextLength + 50) {
+        let difference = getDifference(PREVIOUS_TEXT, allText);
+        PREVIOUS_TEXT = allText;
+        makePostRequestOnScroll(difference);
+    }
+}
+
+function makePostRequestOnScroll(text) {
+    let data = {"blob": text, details: {sort: true, url: window.location.href}};
+    console.log(JSON.stringify(data));
+    fetchWebCheck(POST_URL,  {
+        method: "POST",
+        body: JSON.stringify({body: data}),
+        headers: {
+            'Content-Type': 'application/json',
+    }}).then(res => res.json()).then(data => {
+        let body = JSON.parse(data.body);
+        console.log(body);
+        processEntities(body);
+
+    });
+
+}
+
+function getDifference(a, b) {
+    var i = 0;
+    var j = 0;
+    var result = "";
+    
+    while (j < b.length)
+    {
+        if (a[i] != b[j] || i == a.length)
+            result += b[j];
+        else
+            i++;
+        j++;
+    }
+    return result;
+}
+
