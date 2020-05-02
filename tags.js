@@ -659,7 +659,7 @@ function checkForSizeChange() {
         let difference = getDifference(PREVIOUS_TEXT, allText);
         NEW_NODES = separateChildNodes(document.body.childNodes);
         PREVIOUS_TEXT = allText;
-        makePostRequestOnScroll(document.body.innerText);
+        makePostRequestOnScroll(difference);
     }
 }
 
@@ -703,4 +703,3 @@ function separateChildNodes(newNodes) {
     });
     return updatedNodes;
 }
-
