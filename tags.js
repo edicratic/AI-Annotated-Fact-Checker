@@ -16,10 +16,10 @@ NEW_NODES = null;
 
 window.addEventListener('scroll', adjustSpansBasedOnHeight);
 window.addEventListener('scroll', checkForSizeChange);
-if(sendVal){
-  document.body.onmouseup = (e) => analyzeTextForSending();
-  document.body.onmousedown = (e) => checkAndRemoveSpans(e);
-}
+
+chrome.storage.local.get(["highlight-enabled"], result => handleHighlightEnabling(result));
+chrome.storage.onChanged.addListener((changes, namespace) => handleStorageChange(changes, namespace));
+
 
 document.body.onmousemove = e => handleMouseMove(e);
 chrome.runtime.onMessage.addListener(
@@ -225,8 +225,6 @@ function isOverLap(span, anchor, x, y, id) {
 }
 
 function fetchWebCheck(input, params) {
-    console.log("hi");
-    console.log(input);
     return new Promise((resolve, reject) => {
       console.log("sending message");
       chrome.runtime.sendMessage({input,params, message: "callInternet", needsAuthHeaders: true}, messageResponse => {
@@ -702,4 +700,24 @@ function separateChildNodes(newNodes) {
         if(node.className !== TOOL_TIP_CLASS_NAME) updatedNodes.push(node);
     });
     return updatedNodes;
+}
+
+function handleHighlightEnabling(result) {
+    let isHighlightEnabled = result['highlight-enabled'];
+    if(isHighlightEnabled || isHighlightEnabled === undefined) {
+        document.body.addEventListener('mouseup', analyzeTextForSending);
+        document.body.addEventListener("mousedown", checkAndRemoveSpans);
+    }
+}
+
+function handleStorageChange(changes, namespace) {
+    let change = changes['highlight-enabled']['newValue'];
+    console.log(change);
+    if (change) {
+        document.body.addEventListener('mouseup', analyzeTextForSending);
+        document.body.addEventListener("mousedown", checkAndRemoveSpans);
+    } else {
+        document.body.removeEventListener('mouseup', analyzeTextForSending);
+        document.body.removeEventListener("mousedown", checkAndRemoveSpans);
+    }
 }

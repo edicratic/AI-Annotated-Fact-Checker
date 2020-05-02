@@ -9,7 +9,6 @@ let isQuickLookUpEnabled = localStorage[QUICK_LOOK_UP_ENABLED];
 let sendVal = isQuickLookUpEnabled === 'true' || isQuickLookUpEnabled === undefined;
 var manifest = chrome.runtime.getManifest();
 
-
 updateBox(checkBox);
 checkBox.onclick = () => handleCheckBoxClick();
 bugReport.onclick = handleBugReport;
@@ -17,12 +16,7 @@ icon.addEventListener("mouseover", (e) => {
     let popup = document.getElementById("myPopup");
     popup.classList.toggle("show");
 });
-if (localStorage['isLoadedEdicratic'] === 'true') {
-    check.style.display = "";
-    changeColor.style.display = "none";
-} else {
-    check.style.display = "none";
-}
+
 var isValid = localStorage['validEdicratic'];
 if (isValid === 'true') {
     invalidMessage.style.display = 'none';
@@ -31,31 +25,27 @@ if (isValid === 'true') {
 }
 
 function handleCheckBoxClick() {
-    let val = localStorage['edicratic-quick-look-up-enabled'];
-    let enable = undefined;
-    if (!val || val === 'true') {
-        localStorage['edicratic-quick-look-up-enabled'] = false;
-        enable = false;
+  chrome.storage.local.get(["highlight-enabled"], (result) => {
+    let val = result['highlight-enabled'];
+    let enabled;
+    if (val || val == undefined) {
+      enabled = false;
     } else {
-        localStorage['edicratic-quick-look-up-enabled'] = true;
-        enable = true;
+      enabled = true;
     }
-    chrome.tabs.query({currentWindow: true, active: true}, function (tabs){
-        var activeTab = tabs[0];
-        chrome.tabs.sendMessage(activeTab.id, {"message": "checkHighlight", "enable": enable});
-    });
+    chrome.storage.local.set({'highlight-enabled': enabled});
+  });
 }
 
 function updateBox(checkBox) {
-    let val = localStorage['edicratic-quick-look-up-enabled'];
-    let enable = undefined;
-    if (!val || val === 'true') {
+    chrome.storage.local.get(["highlight-enabled"], (result) => {
+      let val = result['highlight-enabled'];
+      if (val || val == undefined) {
         checkBox.checked = true;
-        enable = true;
-    } else {
+      } else {
         checkBox.checked = false;
-        enable = false;
-    }
+      }
+    });
 }
 /*
 function secureWebCheck(element, callback){
