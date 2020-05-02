@@ -15,7 +15,6 @@ PREVIOUS_TEXT = "";
 NEW_NODES = null;
 
 window.addEventListener('scroll', adjustSpansBasedOnHeight);
-window.addEventListener('scroll', checkForSizeChange);
 
 chrome.storage.local.get(["highlight-enabled"], result => handleHighlightEnabling(result));
 chrome.storage.onChanged.addListener((changes, namespace) => handleStorageChange(changes, namespace));
@@ -24,15 +23,8 @@ chrome.storage.onChanged.addListener((changes, namespace) => handleStorageChange
 document.body.onmousemove = e => handleMouseMove(e);
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
-      if( request.message === "checkHighlight" ) {
-          if(request.enable) {
-            document.body.onmouseup = (e) => analyzeTextForSending();
-            document.body.onmousedown = (e) => checkAndRemoveSpans(e);
-          } else {
-            document.body.onmouseup = undefined;
-            document.body.onmousedown = undefined;
-          }
-    }else if (request.message === "runWebCheck"){
+    if (request.message === "runWebCheck"){
+        window.addEventListener('scroll', checkForSizeChange);
         makePostRequest(request);
     }
   });
@@ -59,7 +51,6 @@ async function modifySingleNode(node, text) {
     var result = await fetchWiki(url);
     var data = await result.json();
 
-
     if(!data || !data.query) {
         alert("Sorry, could not find a match for that :(. Try to highlight specific terms");
         return;
@@ -76,7 +67,6 @@ async function modifySingleNode(node, text) {
     newElement.style.display = "inline";
     newElement.innerHTML = innerText;
     newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId);
-    //newElement.onmouseleave = (e) => handleMouseLeaveAnchor(e, uniqueId);
     node.parentElement.replaceChild(newElement, node);
 
     var tooltip = document.createElement('span');
@@ -226,10 +216,7 @@ function isOverLap(span, anchor, x, y, id) {
 
 function fetchWebCheck(input, params) {
     return new Promise((resolve, reject) => {
-      console.log("sending message");
       chrome.runtime.sendMessage({input,params, message: "callInternet", needsAuthHeaders: true}, messageResponse => {
-        console.log("goet a response");
-        console.log(messageResponse);
         const [response, error] = messageResponse;
         if (response === null) {
           reject(error);
@@ -275,10 +262,8 @@ function makePostRequest() {
         console.log("errr");
       }else{
         body = JSON.parse(data.body);
-        var data2 = [...body];
-        //sortEntities(data2);
-        console.log(data2);
-        processEntities(data2);
+        console.log(body);
+        processEntities(body);
         chrome.runtime.sendMessage({
             data: DATA_LOADED
         });
@@ -663,7 +648,6 @@ function checkForSizeChange() {
 
 function makePostRequestOnScroll(text) {
     let data = {"blob": text, details: {sort: true, url: window.location.href}};
-    console.log(JSON.stringify(data));
     fetchWebCheck(POST_URL,  {
         method: "POST",
         body: JSON.stringify({body: data}),
@@ -671,7 +655,6 @@ function makePostRequestOnScroll(text) {
             'Content-Type': 'application/json',
     }}).then(res => res.json()).then(data => {
         let body = JSON.parse(data.body);
-        console.log(body);
         processEntities(body);
 
     });
@@ -712,7 +695,6 @@ function handleHighlightEnabling(result) {
 
 function handleStorageChange(changes, namespace) {
     let change = changes['highlight-enabled']['newValue'];
-    console.log(change);
     if (change) {
         document.body.addEventListener('mouseup', analyzeTextForSending);
         document.body.addEventListener("mousedown", checkAndRemoveSpans);

@@ -89,24 +89,11 @@ function secureWebCheck(element, callback){
 }
 */
 function performWebCheck(){
-  request = {message: "runWebCheck"}
   chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
-      var specTab = tabs[0];;
-      chrome.tabs.insertCSS(specTab.id, {file: 'tags.css'});
-      chrome.tabs.insertCSS(specTab.id, {file: 'fontawesome.css'});
-      chrome.tabs.insertCSS(specTab.id, {file: 'expandLibrary.css'});
-      chrome.tabs.executeScript(specTab.id, {file: 'fontawesome.js'}, () => console.log("DONE"));
-      chrome.tabs.executeScript(specTab.id, {file: 'expandLibrary.js'}, () => console.log("DONE"));
-      chrome.tabs.executeScript(specTab.id, {
-            code: 'var sendVal = ' + JSON.stringify(sendVal)
-        }, function() {
-            chrome.tabs.executeScript(specTab.id, {file: 'tags.js'}, () => {
-              chrome.tabs.sendMessage(specTab.id, request);
-           });
-        });
+      let specTab = tabs[0]; 
+      chrome.tabs.sendMessage(specTab.id, {message: "runWebCheck"});
       changeColor.style.display = "none"
       check.style.display = "";
-      window.close();
   });
 }
 
