@@ -76,7 +76,7 @@ async function modifySingleNode(node, text) {
     newElement.style.display = "inline";
     newElement.innerHTML = innerText;
     newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId);
-    newElement.onmouseleave = (e) => handleMouseLeaveAnchor(e, uniqueId);
+    //newElement.onmouseleave = (e) => handleMouseLeaveAnchor(e, uniqueId);
     node.parentElement.replaceChild(newElement, node);
 
     var tooltip = document.createElement('span');
