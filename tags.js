@@ -245,7 +245,7 @@ function makePostRequest() {
         }
     }).then(data =>{
       //well so is thius hacky
-      spinner.style.display = "none";
+      spinner.parentElement.removeChild(spinner);
       if(data == undefined){
         console.log("errr");
       }else{
@@ -258,7 +258,7 @@ function makePostRequest() {
       }
     }).catch(e => {
         console.log(e);
-        spinner.style.display = "none";
+        spinner.parentElement.removeChild(spinner);
         alert("Oops. Smething went wrong :(. Please try again. Error: " + e)
     });
 }
