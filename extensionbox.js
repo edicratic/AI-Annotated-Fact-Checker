@@ -8,6 +8,7 @@ let bugReport = document.getElementById('edicratic-bug-report');
 let isQuickLookUpEnabled = localStorage[QUICK_LOOK_UP_ENABLED];
 let sendVal = isQuickLookUpEnabled === 'true' || isQuickLookUpEnabled === undefined;
 var manifest = chrome.runtime.getManifest();
+if(localStorage['isLoadedEdicratic'] === 'true') changeColor.style.display = 'none';
 
 updateBox(checkBox);
 checkBox.onclick = () => handleCheckBoxClick();

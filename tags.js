@@ -250,10 +250,11 @@ function makePostRequest() {
                       headers: {
                           'Content-Type': 'application/json',
     }}).then(result => {
+        console.log(result);
         if (result.ok) {
             return result.json();
         } else {
-            throw new Error('Something went wrong');
+            throw new Error(result.status);
         }
     }).then(data =>{
       //well so is thius hacky
@@ -271,7 +272,7 @@ function makePostRequest() {
     }).catch(e => {
         console.log(e);
         spinner.style.display = "none";
-        alert("Oops. Smething went wrong :(. Please try again.")
+        alert("Oops. Smething went wrong :(. Please try again. Error: " + e)
     });
 }
 
@@ -653,10 +654,19 @@ function makePostRequestOnScroll(text) {
         body: JSON.stringify({body: data}),
         headers: {
             'Content-Type': 'application/json',
-    }}).then(res => res.json()).then(data => {
+    }}).then(res => {
+        if(res.ok) {
+            return res.json();
+        } else {
+            throw new Error(res.status);
+        }
+    }).then(data => {
         let body = JSON.parse(data.body);
         processEntities(body);
 
+    }).catch(e => {
+        //probably don't want to tell user when this happens
+        //alert("Oops. Smething went wrong :(. Please try again. Error: " + e)
     });
 
 }
