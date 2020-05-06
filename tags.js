@@ -18,6 +18,7 @@ ARROW_UP_CLASSNAME = 'edicratic-tooltip-bottom-rightsideup';
 ARROW_DOWN_CLASSNAME = 'edicratic-tooltip-bottom-upsidedown'
 TAB_CONTAINER_CLASS_NAME = 'edicratic-tabContainer';
 INDIVIDUAL_TAB_CLASS_NAME = 'edicratic-tab';
+SHOW_HIDDEN_TEXT = 'edicratic-show-hidden';
 
 window.addEventListener('scroll', adjustSpansBasedOnHeight);
 
@@ -67,7 +68,6 @@ async function modifySingleNode(node, text) {
     var uniqueId = "d3" + Math.floor(Math.random() * 1000000);
     innerText = innerText.replace(text, `<div id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text}</div>`);
 
-    idToData[uniqueId] = [0, itemsArray]
     var newElement = document.createElement('div');
     newElement.style.display = "inline";
     newElement.innerHTML = innerText;
@@ -77,7 +77,7 @@ async function modifySingleNode(node, text) {
     var tooltip = document.createElement('span');
     tooltip.id = `${uniqueId}-parent`;
     tooltip.className = TOOL_TIP_CLASS_NAME;
-    tooltip.innerHTML = `${itemsArray[0]['full_html']}</div>`
+    tooltip.innerHTML = `${itemsArray}</div>`
 
     //create pointer
     let pointer = document.createElement('div');
@@ -94,7 +94,7 @@ async function modifySingleNode(node, text) {
         <a class="edicratic-tab">Tokyo</a>
     `
     tooltip.appendChild(tabs);
-    console.log(tooltip);
+    
     tooltip.onmouseleave = (e) => {
         if(e.target) {
             let id = e.target.id;
@@ -103,6 +103,10 @@ async function modifySingleNode(node, text) {
         }
     }
     document.body.prepend(tooltip)
+    let showMoreLinks = document.getElementsByClassName(SHOW_HIDDEN_TEXT);
+    for(var i = 0; i < showMoreLinks.length; i++) {
+        showMoreLinks[i].onclick = (e) => showHiddenText(e);
+    }
     tooltip.onclick = e => e.preventDefault();
 }
 
@@ -185,10 +189,26 @@ function positionTooltips(id) {
     let anchorLeft = anchor.getBoundingClientRect().left;
     let spanWidth = (Math.min(anchorRight + anchorLeft) / 2, 400);
     span.style.width = `${spanWidth}px`
-    span.style.left = `${x - spanWidth / 2 + anchor.clientWidth / 2}px`;
-
     let pointer = document.getElementById(`${id}-pointer`);
     pointer.style.display = 'block';
+    
+    let distanceLeft = anchor.getBoundingClientRect().left;
+    let distanceRight = window.innerWidth - anchor.clientWidth - distanceLeft;
+    let halfWidth = span.clientWidth / 2;
+    console.log(distanceLeft + ' ' + distanceRight + ' ' + halfWidth);
+    if(halfWidth > distanceLeft) {
+        span.style.left = `${x + anchor.clientWidth / 2 - TOOL_TIP_POINTER_HEIGHT}px`;
+
+    } else if (halfWidth > distanceRight) {
+        span.style.left = `${x - spanWidth + anchor.clientWidth / 2 + TOOL_TIP_POINTER_HEIGHT}px`;
+
+    } else {
+        span.style.left = `${x - spanWidth / 2 + anchor.clientWidth / 2}px`;
+    }
+
+    pointer.style.left = `${x - spanWidth / 2 + anchor.clientWidth / 2 + 
+        span.clientWidth / 2}px`;
+
 
 
     let distance = anchor.getBoundingClientRect().top;
@@ -196,8 +216,6 @@ function positionTooltips(id) {
         span.style.top = `${y + anchor.clientHeight + TOOL_TIP_POINTER_HEIGHT}px`;
         onTop[id] = false;
         pointer.style.bottom = `${window.innerHeight - span.offsetTop}px`
-        pointer.style.left = `${x - spanWidth / 2 + anchor.clientWidth / 2 + 
-            span.clientWidth / 2}px`;
         pointer.classList.remove(ARROW_UP_CLASSNAME);
         pointer.classList.add(ARROW_DOWN_CLASSNAME);
     } else {
@@ -206,8 +224,6 @@ function positionTooltips(id) {
         span.style.top = `${y - span.clientHeight - TOOL_TIP_POINTER_HEIGHT}px`;
         onTop[id] = true;
         pointer.style.top = `${y - TOOL_TIP_POINTER_HEIGHT}px`
-        pointer.style.left = `${x - spanWidth / 2 + anchor.clientWidth / 2 + 
-        span.clientWidth / 2}px`;
         pointer.classList.remove(ARROW_DOWN_CLASSNAME);
         pointer.classList.add(ARROW_UP_CLASSNAME);
     }
@@ -442,20 +458,15 @@ function removeIconShowMore(span) {
 }
 
 function showHiddenText(e) {
-    let id = e.toElement.id;
-    id = id.substring(0, id.indexOf('-'));
-    let span = document.getElementById(`${id}-parent`);
-    span.children[2].style.maxHeight = '1000000px';
-    let newIcon = document.createElement('i');
-    newIcon.id = `${id}-icon`;
-    newIcon.className = SHOW_LESS_ICON_CLASS;
-    newIcon.onclick = (e) => hideText(e);
-    let oldIcon = e.toElement;
-    oldIcon.parentNode.replaceChild(newIcon, oldIcon);
-
-    //remove Arrows
-    span.getElementsByClassName('leftArrow')[0].style.display = 'none';
-    span.getElementsByClassName('rightArrow')[0].style.display = 'none';
+    let id = e.target.id;
+    let hiddenText = document.getElementById(`${id}-hidden`);
+    if (hiddenText.style.display === 'none') {
+        e.target.textContent = 'Show Less';
+        hiddenText.style.display = 'inline';
+    } else {
+        e.target.textContent = 'Show More';
+        hiddenText.style.display = 'none';
+    }
 
 }
 
@@ -567,29 +578,45 @@ function invalidPosition(anchor, e, OPEN_SPAN) {
     let parent = e.target.parentElement;
     let top = anchor.getBoundingClientRect().top;
     let bottom = top + anchor.clientHeight;
-    if (!parent) {
-        return invalidPositionHelper(target) &&
-        !(onTop[OPEN_SPAN] ? e.clientY > top - 20 && e.clientY < top + 20 : e.clientY > bottom - 20 && e.clientY < bottom + 20);
-    } else {
-        return invalidPositionHelper(target) && invalidPositionHelper(parent)
-        && !(onTop[OPEN_SPAN] ? e.clientY  > top - 20 && e.clientY  < top + 20 : e.clientY > bottom - 20 && e.clientY < bottom + 20);
-    }
+    return invalidPositionHelper(target) &&
+    !(onTop[OPEN_SPAN] ? e.clientY > top - 20 && e.clientY < top + 20 : e.clientY > bottom - 20 && e.clientY < bottom + 20);
 }
 
 function invalidPositionHelper(element) {
-    return element.className !== TOOL_TIP_CLASS_NAME && element.className !== ANCHOR_CLASS_NAME
-    && element.className !== TAB_CONTAINER_CLASS_NAME;
+    for(let i = 0; i < 5; i++) {
+        if(!element) {
+            return true;
+        } else if(element.className === TOOL_TIP_CLASS_NAME || element.className === ANCHOR_CLASS_NAME) {
+            return false;
+        } else {
+            element = element.parentElement;
+
+        }
+    }
+    return true;
 }
 
 function proccessWikiData(items) {
-    let itemsArray = [];
+    let content = `<h4>Wiki Articles</h4><hr/><div class="info-edicratic">`;
+    //`<b>${item.title}</b><p class=${PARAGRAPH_CLASS_NAME}><br/>` + (stripHtml(item.extract) || item.description)
+    //put link underneath
+    console.log(items);
     for (var i = 0; i < items.length; i++) {
         let item = items[i];
         let wikilink = `https://en.wikipedia.org/?curid=${item.pageid}`
-        let data = {'link': wikilink,'full_html': `<h4>Wiki Articles</h4><hr/>` + `<b>${item.title}</b><p class=${PARAGRAPH_CLASS_NAME}><br/>` + (stripHtml(item.extract) || item.description), 'title': item.title, 'content': (stripHtml(item.extract) || item.description)}
-        if(data['content'] !== undefined) itemsArray.push(data);
+        // let data = {'link': wikilink,'full_html':  + `<b>${item.title}</b><p class=${PARAGRAPH_CLASS_NAME}><br/>` + (stripHtml(item.extract) || item.description), 'title': item.title, 'content': (stripHtml(item.extract) || item.description)}
+        // if(data['content'] !== undefined) itemsArray.push(data);
+        let pageDescription = stripHtml(item.extract) || item.description;
+        if (!pageDescription) continue;
+        let words = pageDescription.split(' ');
+        let visibleArray = words.slice(0, 10);
+        let hiddenArray = words.slice(10);
+        content += `<b>${item.title}:</b><p class=${PARAGRAPH_CLASS_NAME}>
+        ${visibleArray.join(' ')}<span style="display: none" id="${item.pageid}-hidden">
+        ${hiddenArray.join(' ')} <br/><a href="${wikilink}" target="_blank" class="inner-link">Learn More</a></span></p>
+        <a id="${item.pageid}"class="inner-link ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
     }
-    return itemsArray;
+    return content + '</div>';
 
 }
 

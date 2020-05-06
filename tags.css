@@ -262,6 +262,11 @@
   border-color: transparent transparent #f5f5f5 transparent;
 }
 
+.info-edicratic{
+   height: 400px;
+   overflow-y: scroll;
+}
+
 /*media queries*/
 @media screen and (max-width: 1125px) {
   .edicratic-tooltip .edicratic-paragraph-classname {
