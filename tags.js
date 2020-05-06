@@ -16,6 +16,8 @@ NEW_NODES = null;
 TOOL_TIP_POINTER_HEIGHT = 12;
 ARROW_UP_CLASSNAME = 'edicratic-tooltip-bottom-rightsideup';
 ARROW_DOWN_CLASSNAME = 'edicratic-tooltip-bottom-upsidedown'
+TAB_CONTAINER_CLASS_NAME = 'edicratic-tabContainer';
+INDIVIDUAL_TAB_CLASS_NAME = 'edicratic-tab';
 
 window.addEventListener('scroll', adjustSpansBasedOnHeight);
 
@@ -23,7 +25,7 @@ chrome.storage.local.get(["highlight-enabled"], result => handleHighlightEnablin
 chrome.storage.onChanged.addListener((changes, namespace) => handleStorageChange(changes, namespace));
 
 
-//document.body.onmousemove = e => handleMouseMove(e);
+document.body.onmousemove = e => handleMouseMove(e);
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
     if (request.message === "runWebCheck"){
@@ -545,30 +547,38 @@ function noNearbyTags(child, regex) {
 }
 
 function handleMouseMove(e) {
-    if (OPEN_SPAN) {
-        const element = e.target;
-        const elementParent = e.target.parentElement;
-        let currentSpan = document.getElementById(`${OPEN_SPAN}-pointer`);
-
-        if (determineMouseOverSpan(element, elementParent, currentSpan.getBoundingClientRect().left,
-                    currentSpan.getBoundingClientRect().top, e.screenX, e.screenY)) {
-            let spans = document.getElementsByClassName(TOOL_TIP_CLASS_NAME);
-            for (var i = 0; i < spans.length; i++) {
-                let id = spans[i].id;
-                id = id.substring(0, id.indexOf('-'));
-                removeSpan(id);
-                let pointer = document.getElementById(`${id}-pointer`)
-                pointer.parentElement.removeChild(pointer);
-            }
-            OPEN_SPAN = undefined;
+    if (!OPEN_SPAN) return;
+    let anchor = document.getElementById(`${OPEN_SPAN}-parent-parent`)
+    if (invalidPosition(anchor, e, OPEN_SPAN)) {
+        let spans = document.getElementsByClassName(TOOL_TIP_CLASS_NAME);
+        for (var i = 0; i < spans.length; i++) {
+            let id = spans[i].id;
+            id = id.substring(0, id.indexOf('-'));
+            removeSpan(id);
+            let pointer = document.getElementById(`${id}-pointer`);
+            pointer.style.display = 'none';
         }
-}
+        OPEN_SPAN = undefined;
+    }
 }
 
-function determineMouseOverSpan(element, elementParent, spanX, spanY, x, y) {
-    return element.className === TOOL_TIP_CLASS_NAME || elementParent.className === TOOL_TIP_CLASS_NAME
-        || element.className === ANCHOR_CLASS_NAME || element.className === 'tab-edicratic' ||
-        element.parentElement.className === 'tab-edicratic' || (y <= spanY + 30 && y >= spanY - 30)
+function invalidPosition(anchor, e, OPEN_SPAN) {
+    let target = e.target;
+    let parent = e.target.parentElement;
+    let top = anchor.getBoundingClientRect().top;
+    let bottom = top + anchor.clientHeight;
+    if (!parent) {
+        return invalidPositionHelper(target) &&
+        !(onTop[OPEN_SPAN] ? e.clientY > top - 20 && e.clientY < top + 20 : e.clientY > bottom - 20 && e.clientY < bottom + 20);
+    } else {
+        return invalidPositionHelper(target) && invalidPositionHelper(parent)
+        && !(onTop[OPEN_SPAN] ? e.clientY  > top - 20 && e.clientY  < top + 20 : e.clientY > bottom - 20 && e.clientY < bottom + 20);
+    }
+}
+
+function invalidPositionHelper(element) {
+    return element.className !== TOOL_TIP_CLASS_NAME && element.className !== ANCHOR_CLASS_NAME
+    && element.className !== TAB_CONTAINER_CLASS_NAME;
 }
 
 function proccessWikiData(items) {
@@ -576,7 +586,7 @@ function proccessWikiData(items) {
     for (var i = 0; i < items.length; i++) {
         let item = items[i];
         let wikilink = `https://en.wikipedia.org/?curid=${item.pageid}`
-        let data = {'link': wikilink,'full_html': `<b>${item.title}</b>` + `<hr style="color:black"/><p class=${PARAGRAPH_CLASS_NAME}>` + (stripHtml(item.extract) || item.description), 'title': item.title, 'content': (stripHtml(item.extract) || item.description)}
+        let data = {'link': wikilink,'full_html': `<h4>Wiki Articles</h4><hr/>` + `<b>${item.title}</b><p class=${PARAGRAPH_CLASS_NAME}><br/>` + (stripHtml(item.extract) || item.description), 'title': item.title, 'content': (stripHtml(item.extract) || item.description)}
         if(data['content'] !== undefined) itemsArray.push(data);
     }
     return itemsArray;

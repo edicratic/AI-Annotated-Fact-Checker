@@ -54,53 +54,15 @@
 }
 .edicratic-tooltip .edicratic-paragraph-classname {
   height: auto;
-  overflow-y: hidden;
+  overflow-y: auto;
   margin-bottom: 0.5rem;
+  max-height: 200px;
   font-size: 1vw !important;
   font-weight: normal !important;
   font-family: 'Times New Roman' !important;
   font-style: normal !important;
   line-height: normal !important;
   overflow-y:auto;
-
-}
-
-/* .edicratic-anchor-tag-style:hover .edicratic-tooltip {
-    visibility: visible !important;
-    opacity: 1 !important;
-} */
-
-.edicratic-tooltip .rightArrow {
-    float: right !important;
-    margin-right: 1rem !important;
-    width: 4rem !important;
-    height: auto !important;
-    bottom: -2 !important;
-    transition: top ease 0.5s !important;
-    margin-bottom: -1px;
-
-}
-
-.edicratic-tooltip .leftArrow {
-    float: left !important;
-    margin-left: 1rem !important;
-    width: 4rem !important;
-    height: auto !important;
-    bottom: -2 !important;
-    transition: top ease 0.5s !important;
-    margin-bottom: -1px;
-
-}
-
-.edicratic-tooltip .leftArrow:hover {
-    top: -10px !important;
-    background-color: #15c39a !important;
-
-}
-
-.edicratic-tooltip .rightArrow:hover {
-    top: -10px !important;
-    background-color: #15c39a !important;
 
 }
 
