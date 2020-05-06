@@ -32,7 +32,7 @@
     visibility: hidden;
     /*height: 30vh !important;*/
     height: auto;
-    min-width: 200px;
+    width: auto;
     background-color: #f5f5f5 !important;
     color: black !important;
     text-align: center !important;
@@ -250,6 +250,55 @@
       transform: rotate(360deg);
     }
   }
+
+/*alt tab*/
+.edicratic-tooltip .edicratic-tabContainer {
+  display: -webkit-flex;
+  display: flex;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  background-color: lightgray;
+  height: 30px;
+  margin-top: 1rem;
+  margin-bottom: -5px;
+}
+
+.edicratic-tooltip .edicratic-tab {
+    width: 100px;
+    padding: 0.5rem;
+    align-items: center;
+    text-decoration: none !important;
+    position: relative;
+    display: flex;
+    cursor: pointer;
+}
+
+.edicratic-tooltip .edicratic-tab:hover {
+  background-color: white !important;
+}
+
+.edicratic-tooltip .edicratic-selected {
+  background-color: white !important;
+}
+
+.edicratic-tooltip-bottom {
+  content: " ";
+  position: absolute;
+  margin-left: -12px;
+  border-width: 12px;
+  border-style: solid;
+  display: block;
+}
+
+.edicratic-tooltip-bottom-rightsideup {
+  border-color: lightgray transparent transparent transparent;
+}
+
+.edicratic-tooltip-bottom-upsidedown {
+  border-color: transparent transparent #f5f5f5 transparent;
+}
 
 /*media queries*/
 @media screen and (max-width: 1125px) {
