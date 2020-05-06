@@ -102,11 +102,6 @@ async function modifySingleNode(node, text) {
     }
     document.body.prepend(tooltip)
     tooltip.onclick = e => e.preventDefault();
-    tooltip.children[6].addEventListener('click', (e) => arrowClick(e, true), true);
-    tooltip.children[7].addEventListener('click', (e) => arrowClick(e, false), true);
-
-
-
 }
 
 function modifyAllText(regex, entity, data, childList, set) {
@@ -173,42 +168,46 @@ function mouseOverHandle(e, id) {
             removeSpan(OPEN_SPAN);
         }
         OPEN_SPAN = id;
-        const span = document.getElementById(`${id}-parent`);
-        const anchor = document.getElementById(`${id}-parent-parent`);
-        let x = anchor.getBoundingClientRect().left + window.pageXOffset;
-        let y = anchor.getBoundingClientRect().top + window.pageYOffset;
-        span.style.visibility = 'visible';
-        span.style.display = 'block';
-        let anchorRight = anchor.getBoundingClientRect().right;
-        let anchorLeft = anchor.getBoundingClientRect().left;
-        let spanWidth = (Math.min(anchorRight + anchorLeft) / 2, 400);
-        span.style.width = `${spanWidth}px`
-        span.style.left = `${x - spanWidth / 2 + anchor.clientWidth / 2}px`;
+        positionTooltips(id);
+    }
+}
 
-        let pointer = document.getElementById(`${id}-pointer`);
-        pointer.style.display = 'block';
+function positionTooltips(id) {
+    const span = document.getElementById(`${id}-parent`);
+    const anchor = document.getElementById(`${id}-parent-parent`);
+    let x = anchor.getBoundingClientRect().left + window.pageXOffset;
+    let y = anchor.getBoundingClientRect().top + window.pageYOffset;
+    span.style.visibility = 'visible';
+    span.style.display = 'block';
+    let anchorRight = anchor.getBoundingClientRect().right;
+    let anchorLeft = anchor.getBoundingClientRect().left;
+    let spanWidth = (Math.min(anchorRight + anchorLeft) / 2, 400);
+    span.style.width = `${spanWidth}px`
+    span.style.left = `${x - spanWidth / 2 + anchor.clientWidth / 2}px`;
+
+    let pointer = document.getElementById(`${id}-pointer`);
+    pointer.style.display = 'block';
 
 
-        let distance = anchor.getBoundingClientRect().top;
-        if (distance <= span.clientHeight) {
-            span.style.top = `${y + anchor.clientHeight + TOOL_TIP_POINTER_HEIGHT}px`;
-            onTop[id] = false;
-            pointer.style.bottom = `${window.innerHeight - span.offsetTop}px`
-            pointer.style.left = `${x - spanWidth / 2 + anchor.clientWidth / 2 + 
-                span.clientWidth / 2}px`;
-            pointer.classList.remove(ARROW_UP_CLASSNAME);
-            pointer.classList.add(ARROW_DOWN_CLASSNAME);
-        } else {
-            span.children[2].style.maxHeight = '';
-            span.style.minHeight = '';
-            span.style.top = `${y - span.clientHeight - TOOL_TIP_POINTER_HEIGHT}px`;
-            onTop[id] = true;
-            pointer.style.top = `${y - TOOL_TIP_POINTER_HEIGHT}px`
-            pointer.style.left = `${x - spanWidth / 2 + anchor.clientWidth / 2 + 
+    let distance = anchor.getBoundingClientRect().top;
+    if (distance <= span.clientHeight) {
+        span.style.top = `${y + anchor.clientHeight + TOOL_TIP_POINTER_HEIGHT}px`;
+        onTop[id] = false;
+        pointer.style.bottom = `${window.innerHeight - span.offsetTop}px`
+        pointer.style.left = `${x - spanWidth / 2 + anchor.clientWidth / 2 + 
             span.clientWidth / 2}px`;
-            pointer.classList.remove(ARROW_DOWN_CLASSNAME);
-            pointer.classList.add(ARROW_UP_CLASSNAME);
-        }
+        pointer.classList.remove(ARROW_UP_CLASSNAME);
+        pointer.classList.add(ARROW_DOWN_CLASSNAME);
+    } else {
+        span.children[2].style.maxHeight = '';
+        span.style.minHeight = '';
+        span.style.top = `${y - span.clientHeight - TOOL_TIP_POINTER_HEIGHT}px`;
+        onTop[id] = true;
+        pointer.style.top = `${y - TOOL_TIP_POINTER_HEIGHT}px`
+        pointer.style.left = `${x - spanWidth / 2 + anchor.clientWidth / 2 + 
+        span.clientWidth / 2}px`;
+        pointer.classList.remove(ARROW_DOWN_CLASSNAME);
+        pointer.classList.add(ARROW_UP_CLASSNAME);
     }
 }
 
@@ -385,41 +384,8 @@ function preventSpanDefaultBehaviour() {
 }
 
 function adjustSpansBasedOnHeight() {
-    const span = document.getElementById(`${OPEN_SPAN}-parent`);
-    const anchor = document.getElementById(`${OPEN_SPAN}-parent-parent`)
-    if (span) {
-        let y = anchor.getBoundingClientRect().top + window.pageYOffset;
-        let distance = anchor.getBoundingClientRect().top;
-        let expanded = textIsShown(span);
-
-        //normalize for height
-        removeAllTextConstraints(span, OPEN_SPAN);
-        span.children[2].style.maxHeight = '';
-        span.children[2].style.minHeight = '';
-
-
-        if (distance <= span.clientHeight) {
-            span.style.top = `${y + anchor.clientHeight}px`;
-            onTop[OPEN_SPAN] = false;
-            if (expanded) {
-                createIconShowLess(span);
-            } else {
-                span.children[2].style.maxHeight = '100px';
-                if(isOverflown(span.children[2])) {
-                    removeAllTextConstraints(span);
-                    removeIconShowMore(span);
-                    createIconShowMore(span);
-                }
-            }
-        } else {
-            span.children[2].style.maxHeight = '';
-            span.style.minHeight = '';
-            removeAllTextConstraints(span);
-            span.style.top = `${y - span.clientHeight}px`;
-            onTop[OPEN_SPAN] = true;
-            span.getElementsByClassName('leftArrow')[0].style.marginTop = '';
-            span.getElementsByClassName('rightArrow')[0].style.marginTop = '';
-        }
+    if(OPEN_SPAN) {
+        positionTooltips(OPEN_SPAN);
     }
 }
 
@@ -579,19 +545,30 @@ function noNearbyTags(child, regex) {
 }
 
 function handleMouseMove(e) {
-    const element = e.target;
-    const elementParent = e.target.parentElement;
-    if (element.className !== TOOL_TIP_CLASS_NAME && elementParent.className !== TOOL_TIP_CLASS_NAME
-        && element.className !== ANCHOR_CLASS_NAME && element.className != 'tab-edicratic' && 
-        element.parentElement.className !== 'tab-edicratic') {
-        let spans = document.getElementsByClassName(TOOL_TIP_CLASS_NAME);
-        for (var i = 0; i < spans.length; i++) {
-            let id = spans[i].id;
-            id = id.substring(0, id.indexOf('-'));
-            removeSpan(id);
+    if (OPEN_SPAN) {
+        const element = e.target;
+        const elementParent = e.target.parentElement;
+        let currentSpan = document.getElementById(`${OPEN_SPAN}-pointer`);
+
+        if (determineMouseOverSpan(element, elementParent, currentSpan.getBoundingClientRect().left,
+                    currentSpan.getBoundingClientRect().top, e.screenX, e.screenY)) {
+            let spans = document.getElementsByClassName(TOOL_TIP_CLASS_NAME);
+            for (var i = 0; i < spans.length; i++) {
+                let id = spans[i].id;
+                id = id.substring(0, id.indexOf('-'));
+                removeSpan(id);
+                let pointer = document.getElementById(`${id}-pointer`)
+                pointer.parentElement.removeChild(pointer);
+            }
+            OPEN_SPAN = undefined;
         }
-        OPEN_SPAN = undefined;
-    }
+}
+}
+
+function determineMouseOverSpan(element, elementParent, spanX, spanY, x, y) {
+    return element.className === TOOL_TIP_CLASS_NAME || elementParent.className === TOOL_TIP_CLASS_NAME
+        || element.className === ANCHOR_CLASS_NAME || element.className === 'tab-edicratic' ||
+        element.parentElement.className === 'tab-edicratic' || (y <= spanY + 30 && y >= spanY - 30)
 }
 
 function proccessWikiData(items) {

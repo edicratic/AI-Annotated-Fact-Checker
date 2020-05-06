@@ -276,11 +276,11 @@
 }
 
 .edicratic-tooltip .edicratic-tab:hover {
-  background-color: white !important;
+  background-color: gray !important;
 }
 
 .edicratic-tooltip .edicratic-selected {
-  background-color: white !important;
+  background-color: gray !important;
 }
 
 .edicratic-tooltip-bottom {
