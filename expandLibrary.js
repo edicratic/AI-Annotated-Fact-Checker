@@ -136,6 +136,29 @@ function fetchWiki(input) {
     });
   }
 
+  function fetchNewYorkTimes(term) {
+    let dateObj = new Date();
+    let month = `${dateObj.getMonth() + 1}`
+    let day = `${dateObj.getDate()}`;
+    let date = `${dateObj.getFullYear()}-${month.length < 2 ? '0' + month : month}-${day.length < 2 ? '0' + day : day}`;
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({message: 'NYTimes', term, date}, messageResponse => {
+        console.log(messageResponse);
+        const [response, error] = messageResponse;
+        if (response === null) {
+          reject(error);
+        } else {
+          // Use undefined on a 204 - No Content
+          const body = response.body ? new Blob([response.body]) : undefined;
+          resolve(new Response(body, {
+            status: response.status,
+            statusText: response.statusText,
+          }));
+        }
+      });
+    })
+  }
+
   function sendData(url, body) {
       return new Promise((resolve, reject) => {
         params = {

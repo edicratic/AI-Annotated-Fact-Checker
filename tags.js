@@ -19,6 +19,9 @@ ARROW_DOWN_CLASSNAME = 'edicratic-tooltip-bottom-upsidedown'
 TAB_CONTAINER_CLASS_NAME = 'edicratic-tabContainer';
 INDIVIDUAL_TAB_CLASS_NAME = 'edicratic-tab';
 SHOW_HIDDEN_TEXT = 'edicratic-show-hidden';
+ENTITY_HEADER = 'edicratic-entity-header'
+ENTITY_LINK_CLASS_NAME = 'edicratic-entity-link';
+//TODO play with tab width
 
 window.addEventListener('scroll', adjustSpansBasedOnHeight);
 
@@ -56,6 +59,7 @@ async function modifySingleNode(node, text) {
     var url = getWikiUrl(text);
     var result = await fetchWiki(url);
     var data = await result.json();
+    console.log(data);
 
     if(!data || !data.query) {
         alert("Sorry, could not find a match for that :(. Try to highlight specific terms");
@@ -77,7 +81,10 @@ async function modifySingleNode(node, text) {
     var tooltip = document.createElement('span');
     tooltip.id = `${uniqueId}-parent`;
     tooltip.className = TOOL_TIP_CLASS_NAME;
-    tooltip.innerHTML = `${itemsArray}</div>`
+    tooltip.innerHTML = `<div id=${uniqueId}-content> ${itemsArray}</div>`
+
+    //add data
+    idToData[uniqueId] = {'Information': itemsArray};
 
     //create pointer
     let pointer = document.createElement('div');
@@ -87,13 +94,20 @@ async function modifySingleNode(node, text) {
 
     let tabs = document.createElement('div');
     tabs.className = 'edicratic-tabContainer';
+    tabs.id =`${uniqueId}-tabs`;
     tabs.innerHTML = `
-        <a class="edicratic-tab">London</a>
-        <a class="edicratic-tab">Paris</a>
-        <a class="edicratic-tab">Tokyo</a>
-        <a class="edicratic-tab">Tokyo</a>
+        <a class="edicratic-tab edicratic-selected">Information</a>
+        <a class="edicratic-tab">News</a>
     `
     tooltip.appendChild(tabs);
+    //TODO write onclick method
+    let tabChildren = tabs.children;
+    for (var i = 0; i < tabChildren.length; i++) {
+        tabChildren[i].onclick = (e) => handleTabClick(e, uniqueId);
+    }
+
+
+
     
     tooltip.onmouseleave = (e) => {
         if(e.target) {
@@ -103,11 +117,79 @@ async function modifySingleNode(node, text) {
         }
     }
     document.body.prepend(tooltip)
-    let showMoreLinks = document.getElementsByClassName(SHOW_HIDDEN_TEXT);
+    addShowMoreListeners(uniqueId);
+    tooltip.onclick = e => e.preventDefault();
+    addNewYorkTimesData(uniqueId, text);
+}
+
+async function addNewYorkTimesData(id, term) {
+    let resultNYTimes = await fetchNewYorkTimes(term);
+    let dataNYTimes = await resultNYTimes.json();
+    let NYTimesContent = processNYTimes(dataNYTimes, id);
+    idToData[id]['News'] = NYTimesContent;
+    addShowMoreListeners(id);
+}
+
+function addShowMoreListeners(id) {
+    let tooltip = document.getElementById(`${id}-parent`);
+    let showMoreLinks = tooltip.getElementsByClassName(SHOW_HIDDEN_TEXT);
     for(var i = 0; i < showMoreLinks.length; i++) {
         showMoreLinks[i].onclick = (e) => showHiddenText(e);
     }
-    tooltip.onclick = e => e.preventDefault();
+}
+
+function handleTabClick(e, id) {
+    let tooltip = document.getElementById(`${id}-parent`);
+    let tabs = document.getElementById(`${id}-tabs`);
+    let currentTab = e.toElement;
+    let tabChildren = tabs.children;
+    for(var i = 0; i < tabChildren.length; i++) {
+        if (tabChildren[i].classList.contains('edicratic-selected')) {
+            tabChildren[i].classList.remove('edicratic-selected');
+        }
+    }
+    currentTab.classList.add('edicratic-selected');
+    let tooltipChildren = tooltip.children;
+    for(var i = 0; i < tooltipChildren.length; i++) {
+        if(tooltipChildren[i].id === `${id}-content`) {
+            tooltipChildren[i].innerHTML = idToData[id][currentTab.textContent || currentTab.innerText];
+
+        }
+    }
+    addShowMoreListeners(id);
+}
+
+function processNYTimes(data, id) {
+    console.log(data);
+    if(!data || !data.response || !data.response.docs || data.response.docs.length === 0) {
+        let tabs = document.getElementById(`${id}-tabs`);
+        let tabChildren = tabs.children;
+        for (var i = 0; i < tabChildren.length; i++) {
+            if(tabChildren[i].textContent === 'News') {
+                tabChildren[i].parentElement.removeChild(tabChildren[i]);
+                return;
+            }
+        }
+    }
+        let articles = data.response.docs;
+        let content = `<h4>News Articles From Today</h4><hr/><div class="info-edicratic">`;
+        for (var i = 0; i < articles.length; i++) {
+            //TODO sort by category. add author attribution
+            let article = articles[i];
+            let link = article.web_url;
+            let title = article.headline.main;
+            let pageDescription = article.abstract;
+            let firstParagraph = article.lead_paragraph;
+            let id = article._id;
+            let imageSource = article.multimedia && article.multimedia[0] && article.multimedia[0].url ?
+            `https://www.nytimes.com/${article.multimedia[0].url}` : undefined;
+            content += `<b class="${ENTITY_HEADER}">${title}:</b><p class=${PARAGRAPH_CLASS_NAME}>
+            ${pageDescription}<span style="display: none" id="${id}-hidden">
+            <br/><br/>${firstParagraph} <br/><br/>` + (imageSource ? `<img class='edicratic-image-nyt' src="${imageSource}"/><br/><br/>` : ``) 
+            + `<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${link}', '_blank')">Read Article</a></span></p>
+            <a id="${id}"class="inner-link ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
+        }
+        return content + '</div>';
 }
 
 function modifyAllText(regex, entity, data, childList, set) {
@@ -583,7 +665,7 @@ function invalidPosition(anchor, e, OPEN_SPAN) {
 }
 
 function invalidPositionHelper(element) {
-    for(let i = 0; i < 5; i++) {
+    for(let i = 0; i < 10; i++) {
         if(!element) {
             return true;
         } else if(element.className === TOOL_TIP_CLASS_NAME || element.className === ANCHOR_CLASS_NAME) {
@@ -598,23 +680,19 @@ function invalidPositionHelper(element) {
 
 function proccessWikiData(items) {
     let content = `<h4>Wiki Articles</h4><hr/><div class="info-edicratic">`;
-    //`<b>${item.title}</b><p class=${PARAGRAPH_CLASS_NAME}><br/>` + (stripHtml(item.extract) || item.description)
-    //put link underneath
     console.log(items);
     for (var i = 0; i < items.length; i++) {
         let item = items[i];
         let wikilink = `https://en.wikipedia.org/?curid=${item.pageid}`
-        // let data = {'link': wikilink,'full_html':  + `<b>${item.title}</b><p class=${PARAGRAPH_CLASS_NAME}><br/>` + (stripHtml(item.extract) || item.description), 'title': item.title, 'content': (stripHtml(item.extract) || item.description)}
-        // if(data['content'] !== undefined) itemsArray.push(data);
         let pageDescription = stripHtml(item.extract) || item.description;
         if (!pageDescription) continue;
         let words = pageDescription.split(' ');
         let visibleArray = words.slice(0, 10);
         let hiddenArray = words.slice(10);
-        content += `<b>${item.title}:</b><p class=${PARAGRAPH_CLASS_NAME}>
+        content += `<b class="${ENTITY_HEADER}">${item.title}:</b><p class=${PARAGRAPH_CLASS_NAME}>
         ${visibleArray.join(' ')}<span style="display: none" id="${item.pageid}-hidden">
         ${hiddenArray.join(' ')} <br/><br/>` + (item.thumbnail ? `<img class='edicratic-image' src="${item.thumbnail.source}"/><br/><br/>` : ``) 
-        + `<a href="${wikilink}" target="_blank" class="inner-link">Learn More</a></span></p>
+        + `<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${wikilink}', '_blank')">Learn More</a></span></p>
         <a id="${item.pageid}"class="inner-link ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
     }
     return content + '</div>';

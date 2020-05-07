@@ -63,6 +63,7 @@
   line-height: normal !important;
   overflow-y:auto;
   padding: 1rem;
+  padding-bottom: 0;
 
 }
 
@@ -235,6 +236,20 @@
     position: relative;
     display: flex;
     cursor: pointer;
+    color: black !important;
+}
+
+.edicratic-tooltip b {
+    font-weight: bold !important;
+}
+
+.edicratic-tooltip h4 {
+  display: block !important;
+  margin-block-start: 1.33em !important;
+  margin-block-end: 1.33em !important;
+  margin-inline-start: 0px !important;
+  margin-inline-end: 0px !important;
+  font-weight: bold !important;
 }
 
 .edicratic-tooltip .edicratic-tab:hover {
@@ -254,6 +269,10 @@
   display: block;
 }
 
+.edicratic-entity-header {
+  padding: 1rem;
+}
+
 .edicratic-tooltip-bottom-rightsideup {
   border-color: lightgray transparent transparent transparent;
 }
@@ -269,7 +288,21 @@
 
 .edicratic-image {
   width: auto;
-  height: 100px;
+  height: 50px;
+  /* border-radius: 50%; */
+  display: inline !important;
+}
+
+.edicratic-image-nyt {
+  width: auto;
+  height: 200px;
+  display:inline !important;
+}
+
+.edicratic-entity-link {
+  color: #8c1515;
+  cursor: pointer;
+
 }
 
 /*media queries*/

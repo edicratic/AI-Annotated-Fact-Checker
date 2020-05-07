@@ -93,8 +93,23 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 		fetch("https://webcheck-api.edicratic.com/log", param_stuff);
         sendResponse([null, err]);
     });
-    return true;
+} else if (request.message === 'NYTimes') {
+  //TODO attach auth here, Chris
+  let url = `https://api.nytimes.com/svc/search/v2/articlesearch.json?q=${request.term}&fq=pub_date:("${request.date}")&api-key=6NLKSZcRcdoGdABNC5e5ZlCetf0Upvns`
+  fetch(url).then(response => {
+    return response.text().then(text => {
+      console.log(text);
+      sendResponse([{
+        body: text,
+        status: response.status,
+        statusText: response.statusText,
+      }, null]);
+    }, function(error) {
+      sendResponse[null, error];
+    });
+  })
 }
+return true;
 });
 
 chrome.runtime.onInstalled.addListener(function(details){
