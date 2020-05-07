@@ -165,7 +165,7 @@ function getWikiUrl(term) {
     const params =  new URLSearchParams({
         "action": "query",
         "format": "json",
-        "prop": "description|extracts",
+        "prop": "description|extracts|pageimages",
         "list": "",
         "generator": "search",
         "exsentences": "2",
@@ -174,7 +174,7 @@ function getWikiUrl(term) {
         "gsrsearch": term,
         "gsrlimit": 5,
         "gsrinfo": "totalhits",
-        "gsrsort": "relevance"
+        "gsrsort": "relevance",
     });
     return `https://en.wikipedia.org/w/api.php?${params.toString()}`;
 }

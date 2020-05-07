@@ -613,7 +613,8 @@ function proccessWikiData(items) {
         let hiddenArray = words.slice(10);
         content += `<b>${item.title}:</b><p class=${PARAGRAPH_CLASS_NAME}>
         ${visibleArray.join(' ')}<span style="display: none" id="${item.pageid}-hidden">
-        ${hiddenArray.join(' ')} <br/><a href="${wikilink}" target="_blank" class="inner-link">Learn More</a></span></p>
+        ${hiddenArray.join(' ')} <br/><br/>` + (item.thumbnail ? `<img class='edicratic-image' src="${item.thumbnail.source}"/><br/><br/>` : ``) 
+        + `<a href="${wikilink}" target="_blank" class="inner-link">Learn More</a></span></p>
         <a id="${item.pageid}"class="inner-link ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
     }
     return content + '</div>';
