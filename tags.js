@@ -368,6 +368,7 @@ function fetchWebCheck(input, params) {
 async function testEndpoint(term, id, tooltipField) {
     await sleep(10);
     let content = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">`;
+    if (tooltipField) tooltipField.innerHTML = content + 'Searching...</div>';
     let resultNYTimes = await fetchNewYorkTimes(term);
     let dataNYTimes = await resultNYTimes.text();
     let str = await new window.DOMParser().parseFromString(dataNYTimes, "text/xml");
@@ -393,13 +394,18 @@ async function testEndpoint(term, id, tooltipField) {
             let source = data.source;
             let updatedId = `${Math.floor(Math.random() * 1000000)}` + id;
 
-            content += `<b class="${ENTITY_HEADER}">${title}:</b><p class=${PARAGRAPH_CLASS_NAME}>
+            let newElement = `<b class="${ENTITY_HEADER}">${title}:</b><p class=${PARAGRAPH_CLASS_NAME}>
             <span style="display: none" id="${updatedId}-hidden">
-            ${data.description}` + (source ? `<br/><img class='edicratic-image-nyt' src="${source}"/><br/><br/>` : `<br/>`) 
+            ${data.description}` + (source ? `<br class="image-newline"/><img class='edicratic-image-nyt' src="${source}"/><br/><br/>` : `<br/><br/>`) 
             + `<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${url}', '_blank')">Read Article</a></span></p>
             <a id="${updatedId}"class="inner-link ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
+            content += newElement;
             if(tooltipField) {
-                tooltipField.innerHTML = content;
+                if(i === 0) {
+                    tooltipField.getElementsByClassName('info-edicratic')[0].innerHTML = newElement;
+                } else {
+                    tooltipField.getElementsByClassName('info-edicratic')[0].innerHTML += newElement;
+                }
                 addShowMoreListeners(id);
             }
             idToData[id]['News'] = content;
@@ -524,8 +530,12 @@ function showHiddenText(e) {
     let id = e.target.id;
     let hiddenText = document.getElementById(`${id}-hidden`);
     let image = hiddenText.getElementsByClassName(IMAGE_NYT_CLASSNAME)[0];
-    if(image.clientWidth * image.clientHeight < 200) {
-        image.style.display = "none";
+    let newLines = hiddenText.getElementsByClassName('image-newline');
+    if(image && image.naturalWidth * image.naturalHeight < 200) {
+        image.parentElement.removeChild(image);
+        for (var i = 0; i < newLines.length; i++) {
+            newLines[i].parentElement.removeChild(newLines[i]);
+        }
     }
     if (hiddenText.style.display === 'none') {
         e.target.textContent = 'Show Less';
