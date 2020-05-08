@@ -13,86 +13,25 @@
     // });
 // });
 //TODO Yukt add the caching
-
-function getAuth(interactive){
-  return new Promise((resolve, reject) => {
-    chrome.identity.getAuthToken({
-      interactive: interactive
-     }, function(token) {
-       auth = {type:"Google", token: token}
-       if (chrome.runtime.lastError) {
-         reject(chrome.runtime.lastError.message);
-       }
-       chrome.storage.local.get(['email'], (res) => {
-         if(chrome.runtime.lastError || Object.entries(res).length == 0){
-           var x = new XMLHttpRequest();
-           x.open('GET', 'https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=' + token);
-           x.onload = function() {
-             let response = JSON.parse(x.response);
-             chrome.storage.local.set({"email": response["email"], "first_name": response["given_name"]}, function() {
-               if(chrome.runtime.lastError && showError){
-                 auth["email"] = "failedToGet@mail.com";
-                 console.log("failed to write to localstorage ... what do we do?");
-               }else{
-                 auth["email"] = response["email"];
-               }
-             });
-           };
-           x.send();
-         }else{
-           auth["email"] = res.email;
-         }
-       resolve(auth);
-     });
-  })
-});
-}
-//TODO show the error
-function attachHeaders(request, interactive){
-  return new Promise((resolve, reject) =>{
-    if(!request.needsAuthHeaders){
-      resolve(request);
-    }
-    getAuth(interactive).then(auth => {
-      request.params.headers["authorizationToken"] = auth["token"];
-      resolve(request);
-    }).catch((err) => {
-      reject(err);
-    });
- });
-}
+BASE_URL = "https://q329xt0jt9.execute-api.us-east-1.amazonaws.com/default"
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    console.log("wtf");
     if (request.message === "callInternet"){
-      console.log("hello");
-      attachHeaders(request, false).then((readyRequest) => {
-        fetch(readyRequest.input, readyRequest.params).then(function(response) {
-          console.log("a response");
-          return response.text().then(function(text) {
-            sendResponse([{
-              body: text,
-              status: response.status,
-              statusText: response.statusText,
-            }, null]);
-          });
-        }, function(error) {
-          console.log("here?");
-          console.log(error);
-          sendResponse([null, error]);
+      console.log("calling the internet");
+      fetch(request.input, request.params).then(function(response) {
+        console.log("a response");
+        return response.text().then(function(text) {
+          sendResponse([{
+            body: text,
+            status: response.status,
+            statusText: response.statusText,
+          }, null]);
         });
-    }).catch(err => {
-		err_log = {type: "Application Error", content: err, url: "None"};
-		param_stuff = {
-				method: "POST",
-				body: JSON.stringify({body: err_log}),
-				headers: {
-				   'Content-Type': 'application/json',
-			   }
-			 };
-		fetch("https://webcheck-api.edicratic.com/log", param_stuff);
-        sendResponse([null, err]);
-    });
+      }, function(error) {
+        console.log("here?");
+        console.log(error);
+        sendResponse([null, error]);
+      });
 } else if (request.message === 'NYTimes') {
   //TODO attach auth here, Chris
   let url = `https://api.nytimes.com/svc/search/v2/articlesearch.json?q=${request.term}&fq=pub_date:("${request.date}")&api-key=6NLKSZcRcdoGdABNC5e5ZlCetf0Upvns`
@@ -113,19 +52,84 @@ return true;
 });
 
 chrome.runtime.onInstalled.addListener(function(details){
-  getAuth(true).then(auth =>{
-    console.log(auth);
-  }).catch(err => {
-		err_log = {type: "Application Error", content: err, url: "None"};
-		param_stuff = {
-				method: "POST",
-				body: JSON.stringify({body: err_log}),
-				headers: {
-				   'Content-Type': 'application/json',
-			   }
-			 };
-		fetch("https://webcheck-api.edicratic.com/log", param_stuff);
-    });
+  oauthFlow();
 });
 
-getAuth(false);
+function getToken(id_token){
+  return new Promise((resolve, reject) => {
+      let params =  {method:"POST", body: JSON.stringify({body:{oauth2_identifier:{type: "google", id_token: id_token}}}),
+                      'Content-Type': 'application/json'};
+      fetch(BASE_URL + "/token",params).then(res => {
+          resolve(res);
+      }).catch(err => {
+          reject(err);
+      });
+  });
+}
+
+function oauthFlow(){
+  var manifest = chrome.runtime.getManifest();
+  var clientId = encodeURIComponent(manifest.oauth2.client_id);
+  var scopes = encodeURIComponent(manifest.oauth2.scopes.join(' '));
+  var redirectUri = encodeURIComponent('urn:ietf:wg:oauth:2.0:oob:auto');
+  var url = 'https://accounts.google.com/o/oauth2/auth' +
+            '?client_id=' + clientId +
+            '&response_type=id_token' +
+            '&access_type=offline' +
+            '&redirect_uri=' + redirectUri +
+            '&scope=' + scopes;
+
+  var RESULT_PREFIX = ['Success', 'Denied', 'Error'];
+  chrome.tabs.create({'url': 'about:blank'}, function(authenticationTab) {
+      chrome.tabs.onUpdated.addListener(function googleAuthorizationHook(tabId, changeInfo, tab) {
+          if (tabId === authenticationTab.id) {
+              console.log(tab.title);
+              var titleParts = tab.title.split(' ', 2);
+
+              var result = titleParts[0];
+              if (titleParts.length == 2 && RESULT_PREFIX.indexOf(result) >= 0) {
+                  chrome.tabs.onUpdated.removeListener(googleAuthorizationHook);
+                  chrome.tabs.remove(tabId);
+
+                  var response = titleParts[1];
+                  console.log("hey");
+                  const urlParams = new URLSearchParams(response);
+                  let id_token = null;
+                  switch (result) {
+                      case 'Success':
+                          console.log("SUCCESSS")
+                          console.log(response);
+                          id_token = urlParams.get("id_token");
+                          getToken(id_token).then(res => {
+                              console.log(res);
+                          }).catch(err => {
+                              console.log(err);
+                          });
+                      break;
+                      case 'Denied':
+                          console.log("DENIEDDD");
+                          // Example: error_subtype=access_denied&error=immediate_failed
+                          console.log(response);
+                      break;
+                      case 'Error':
+                          console.log("ERRRORRROROOR");
+                          console.log(response);
+                          id_token = urlParams.get("id_token");
+                          if (id_token == null || id_token == undefined){
+                              console.log("an actual error")
+                          }else{
+                              getToken(id_token).then(res => {
+                                  console.log(res);
+                              }).catch(err => {
+                                  console.log(err);
+                              });
+                          }
+                      break;
+                  }
+              }
+          }
+      });
+
+      chrome.tabs.update(authenticationTab.id, {'url': url});
+  });
+};
