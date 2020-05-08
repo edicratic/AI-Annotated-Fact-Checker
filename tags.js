@@ -394,10 +394,13 @@ async function testEndpoint(term, id, tooltipField) {
             let data = await res.json();
             let source = data.source;
             let updatedId = `${Math.floor(Math.random() * 1000000)}` + id;
+            let empty = data.description === 'EMPTY';
+            console.log(empty);
 
             let newElement = `<b class="${ENTITY_HEADER}">${title}:</b><p class=${PARAGRAPH_CLASS_NAME}>
-            <span style="display: none" id="${updatedId}-hidden">` + (source ? `<img class='edicratic-image-nyt' src="${source}"/>` : ``)  +
-            `${data.description}`
+            <span style="display: none" id="${updatedId}-hidden">` + 
+            (source ? `<img ${empty ? 'style="width:100%; height:100%;margin-bottom: 1rem;"' : ''}class='edicratic-image-nyt' src="${source}"/>` : ``)  +
+            `${!empty ? data.description : ''}`
             + `<br/><br/><a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${url}', '_blank')">Read Article</a></span></p>
             <a id="${updatedId}"class="inner-link ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
             content += newElement;
@@ -428,7 +431,7 @@ function extractMetaData(url) {
             for (var i = 0; i < metaTags.length; i++) {
                 let content = metaTags[i].content;
                 if(content && content.length >= description.length && !content.includes('http') 
-                && !content.includes('://') && content.split(",").length < 5) {
+                && !content.includes('://') && content.split(",").length < 5 && !content.includes('{')) {
                     description = metaTags[i].content;
                 }
             }
@@ -439,7 +442,7 @@ function extractMetaData(url) {
                 }
             }
             if(!description || description.length < 100) {
-                description = 'No further description available';
+                description = 'EMPTY';
             }
             let source = image ? image.src : '';
             body = JSON.stringify({description, source});
