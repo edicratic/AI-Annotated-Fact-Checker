@@ -84,6 +84,9 @@ function oauthFlow(){
       chrome.tabs.onUpdated.addListener(function googleAuthorizationHook(tabId, changeInfo, tab) {
           if (tabId === authenticationTab.id) {
               console.log(tab.title);
+			  if (tab.title === null || tab.title === undefined){
+				  return;
+			  }
               var titleParts = tab.title.split(' ', 2);
 
               var result = titleParts[0];
