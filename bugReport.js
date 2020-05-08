@@ -1,5 +1,6 @@
 MODAL = 'edicratic-modal'
-LOG_URL = "https://webcheck-api.edicratic.com/log"
+BASE_URL = "https://q329xt0jt9.execute-api.us-east-1.amazonaws.com/default";
+LOG_URL = BASE_URL + "/log"
 MODAL_OPENED = 'MODAL_OPENED'
 document.body.addEventListener('mousedown', checkForModalClose);
 
