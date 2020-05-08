@@ -396,9 +396,9 @@ async function testEndpoint(term, id, tooltipField) {
             let updatedId = `${Math.floor(Math.random() * 1000000)}` + id;
 
             let newElement = `<b class="${ENTITY_HEADER}">${title}:</b><p class=${PARAGRAPH_CLASS_NAME}>
-            <span style="display: none" id="${updatedId}-hidden">
-            ${data.description}` + (source ? `<br class="image-newline"/><img class='edicratic-image-nyt' src="${source}"/><br/><br/>` : `<br/><br/>`) 
-            + `<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${url}', '_blank')">Read Article</a></span></p>
+            <span style="display: none" id="${updatedId}-hidden">` + (source ? `<img class='edicratic-image-nyt' src="${source}"/>` : ``)  +
+            `${data.description}`
+            + `<br/><br/><a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${url}', '_blank')">Read Article</a></span></p>
             <a id="${updatedId}"class="inner-link ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
             content += newElement;
             if(tooltipField) {

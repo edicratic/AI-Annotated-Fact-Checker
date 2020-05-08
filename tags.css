@@ -294,10 +294,10 @@
 }
 
 .edicratic-image-nyt {
-  width: auto;
-  height: 200px;
-  margin-top: 1rem;
-  display:inline-block !important;
+  margin-top: 0;
+  width: 20%;
+  height: 20%;
+  float: left;
 }
 
 .edicratic-entity-link {
