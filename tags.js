@@ -20,6 +20,7 @@ INDIVIDUAL_TAB_CLASS_NAME = 'edicratic-tab';
 SHOW_HIDDEN_TEXT = 'edicratic-show-hidden';
 ENTITY_HEADER = 'edicratic-entity-header'
 ENTITY_LINK_CLASS_NAME = 'edicratic-entity-link';
+IMAGE_NYT_CLASSNAME = 'edicratic-image-nyt';
 
 window.addEventListener('scroll', adjustSpansBasedOnHeight);
 
@@ -129,6 +130,13 @@ async function addNewYorkTimesData(id, term) {
 function addShowMoreListeners(id) {
     let tooltip = document.getElementById(`${id}-parent`);
     let showMoreLinks = tooltip.getElementsByClassName(SHOW_HIDDEN_TEXT);
+    let images = tooltip.getElementsByClassName(IMAGE_NYT_CLASSNAME);
+    for(var i = 0; i < images.length; i++) {
+        images[i].onerror = (e) => {
+            let br = document.createElement('br');
+            e.target.parentElement.replaceChild(br, e.target);
+        };
+    }
     for(var i = 0; i < showMoreLinks.length; i++) {
         showMoreLinks[i].onclick = (e) => showHiddenText(e);
     }
@@ -155,12 +163,7 @@ function handleTabClick(e, id) {
                 tooltipChildren[i].innerHTML = innerHTML;
             } else {
                 tooltipChildren[i].innerHTML = `<h4>News Articles From Today</h4><hr/><div class="info-edicratic">Searching...</div>`;
-                testEndpoint(idToTerm[id], id).then(() => {
-                    console.log(i);
-                    console.log(tooltip.children);
-                    tooltipChildren[index].innerHTML = idToData[id][currentTab.textContent || currentTab.innerText];
-                    addShowMoreListeners(id);
-                });
+                testEndpoint(idToTerm[id], id, tooltipChildren[index]);
             }
 
         }
@@ -362,7 +365,8 @@ function fetchWebCheck(input, params) {
 
   //TODO rename NYTimes method and endpoint method
 
-async function testEndpoint(term, id) {
+async function testEndpoint(term, id, tooltipField) {
+    await sleep(10);
     let content = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">`;
     let resultNYTimes = await fetchNewYorkTimes(term);
     let dataNYTimes = await resultNYTimes.text();
@@ -391,11 +395,16 @@ async function testEndpoint(term, id) {
 
             content += `<b class="${ENTITY_HEADER}">${title}:</b><p class=${PARAGRAPH_CLASS_NAME}>
             <span style="display: none" id="${updatedId}-hidden">
-            <br/><br/>${data.description} <br/><br/>` + (source ? `<img class='edicratic-image-nyt' src="${source}"/><br/><br/>` : ``) 
+            ${data.description}` + (source ? `<br/><img class='edicratic-image-nyt' src="${source}"/><br/><br/>` : `<br/>`) 
             + `<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${url}', '_blank')">Read Article</a></span></p>
             <a id="${updatedId}"class="inner-link ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
+            if(tooltipField) {
+                tooltipField.innerHTML = content;
+                addShowMoreListeners(id);
+            }
+            idToData[id]['News'] = content;
         }
-        await sleep(20);
+        await sleep(10);
     }
     idToData[id]['News'] = content;
 }
@@ -411,8 +420,8 @@ function extractMetaData(url) {
             var image;
             for (var i = 0; i < metaTags.length; i++) {
                 let content = metaTags[i].content;
-                if(content && content.length >= description.length && !content.includes('http')
-                && content.split(",").length < 5) {
+                if(content && content.length >= description.length && !content.includes('http') 
+                && !content.includes('://') && content.split(",").length < 5) {
                     description = metaTags[i].content;
                 }
             }
@@ -514,6 +523,10 @@ function adjustSpansBasedOnHeight() {
 function showHiddenText(e) {
     let id = e.target.id;
     let hiddenText = document.getElementById(`${id}-hidden`);
+    let image = hiddenText.getElementsByClassName(IMAGE_NYT_CLASSNAME)[0];
+    if(image.clientWidth * image.clientHeight < 200) {
+        image.style.display = "none";
+    }
     if (hiddenText.style.display === 'none') {
         e.target.textContent = 'Show Less';
         hiddenText.style.display = 'inline';

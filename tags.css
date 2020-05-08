@@ -296,7 +296,8 @@
 .edicratic-image-nyt {
   width: auto;
   height: 200px;
-  display:inline !important;
+  margin-top: 1rem;
+  display:inline-block !important;
 }
 
 .edicratic-entity-link {
