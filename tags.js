@@ -1,6 +1,7 @@
 ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
 TOOL_TIP_CLASS_NAME = 'edicratic-tooltip';
-POST_URL = 'https://webcheck-api.edicratic.com/process';
+BASE_URL = "https://q329xt0jt9.execute-api.us-east-1.amazonaws.com/default";
+POST_URL = BASE_URL + '/process';
 INNER_LINK = 'inner-link';
 PARAGRAPH_CLASS_NAME = 'edicratic-paragraph-classname'
 NEW_LINE_ID = "please-remove-me";
