@@ -103,17 +103,11 @@ function sendBackData(paragraph, text) {
 }
 
 async function lookUpTerm(term) {
-
     var URL = getWikiUrl(term);
     var result = await fetchWiki(URL);
     var data = await result.json();
-    if(!data || !data.query) return;
-    var pages = data.query.pages;
-    var matches = getMatches(pages);
-    var pairs = {};
-    pairs[term] = matches;
-    init([pairs]);
-
+    if(!data || !data.query || !data.query.pages || data.query.pages.length === 0) return;
+    init(data, term);
 }
 
 function fetchWiki(input) {

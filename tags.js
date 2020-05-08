@@ -38,28 +38,24 @@ chrome.runtime.onMessage.addListener(
     }
   });
 
-function init(data) {
-    data.forEach((obj) => {
-        let entity = Object.keys(obj)[0];
-        let items = obj[entity];
-        let itemsArray = proccessWikiData(items);
-        var regex = undefined;
-        try {
-            var regex = new RegExp(entity, "i");
-        } catch(e) {
-            console.log(e);
-        }
-        let childList = document.body.childNodes;
-        const set = new Set();
-        if(itemsArray.length > 0 && regex) modifyAllText(regex, entity, itemsArray, NEW_NODES || childList, set,);
-    });
+function init(data, entity) {
+    var pages = data.query.pages;
+    var matches = getMatches(pages);
+    var regex = undefined;
+    try {
+        var regex = new RegExp(entity, "i");
+    } catch(e) {
+        console.log(e);
+    }
+    let childList = document.body.childNodes;
+    const set = new Set();
+    if(regex) modifyAllText(regex, entity, matches, NEW_NODES || childList, set);
 }
 
 async function modifySingleNode(node, text) {
     var url = getWikiUrl(text);
     var result = await fetchWiki(url);
     var data = await result.json();
-    console.log(data);
 
     if(!data || !data.query) {
         alert("Sorry, could not find a match for that :(. Try to highlight specific terms");
@@ -67,10 +63,10 @@ async function modifySingleNode(node, text) {
     }
     var pages = data.query.pages;
     var matches = getMatches(pages);
-    let itemsArray = proccessWikiData(matches);
     var innerText = node.textContent;
     var uniqueId = "d3" + Math.floor(Math.random() * 1000000);
     innerText = innerText.replace(text, `<div id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text}</div>`);
+    let itemsArray = proccessWikiData(matches, uniqueId);
 
     var newElement = document.createElement('div');
     newElement.style.display = "inline";
@@ -160,7 +156,6 @@ function handleTabClick(e, id) {
 }
 
 function processNYTimes(data, id) {
-    console.log(data);
     if(!data || !data.response || !data.response.docs || data.response.docs.length === 0) {
         let tabs = document.getElementById(`${id}-tabs`);
         let tabChildren = tabs.children;
@@ -180,19 +175,19 @@ function processNYTimes(data, id) {
             let title = article.headline.main;
             let pageDescription = article.abstract;
             let firstParagraph = article.lead_paragraph;
-            let id = article._id;
+            let updatedId = `${Math.floor(Math.random() * 1000000)}` + id;
             let imageSource = article.multimedia && article.multimedia[0] && article.multimedia[0].url ?
             `https://www.nytimes.com/${article.multimedia[0].url}` : undefined;
             content += `<b class="${ENTITY_HEADER}">${title}:</b><p class=${PARAGRAPH_CLASS_NAME}>
-            ${pageDescription}<span style="display: none" id="${id}-hidden">
+            ${pageDescription}<span style="display: none" id="${updatedId}-hidden">
             <br/><br/>${firstParagraph} <br/><br/>` + (imageSource ? `<img class='edicratic-image-nyt' src="${imageSource}"/><br/><br/>` : ``) 
             + `<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${link}', '_blank')">Read Article</a></span></p>
-            <a id="${id}"class="inner-link ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
+            <a id="${updatedId}"class="inner-link ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
         }
         return content + '</div>';
 }
 
-function modifyAllText(regex, entity, data, childList, set) {
+function modifyAllText(regex, entity, matches, childList, set) {
     for (var i = 0; i < childList.length; i++) {
         const child = childList[i];
         if(!set.has(child) && child.className !== ANCHOR_CLASS_NAME && child.className !== TOOL_TIP_CLASS_NAME && child.tagName !== 'NAV') {
@@ -207,7 +202,8 @@ function modifyAllText(regex, entity, data, childList, set) {
                 child.innerText = "";
                 var uniqueId = "d" + i + Math.floor(Math.random() * 1000000);
                 text = text.replace(regex, `<div id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text.match(regex)}</div>`);
-                idToData[uniqueId] = [0, data]
+                let data = proccessWikiData(matches, uniqueId);
+                idToData[uniqueId] = {'Information': data};
                 var newElement = document.createElement('div');
                 newElement.style.display = "inline";
                 newElement.innerHTML = text;
@@ -219,32 +215,44 @@ function modifyAllText(regex, entity, data, childList, set) {
                     child.parentElement.replaceChild(newElement, child);
                 }
                 set.add(newElement);
-
-                //create span
-                var tooltip = document.createElement('span');
-                tooltip.id = `${uniqueId}-parent`;
-                tooltip.className = TOOL_TIP_CLASS_NAME;
-                tooltip.innerHTML = `${data[0]['full_html']} <br/><br/> <div id="${uniqueId}" class="leftArrow fa fa-arrow-left fa-3x"></div> <div id="${uniqueId}" class="rightArrow fa fa-arrow-right fa-3x"></div>`
-                tooltip.onmouseleave = (e) => {
-                    if(e.target) {
-                        let id = e.target.id;
-                        id = id.substring(0, id.indexOf('-'));
-                        removeSpan(id);
-                    }
-                }
-                document.body.prepend(tooltip)
-                set.add(tooltip);
-                tooltip.onclick = e => e.preventDefault();
-                tooltip.children[6].addEventListener('click', (e) => arrowClick(e, true), true);
-                tooltip.children[7].addEventListener('click', (e) => arrowClick(e, false), true);
-
+                createTooltip(data, uniqueId);
+                //addNewYorkTimesData(uniqueId, entity);
             }
             if (length !== 0) {
-                modifyAllText(regex, entity, data, nextList, set)
+                modifyAllText(regex, entity, matches, nextList, set)
             }
     }
     }
+}
 
+function createTooltip(data, id) {
+    var tooltip = document.createElement('span');
+    tooltip.id = `${id}-parent`;
+    tooltip.className = TOOL_TIP_CLASS_NAME;
+    tooltip.innerHTML = `<div id=${id}-content> ${data}</div>`
+
+    let pointer = document.createElement('div');
+    pointer.className = 'edicratic-tooltip-bottom';
+    pointer.id = `${id}-pointer`;
+    document.body.appendChild(pointer);
+
+    let tabs = document.createElement('div');
+    tabs.className = 'edicratic-tabContainer';
+    tabs.id =`${id}-tabs`;
+    tabs.innerHTML = `
+        <a class="edicratic-tab edicratic-selected">Information</a>
+        <a class="edicratic-tab">News</a>
+    `
+    tooltip.appendChild(tabs);
+
+    let tabChildren = tabs.children;
+    for (var i = 0; i < tabChildren.length; i++) {
+        tabChildren[i].onclick = (e) => handleTabClick(e, id);
+    }
+
+    document.body.prepend(tooltip)
+    addShowMoreListeners(id);
+    tooltip.onclick = e => e.preventDefault();
 
 }
 
@@ -277,7 +285,6 @@ function positionTooltips(id) {
     let distanceLeft = anchor.getBoundingClientRect().left;
     let distanceRight = window.innerWidth - anchor.clientWidth - distanceLeft;
     let halfWidth = span.clientWidth / 2;
-    console.log(distanceLeft + ' ' + distanceRight + ' ' + halfWidth);
     if(halfWidth > distanceLeft) {
         span.style.left = `${x + anchor.clientWidth / 2 - TOOL_TIP_POINTER_HEIGHT}px`;
 
@@ -301,8 +308,6 @@ function positionTooltips(id) {
         pointer.classList.remove(ARROW_UP_CLASSNAME);
         pointer.classList.add(ARROW_DOWN_CLASSNAME);
     } else {
-        span.children[2].style.maxHeight = '';
-        span.style.minHeight = '';
         span.style.top = `${y - span.clientHeight - TOOL_TIP_POINTER_HEIGHT}px`;
         onTop[id] = true;
         pointer.style.top = `${y - TOOL_TIP_POINTER_HEIGHT}px`
@@ -327,7 +332,6 @@ function fetchWebCheck(input, params) {
           // Use undefined on a 204 - No Content
           //TODO @ Yukt halp??
           //response = JSON.parse(response.body);
-          //console.log(response);
           //This is a bit hacky
           const body = response.body ?  new Blob([response.body]) : undefined;
           resolve(new Response(body, {
@@ -396,7 +400,6 @@ function sortEntities(data) {
             if (curr.entity.includes(compare.entity)) counts[curr.entity] += 1;
         }
     }
-    console.log(counts);
     data.sort((a, b) => {
         var diff = counts[b.entity] - counts[a.entity];
         return diff === 0 ? a.block - b.block : diff;
@@ -549,7 +552,6 @@ function showHiddenText(e) {
         e.target.textContent = 'Show More';
         hiddenText.style.display = 'none';
     }
-
 }
 
 function hideText(e) {
@@ -678,9 +680,8 @@ function invalidPositionHelper(element) {
     return true;
 }
 
-function proccessWikiData(items) {
+function proccessWikiData(items, id) {
     let content = `<h4>Wiki Articles</h4><hr/><div class="info-edicratic">`;
-    console.log(items);
     for (var i = 0; i < items.length; i++) {
         let item = items[i];
         let wikilink = `https://en.wikipedia.org/?curid=${item.pageid}`
@@ -689,11 +690,12 @@ function proccessWikiData(items) {
         let words = pageDescription.split(' ');
         let visibleArray = words.slice(0, 10);
         let hiddenArray = words.slice(10);
+        let modiifiedId = 't' + `${i}` + id + `${Math.floor(Math.random() * 1000000)}`;
         content += `<b class="${ENTITY_HEADER}">${item.title}:</b><p class=${PARAGRAPH_CLASS_NAME}>
-        ${visibleArray.join(' ')}<span style="display: none" id="${item.pageid}-hidden">
+        ${visibleArray.join(' ')}<span id="${modiifiedId}-show-more-hidden" style="display: none">
         ${hiddenArray.join(' ')} <br/><br/>` + (item.thumbnail ? `<img class='edicratic-image' src="${item.thumbnail.source}"/><br/><br/>` : ``) 
         + `<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${wikilink}', '_blank')">Learn More</a></span></p>
-        <a id="${item.pageid}"class="inner-link ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
+        <a id="${modiifiedId}-show-more" class="inner-link ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
     }
     return content + '</div>';
 
