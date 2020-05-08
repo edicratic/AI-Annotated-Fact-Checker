@@ -5,6 +5,7 @@ INNER_LINK = 'inner-link';
 PARAGRAPH_CLASS_NAME = 'edicratic-paragraph-classname'
 NEW_LINE_ID = "please-remove-me";
 idToData = {};
+idToTerm = {};
 onTop = {};
 OPEN_SPAN = undefined;
 DATA_LOADED = 'DATA_LOADED'
@@ -30,6 +31,7 @@ document.body.onmousemove = e => handleMouseMove(e);
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
     if (request.message === "runWebCheck"){
+        console.log('received');
         //window.addEventListener('scroll', checkForSizeChange);
         makePostRequest(request);
     }
@@ -62,6 +64,7 @@ async function modifySingleNode(node, text) {
     var matches = getMatches(pages);
     var innerText = node.textContent;
     var uniqueId = "d3" + Math.floor(Math.random() * 1000000);
+    idToTerm[uniqueId] = text;
     innerText = innerText.replace(text, `<div id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text}</div>`);
     let itemsArray = proccessWikiData(matches, uniqueId);
 
@@ -112,7 +115,7 @@ async function modifySingleNode(node, text) {
     document.body.prepend(tooltip)
     addShowMoreListeners(uniqueId);
     tooltip.onclick = e => e.preventDefault();
-    addNewYorkTimesData(uniqueId, text);
+    testEndpoint(text, uniqueId);
 }
 
 async function addNewYorkTimesData(id, term) {
@@ -143,9 +146,22 @@ function handleTabClick(e, id) {
     }
     currentTab.classList.add('edicratic-selected');
     let tooltipChildren = tooltip.children;
+    let index = 0;
     for(var i = 0; i < tooltipChildren.length; i++) {
         if(tooltipChildren[i].id === `${id}-content`) {
-            tooltipChildren[i].innerHTML = idToData[id][currentTab.textContent || currentTab.innerText];
+            index = i;
+            let innerHTML = idToData[id][currentTab.textContent || currentTab.innerText];
+            if(innerHTML) {
+                tooltipChildren[i].innerHTML = innerHTML;
+            } else {
+                tooltipChildren[i].innerHTML = `<h4>News Articles From Today</h4><hr/><div class="info-edicratic">Searching...</div>`;
+                testEndpoint(idToTerm[id], id).then(() => {
+                    console.log(i);
+                    console.log(tooltip.children);
+                    tooltipChildren[index].innerHTML = idToData[id][currentTab.textContent || currentTab.innerText];
+                    addShowMoreListeners(id);
+                });
+            }
 
         }
     }
@@ -172,7 +188,7 @@ function processNYTimes(data, id) {
             let title = article.headline.main;
             let pageDescription = article.abstract;
             let firstParagraph = article.lead_paragraph;
-            let updatedId = `${Math.floor(Math.random() * 1000000)}` + id;
+            let updatedId = `${Math.floor(Math.random() * 1000000)}` + id + `${i}`;
             let imageSource = article.multimedia && article.multimedia[0] && article.multimedia[0].url ?
             `https://www.nytimes.com/${article.multimedia[0].url}` : undefined;
             content += `<b class="${ENTITY_HEADER}">${title}:</b><p class=${PARAGRAPH_CLASS_NAME}>
@@ -198,6 +214,7 @@ function modifyAllText(regex, entity, matches, childList, set) {
                 }
                 child.innerText = "";
                 var uniqueId = "d" + i + Math.floor(Math.random() * 1000000);
+                idToTerm[uniqueId] = entity;
                 text = text.replace(regex, `<div id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text.match(regex)}</div>`);
                 let data = proccessWikiData(matches, uniqueId);
                 idToData[uniqueId] = {'Information': data};
@@ -213,7 +230,7 @@ function modifyAllText(regex, entity, matches, childList, set) {
                 }
                 set.add(newElement);
                 createTooltip(data, uniqueId);
-                //addNewYorkTimesData(uniqueId, entity);
+                //testEndpoint(entity,uniqueId);
             }
             if (length !== 0) {
                 modifyAllText(regex, entity, matches, nextList, set)
@@ -238,6 +255,7 @@ function createTooltip(data, id) {
     tabs.id =`${id}-tabs`;
     tabs.innerHTML = `
         <a class="edicratic-tab edicratic-selected">Information</a>
+        <a class="edicratic-tab">News</a>
     `
     tooltip.appendChild(tabs);
 
@@ -296,8 +314,9 @@ function positionTooltips(id) {
 
 
 
-    let distance = anchor.getBoundingClientRect().top;
-    if (distance <= span.clientHeight) {
+    let top = anchor.getBoundingClientRect().top;
+    let bottom = window.innerHeight - top;
+    if (top <= bottom) {
         span.style.top = `${y + anchor.clientHeight + TOOL_TIP_POINTER_HEIGHT}px`;
         onTop[id] = false;
         pointer.style.bottom = `${window.innerHeight - span.offsetTop}px`
@@ -341,6 +360,98 @@ function fetchWebCheck(input, params) {
     });
   }
 
+  //TODO rename NYTimes method and endpoint method
+
+async function testEndpoint(term, id) {
+    let content = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">`;
+    let resultNYTimes = await fetchNewYorkTimes(term);
+    let dataNYTimes = await resultNYTimes.text();
+    let str = await new window.DOMParser().parseFromString(dataNYTimes, "text/xml");
+    const items = str.querySelectorAll("item");
+    for(var i = 0; i < items.length && i < 5; i++) {
+        let item = items[i];
+        let children = item.children;
+        let title = null;
+        let url = null;
+        let date = null;
+        for(var j = 0; j < children.length; j++) {
+            if(children[j].tagName === 'title') {
+                title = children[j].innerText || children[j].textContent;
+            } else if(children[j].tagName === 'link') {
+                url = children[j].innerText || children[j].textContent;
+            } else if (children[j].tagName === 'pubDate') {
+                date = children[j].innerText || children[j].textContent;
+            }
+        }
+        if(title && url && date) {
+            let res = await extractMetaData(url);
+            let data = await res.json();
+            let source = data.source;
+            let updatedId = `${Math.floor(Math.random() * 1000000)}` + id;
+
+            content += `<b class="${ENTITY_HEADER}">${title}:</b><p class=${PARAGRAPH_CLASS_NAME}>
+            <span style="display: none" id="${updatedId}-hidden">
+            <br/><br/>${data.description} <br/><br/>` + (source ? `<img class='edicratic-image-nyt' src="${source}"/><br/><br/>` : ``) 
+            + `<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${url}', '_blank')">Read Article</a></span></p>
+            <a id="${updatedId}"class="inner-link ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
+        }
+        await sleep(20);
+    }
+    idToData[id]['News'] = content;
+}
+
+function extractMetaData(url) {
+    return new Promise((resolve, reject ) => {
+        getWebUrl(url).then(res => res.text()).then(data => {
+            let el = document.createElement('div');
+            el.innerHTML = data;
+            let metaTags = el.getElementsByTagName('meta');
+            let images = el.getElementsByTagName('img');
+            var description = "";
+            var image;
+            for (var i = 0; i < metaTags.length; i++) {
+                let content = metaTags[i].content;
+                if(content && content.length >= description.length && !content.includes('http')
+                && content.split(",").length < 5) {
+                    description = metaTags[i].content;
+                }
+            }
+            for (var i = 0; i < images.length; i++) {
+                let currentImage = images[i];
+                if(!image || currentImage.clientWidth * currentImage.clientHeight > image.clientWidth * image.clientHeight) {
+                    image = currentImage;
+                }
+            }
+            if(!description || description.length < 100) {
+                description = 'No further description available';
+            }
+            let source = image ? image.src : '';
+            body = JSON.stringify({description, source});
+            resolve(new Response(body, {
+                status: 200,
+            }));
+        });
+    });
+
+}
+
+function getWebUrl(url) {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({message: 'basicGET', url}, messageResponse => {
+        const [response, error] = messageResponse;
+        if (response === null) {
+          reject(error);
+        } else {
+          const body = response.body ? new Blob([response.body]) : undefined;
+          resolve(new Response(body, {
+            status: response.status,
+            statusText: response.statusText,
+          }));
+        }
+      });
+    })
+  }
+
 function makePostRequest() {
     PREVIOUS_TEXT = document.body.innerText;
     const spinner = document.createElement('div');
@@ -355,10 +466,10 @@ function makePostRequest() {
                       headers: {
                           'Content-Type': 'application/json',
     }}).then(result => {
-        console.log(result);
         if (result.ok) {
             return result.json();
         } else {
+            console.log(result);
             throw new Error(result.status);
         }
     }).then(data =>{

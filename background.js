@@ -95,10 +95,21 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     });
 } else if (request.message === 'NYTimes') {
   //TODO attach auth here, Chris
-  let url = `https://api.nytimes.com/svc/search/v2/articlesearch.json?q=${request.term}&fq=pub_date:("${request.date}")&api-key=6NLKSZcRcdoGdABNC5e5ZlCetf0Upvns`
+  let url = `https://news.google.com/rss/search?q=${request.term}`;
   fetch(url).then(response => {
     return response.text().then(text => {
-      console.log(text);
+      sendResponse([{
+        body: text,
+        status: response.status,
+        statusText: response.statusText,
+      }, null]);
+    }, function(error) {
+      sendResponse[null, error];
+    });
+  })
+} else if(request.message === 'basicGET') {
+  fetch(request.url).then(response => {
+    return response.text().then(text => {
       sendResponse([{
         body: text,
         status: response.status,
