@@ -2,8 +2,6 @@ ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
 TOOL_TIP_CLASS_NAME = 'edicratic-tooltip';
 POST_URL = 'https://webcheck-api.edicratic.com/process';
 INNER_LINK = 'inner-link';
-SHOW_MORE_ICON_CLASS = "show-more fa fa-angle-down fa-3x";
-SHOW_LESS_ICON_CLASS = "show-more fa fa-angle-up fa-3x";
 PARAGRAPH_CLASS_NAME = 'edicratic-paragraph-classname'
 NEW_LINE_ID = "please-remove-me";
 idToData = {};
@@ -21,7 +19,6 @@ INDIVIDUAL_TAB_CLASS_NAME = 'edicratic-tab';
 SHOW_HIDDEN_TEXT = 'edicratic-show-hidden';
 ENTITY_HEADER = 'edicratic-entity-header'
 ENTITY_LINK_CLASS_NAME = 'edicratic-entity-link';
-//TODO play with tab width
 
 window.addEventListener('scroll', adjustSpansBasedOnHeight);
 
@@ -241,7 +238,6 @@ function createTooltip(data, id) {
     tabs.id =`${id}-tabs`;
     tabs.innerHTML = `
         <a class="edicratic-tab edicratic-selected">Information</a>
-        <a class="edicratic-tab">News</a>
     `
     tooltip.appendChild(tabs);
 
@@ -320,6 +316,8 @@ function removeSpan(id) {
     const span = document.getElementById(`${id}-parent`);
     span.style.display = "none";
     span.style.visibility = 'hidden';
+    const pointer = document.getElementById(`${id}-pointer`);
+    pointer.style.display = 'none';
 }
 
 function fetchWebCheck(input, params) {
@@ -390,155 +388,15 @@ async function processEntities(entities) {
    }
 }
 
-function sortEntities(data) {
-    var counts = {};
-    for (var i = 0; i < data.length; i++) {
-        var curr = data[i];
-        counts[curr.entity] = 0;
-        for (var j = 0; j < data.length; j++) {
-            var compare = data[j];
-            if (curr.entity.includes(compare.entity)) counts[curr.entity] += 1;
-        }
-    }
-    data.sort((a, b) => {
-        var diff = counts[b.entity] - counts[a.entity];
-        return diff === 0 ? a.block - b.block : diff;
-    });
-}
-
-function removeNonAlphaNumeric(word) {
-    var PATTERN = /[^\x20\x2D0-9A-Z\x5Fa-z\xC0-\xD6\xD8-\xF6\xF8-\xFF]/g;
-    return word.replace(PATTERN, '');
-}
-
 function stripHtml(html) {
    var tmp = document.createElement("DIV");
    tmp.innerHTML = html;
    return tmp.textContent || tmp.innerText || "";
 }
 
-function addListeners() {
-    let leftArrows = document.getElementsByClassName('leftArrow');
-    let rightArrows = document.getElementsByClassName('rightArrow');
-    for (var i = 0; i < leftArrows.length; i++) {
-        leftArrows[i].addEventListener('click', (e) => arrowClick(e, true), true);
-    }
-    for (var i = 0; i < rightArrows.length; i++) {
-        rightArrows[i].addEventListener('click', (e) => arrowClick(e, false), true);
-
-    }
-}
-
-function arrowClick(e, isLeft) {
-    e.preventDefault();
-    e.stopPropagation();
-    const id = e.toElement.id;
-    //find other arrow and reset margin
-    e.toElement.style.marginTop = '0px';
-    let otherArrow;
-    let otherArrows = document.getElementsByClassName(isLeft ? 'rightArrow' : 'leftArrow');
-    for (var i = 0; i < otherArrows.length; i++) {
-        if(otherArrows[i].id === id) otherArrow = otherArrows[i];
-    }
-    otherArrow.style.marginTop = '0px';
-
-    //change data
-    const entry = idToData[id];
-    var previousIndex = entry[0];
-    var array = entry[1];
-    var newIndex = isLeft ? previousIndex === 0 ? array.length - 1 : previousIndex - 1 : ((previousIndex + 1) % array.length);
-    idToData[id][0] = newIndex;
-    const span = document.getElementById(`${id}-parent`);
-    const spanHeight = span.clientHeight;
-    span.style.minHeight = '';
-    span.children[0].innerHTML = array[newIndex]['title']
-    span.children[2].innerHTML = array[newIndex]['content'];
-    //find link and reset
-    let indexOfLink = 3;
-    for (var i = 0; i < span.children.length; i++) {
-        if(span.children[i].className === INNER_LINK) indexOfLink = i;
-    }
-    span.children[indexOfLink].outerHTML = `<i onclick="window.open('${array[newIndex]['link']}', '_blank');" class="inner-link">Wikimedia Foundation</i>`
-    //keep padding constant when on top
-    removeIconShowMore(span);
-    if (onTop[id]) {
-        const anchor = document.getElementById(`${id}-parent-parent`);
-        span.children[2].style.minHeight = '';
-        span.style.top = `${anchor.getBoundingClientRect().top + window.pageYOffset - span.clientHeight}px`;
-
-    } else {
-        span.style.minHeight =  `${spanHeight - 10}px`;
-        if (isOverflown(span.children[2])) {
-            span.children[2].style.paddingBottom = '';
-            createIconShowMore(span);
-        }
-        let arr = e.toElement;
-        let offset = arr.offsetParent.clientHeight - arr.offsetTop - arr.clientHeight;
-        arr.style.marginTop = `${offset}px`;
-        otherArrow.style.marginTop = `${offset}px`;
-    }
-}
-
-function preventSpanDefaultBehaviour() {
-    const spans = document.getElementsByClassName(TOOL_TIP_CLASS_NAME);
-    for (var i = 0; i < spans.length; i++) {
-        spans[i].onclick = e => e.preventDefault();
-    }
-}
-
 function adjustSpansBasedOnHeight() {
     if(OPEN_SPAN) {
         positionTooltips(OPEN_SPAN);
-    }
-}
-
-function isOverflown(element) {
-    return element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
-}
-
-function createIconShowMore(span) {
-    span.children[2].style.marginBottom = '0rem';
-    let innerLink = span.children[3];
-    let icon = document.createElement('i');
-    icon.className = SHOW_MORE_ICON_CLASS;
-    let id = span.id;
-    id = id.substring(0, id.indexOf('-'));
-    icon.id = `${id}-icon`;
-    icon.onclick = (e) => showHiddenText(e);
-    let br = document.createElement('br');
-    height = br.clientHeight + icon.clientHeight;
-    br.id= NEW_LINE_ID;
-    innerLink.parentNode.insertBefore(icon, innerLink);
-    innerLink.parentNode.insertBefore(br, innerLink);
-    return height;
-}
-
-function createIconShowLess(span) {
-    span.children[2].style.marginBottom = '0rem';
-    let innerLink = span.children[3];
-    let icon = document.createElement('i');
-    icon.className = SHOW_LESS_ICON_CLASS;
-    let id = span.id;
-    id = id.substring(0, id.indexOf('-'));
-    icon.id = `${id}-icon`;
-    icon.onclick = (e) => hideText(e);
-    innerLink.parentNode.insertBefore(icon, innerLink);
-    span.getElementsByClassName('leftArrow')[0].style.display = 'none';
-    span.getElementsByClassName('rightArrow')[0].style.display = 'none';
-    
-}
-
-function removeIconShowMore(span) {
-    span.children[2].style.marginBottom = '';
-    for (var i = 0; i < span.children.length; i++) {
-        if (span.children[i].className === SHOW_MORE_ICON_CLASS || span.children[i].id === NEW_LINE_ID) {
-            span.children[i].parentNode.removeChild(span.children[i]);
-        }
-    }
-    for (var i = 0; i < span.children.length; i++) {
-        if (span.children[i].className === SHOW_MORE_ICON_CLASS || span.children[i].id === NEW_LINE_ID) {
-            span.children[i].parentNode.removeChild(span.children[i]);
-        }
     }
 }
 
@@ -551,56 +409,6 @@ function showHiddenText(e) {
     } else {
         e.target.textContent = 'Show More';
         hiddenText.style.display = 'none';
-    }
-}
-
-function hideText(e) {
-    let id = e.toElement.id;
-    id = id.substring(0, id.indexOf('-'));
-    let span = document.getElementById(`${id}-parent`);
-    span.children[2].style.maxHeight = '100px';
-    let newIcon = document.createElement('i');
-    newIcon.className = SHOW_MORE_ICON_CLASS;
-    newIcon.id = `${id}-icon`;
-    newIcon.onclick = (e) => showHiddenText(e);
-    let oldIcon = e.toElement;
-    oldIcon.parentNode.replaceChild(newIcon, oldIcon);
-
-    //add arrows
-    let leftArrows= document.getElementsByClassName('leftArrow');
-    let rightArrows = document.getElementsByClassName('rightArrow');
-    for (var i = 0; i < leftArrows.length; i++) {
-        if (leftArrows[i].id === id) leftArrows[i].style.display = '';
-    }
-    for (var i = 0; i < rightArrows.length; i++) {
-        if(rightArrows[i].id === id) rightArrows[i].style.display = '';
-    }
-}
-
-function textIsShown(span) {
-    for (var i = 0; i < span.children.length; i++) {
-        if (span.children[i].className === SHOW_LESS_ICON_CLASS) return true;
-    }
-    return false;
-}
-
-function removeAllTextConstraints(span, id) {
-    let arr = span.children;
-    span.children[2].style.marginBottom = '';
-    for (var i = 0; i < arr.length; i++) {
-        let curr = arr[i];
-        if(curr.className === SHOW_MORE_ICON_CLASS || curr.className === SHOW_LESS_ICON_CLASS || curr.id === NEW_LINE_ID) {
-            curr.parentNode.removeChild(curr);
-        }
-    }
-    //add arrows
-    let leftArrows= document.getElementsByClassName('leftArrow');
-    let rightArrows = document.getElementsByClassName('rightArrow');
-    for (var i = 0; i < leftArrows.length; i++) {
-        if (leftArrows[i].id === id) leftArrows[i].style.display = '';
-    }
-    for (var i = 0; i < rightArrows.length; i++) {
-        if(rightArrows[i].id === id) rightArrows[i].style.display = '';
     }
 }
 
@@ -650,8 +458,6 @@ function handleMouseMove(e) {
             let id = spans[i].id;
             id = id.substring(0, id.indexOf('-'));
             removeSpan(id);
-            let pointer = document.getElementById(`${id}-pointer`);
-            pointer.style.display = 'none';
         }
         OPEN_SPAN = undefined;
     }
