@@ -7,6 +7,8 @@ PARAGRAPH_CLASS_NAME = 'edicratic-paragraph-classname'
 NEW_LINE_ID = "please-remove-me";
 idToData = {};
 idToTerm = {};
+idToSelected = {};
+onLeft = {};
 onTop = {};
 OPEN_SPAN = undefined;
 DATA_LOADED = 'DATA_LOADED'
@@ -22,6 +24,7 @@ SHOW_HIDDEN_TEXT = 'edicratic-show-hidden';
 ENTITY_HEADER = 'edicratic-entity-header'
 ENTITY_LINK_CLASS_NAME = 'edicratic-entity-link';
 IMAGE_NYT_CLASSNAME = 'edicratic-image-nyt';
+GRAY_POINTER_CLASSNAME = 'edicratic-grey-pointer';
 
 window.addEventListener('scroll', adjustSpansBasedOnHeight);
 
@@ -103,10 +106,7 @@ async function modifySingleNode(node, text) {
     for (var i = 0; i < tabChildren.length; i++) {
         tabChildren[i].onclick = (e) => handleTabClick(e, uniqueId);
     }
-
-
-
-    
+    idToSelected[uniqueId] = 'Information';
     tooltip.onmouseleave = (e) => {
         if(e.target) {
             let id = e.target.id;
@@ -154,6 +154,8 @@ function handleTabClick(e, id) {
         }
     }
     currentTab.classList.add('edicratic-selected');
+    idToSelected[id] = currentTab.innerText || currentTab.textContent;
+    updatePointerColor(id);
     let tooltipChildren = tooltip.children;
     let index = 0;
     for(var i = 0; i < tooltipChildren.length; i++) {
@@ -163,7 +165,7 @@ function handleTabClick(e, id) {
             if(innerHTML) {
                 tooltipChildren[i].innerHTML = innerHTML;
             } else {
-                tooltipChildren[i].innerHTML = `<h4>News Articles From Today</h4><hr/><div class="info-edicratic">Searching...</div>`;
+                tooltipChildren[i].innerHTML = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">`;
                 testEndpoint(idToTerm[id], id, tooltipChildren[index]);
             }
 
@@ -202,6 +204,15 @@ function processNYTimes(data, id) {
             <a id="${updatedId}"class="inner-link ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
         }
         return content + '</div>';
+}
+
+function updatePointerColor(id) {
+    let pointer = document.getElementById(`${id}-pointer`);
+    if(onLeft[id] && onTop[id] && idToSelected[id] === 'Information') {
+        pointer.classList.add(GRAY_POINTER_CLASSNAME);
+    } else {
+        pointer.classList.remove(GRAY_POINTER_CLASSNAME);
+    }
 }
 
 function modifyAllText(regex, entity, matches, childList, set) {
@@ -262,6 +273,7 @@ function createTooltip(data, id) {
         <a class="edicratic-tab">News</a>
     `
     tooltip.appendChild(tabs);
+    idToSelected[id] = 'Information';
 
     let tabChildren = tabs.children;
     for (var i = 0; i < tabChildren.length; i++) {
@@ -303,18 +315,25 @@ function positionTooltips(id) {
     let distanceLeft = anchor.getBoundingClientRect().left;
     let distanceRight = window.innerWidth - anchor.clientWidth - distanceLeft;
     let halfWidth = span.clientWidth / 2;
+    let pointerDistance = x - spanWidth / 2 + anchor.clientWidth / 2 + 
+    span.clientWidth / 2;
     if(halfWidth > distanceLeft) {
+        onLeft[id] = true;
         span.style.left = `${x + anchor.clientWidth / 2 - TOOL_TIP_POINTER_HEIGHT}px`;
+        pointer.style.left = `${pointerDistance + 1}px`;
 
     } else if (halfWidth > distanceRight) {
+        onLeft[id] = false;
         span.style.left = `${x - spanWidth + anchor.clientWidth / 2 + TOOL_TIP_POINTER_HEIGHT}px`;
+        pointer.style.left = `${pointerDistance - 1}px`;
 
     } else {
+        onLeft[id] = false;
         span.style.left = `${x - spanWidth / 2 + anchor.clientWidth / 2}px`;
+        pointer.style.left = `${pointerDistance}px`;
     }
 
-    pointer.style.left = `${x - spanWidth / 2 + anchor.clientWidth / 2 + 
-        span.clientWidth / 2}px`;
+    
 
 
 
@@ -323,16 +342,17 @@ function positionTooltips(id) {
     if (top <= bottom) {
         span.style.top = `${y + anchor.clientHeight + TOOL_TIP_POINTER_HEIGHT}px`;
         onTop[id] = false;
-        pointer.style.bottom = `${window.innerHeight - span.offsetTop}px`
+        pointer.style.bottom = `${window.innerHeight - span.offsetTop - 3}px`
         pointer.classList.remove(ARROW_UP_CLASSNAME);
         pointer.classList.add(ARROW_DOWN_CLASSNAME);
     } else {
         span.style.top = `${y - span.clientHeight - TOOL_TIP_POINTER_HEIGHT}px`;
         onTop[id] = true;
-        pointer.style.top = `${y - TOOL_TIP_POINTER_HEIGHT}px`
+        pointer.style.top = `${y - TOOL_TIP_POINTER_HEIGHT - 3}px`
         pointer.classList.remove(ARROW_DOWN_CLASSNAME);
         pointer.classList.add(ARROW_UP_CLASSNAME);
     }
+    updatePointerColor(id);
 }
 
 function removeSpan(id) {
@@ -368,11 +388,13 @@ function fetchWebCheck(input, params) {
 
 async function testEndpoint(term, id, tooltipField) {
     await sleep(10);
+    console.log(term);
     let content = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">`;
     if (tooltipField) tooltipField.innerHTML = content + 'Searching...</div>';
     let resultNYTimes = await fetchNewYorkTimes(term);
     let dataNYTimes = await resultNYTimes.text();
     let str = await new window.DOMParser().parseFromString(dataNYTimes, "text/xml");
+    console.log(str);
     const items = str.querySelectorAll("item");
     for(var i = 0; i < items.length && i < 5; i++) {
         let item = items[i];
@@ -401,10 +423,10 @@ async function testEndpoint(term, id, tooltipField) {
             <span style="display: none" id="${updatedId}-hidden">` + 
             (source ? `<img ${empty ? 'style="width:100%; height:100%;margin-bottom: 1rem;"' : ''}class='edicratic-image-nyt' src="${source}"/>` : ``)  +
             `${!empty ? data.description : ''}`
-            + `<br/><br/><a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${url}', '_blank')">Read Article</a></span></p>
-            <a id="${updatedId}"class="inner-link ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
+            + `${empty ? '' : '<br/><br/>'}<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${url}', '_blank')">Read Article</a></span></p>
+        <a id="${updatedId}"class="inner-link ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
             content += newElement;
-            if(tooltipField) {
+            if(tooltipField && idToSelected[id] === 'News') {
                 if(i === 0) {
                     tooltipField.getElementsByClassName('info-edicratic')[0].innerHTML = newElement;
                 } else {
@@ -474,7 +496,7 @@ function getWebUrl(url) {
 function makePostRequest() {
     PREVIOUS_TEXT = document.body.innerText;
     const spinner = document.createElement('div');
-    spinner.className = "loading";
+    //spinner.className = "loading";
     spinner.classList.add('loading-edicratic');
     document.body.appendChild(spinner);
     let data = {"blob": document.body.innerText.substring(0, 50000), details: {sort: true, url: window.location.href}};
