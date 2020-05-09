@@ -1,7 +1,6 @@
 ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
 TOOL_TIP_CLASS_NAME = 'edicratic-tooltip';
-BASE_URL = "https://q329xt0jt9.execute-api.us-east-1.amazonaws.com/default";
-POST_URL = BASE_URL + '/process';
+POST_URL = '/process';
 INNER_LINK = 'inner-link';
 PARAGRAPH_CLASS_NAME = 'edicratic-paragraph-classname'
 NEW_LINE_ID = "please-remove-me";
@@ -365,7 +364,7 @@ function removeSpan(id) {
 
 function fetchWebCheck(input, params) {
     return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({input,params, message: "callInternet", needsAuthHeaders: true}, messageResponse => {
+      chrome.runtime.sendMessage({input,params, message: "callWebCheckAPI", needsAuthHeaders: true}, messageResponse => {
         const [response, error] = messageResponse;
         if (response === null) {
           reject(error);
