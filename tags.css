@@ -1,7 +1,5 @@
 html body {
-  position: static !important;
-  padding: 0 !important;
-  margin: 0 !important;
+ position: static !important;
 }
 
 .edicratic-anchor-tag-style {
