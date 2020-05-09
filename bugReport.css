@@ -35,7 +35,7 @@
     margin: auto !important;
   }
   /* The Close Button */
-  .close {
+  .edicratic-close {
     color: #15c39a !important;
     float: right !important;
     font-size: 28px !important;
@@ -44,14 +44,14 @@
     padding-top: 0 !important;
   }
   
-  .close:hover,
-  .close:focus {
+  .edicratic-close:hover,
+  .edicratic-close:focus {
     color: #000 !important;
     text-decoration: none !important;
     cursor: pointer !important;
   }
 
-  .modal-header-2 {
+  .edicratic-modal-header-2 {
     border-bottom: none !important;
     margin-top: 5% !important;
     color: #6f7287 !important;
@@ -123,7 +123,7 @@
         display: none !important;
     }
 
-    .modal-header-2 {
+    .edicratic-modal-header-2 {
         text-align: center !important;
         border-bottom: none !important;
         margin-left: 0rem !important;

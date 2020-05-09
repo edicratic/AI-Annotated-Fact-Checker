@@ -4,7 +4,8 @@ TOOL_TIP_TEXT_CLASSNAME_TOP = 'tooltiptext-top';
 TOOL_TIP_TEXT_CLASSNAME_BOTTOM = 'tooltiptext-bottom'
 CHECK_CLASS_NAME = 'fa fa-check fa-2x edicratic-yes';
 X_CLASS_NAME = 'fa fa-times fa-2x edicratic-no';
-LOG_URL = "/log";
+BASE_URL = "https://q329xt0jt9.execute-api.us-east-1.amazonaws.com/default";
+LOG_URL = BASE_URL + "/log"
 //Chris, modify this as you please
 NUMBER_OF_CHARCATERS_IN_PARAGRAPH = 500;
 INVALID_DESCRIPTION = "Disambiguation page providing links to topics that could be referred to by the same search term";
@@ -137,7 +138,6 @@ function fetchWiki(input) {
     let date = `${dateObj.getFullYear()}-${month.length < 2 ? '0' + month : month}-${day.length < 2 ? '0' + day : day}`;
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({message: 'NYTimes', term, date}, messageResponse => {
-        console.log(messageResponse);
         const [response, error] = messageResponse;
         if (response === null) {
           reject(error);
@@ -162,7 +162,7 @@ function fetchWiki(input) {
                      'Content-Type': 'application/json',
                  }
                }
-        chrome.runtime.sendMessage({input: url,params,message: "callWebCheckAPI",needsAuthHeaders: true}, messageResponse => {
+        chrome.runtime.sendMessage({input: url,params,message: "callInternet",needsAuthHeaders: true}, messageResponse => {
           //   console.log(messageResponse);
           const [response, error] = messageResponse;
           if (response === null) {

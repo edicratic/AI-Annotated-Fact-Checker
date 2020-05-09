@@ -1,7 +1,7 @@
 ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
 TOOL_TIP_CLASS_NAME = 'edicratic-tooltip';
 POST_URL = '/process';
-INNER_LINK = 'inner-link';
+INNER_LINK = 'edicratic-inner-link';
 PARAGRAPH_CLASS_NAME = 'edicratic-paragraph-classname'
 NEW_LINE_ID = "please-remove-me";
 idToData = {};
@@ -200,7 +200,7 @@ function processNYTimes(data, id) {
             ${pageDescription}<span style="display: none" id="${updatedId}-hidden">
             <br/><br/>${firstParagraph} <br/><br/>` + (imageSource ? `<img class='edicratic-image-nyt' src="${imageSource}"/><br/><br/>` : ``) 
             + `<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${link}', '_blank')">Read Article</a></span></p>
-            <a id="${updatedId}"class="inner-link ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
+            <a id="${updatedId}"class="${INNER_LINK} ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
         }
         return content + '</div>';
 }
@@ -393,7 +393,6 @@ async function testEndpoint(term, id, tooltipField) {
     let resultNYTimes = await fetchNewYorkTimes(term);
     let dataNYTimes = await resultNYTimes.text();
     let str = await new window.DOMParser().parseFromString(dataNYTimes, "text/xml");
-    console.log(str);
     const items = str.querySelectorAll("item");
     for(var i = 0; i < items.length && i < 5; i++) {
         let item = items[i];
@@ -416,14 +415,13 @@ async function testEndpoint(term, id, tooltipField) {
             let source = data.source;
             let updatedId = `${Math.floor(Math.random() * 1000000)}` + id;
             let empty = data.description === 'EMPTY';
-            console.log(empty);
 
             let newElement = `<b class="${ENTITY_HEADER}">${title}:</b><p class=${PARAGRAPH_CLASS_NAME}>
             <span style="display: none" id="${updatedId}-hidden">` + 
             (source ? `<img ${empty ? 'style="width:100%; height:100%;margin-bottom: 1rem;"' : ''}class='edicratic-image-nyt' src="${source}"/>` : ``)  +
             `${!empty ? data.description : ''}`
             + `${empty ? '' : '<br/><br/>'}<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${url}', '_blank')">Read Article</a></span></p>
-        <a id="${updatedId}"class="inner-link ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
+        <a id="${updatedId}"class="${INNER_LINK} ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
             content += newElement;
             if(tooltipField && idToSelected[id] === 'News') {
                 if(i === 0) {
@@ -660,7 +658,7 @@ function proccessWikiData(items, id) {
         ${visibleArray.join(' ')}<span id="${modiifiedId}-show-more-hidden" style="display: none">
         ${hiddenArray.join(' ')} <br/><br/>` + (item.thumbnail ? `<img class='edicratic-image' src="${item.thumbnail.source}"/><br/><br/>` : ``) 
         + `<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${wikilink}', '_blank')">Learn More</a></span></p>
-        <a id="${modiifiedId}-show-more" class="inner-link ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
+        <a id="${modiifiedId}-show-more" class="${INNER_LINK} ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
     }
     return content + '</div>';
 

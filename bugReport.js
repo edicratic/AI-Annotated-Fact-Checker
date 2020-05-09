@@ -24,9 +24,9 @@ function createModal() {
         div.className = 'edicratic-modal';
         div.id = MODAL;
         div.innerHTML = `
-            <span id="close-icon" class="close">&times;</span>
+            <span id="close-icon" class="edicratic-close">&times;</span>
             <img id='logo-id' class="edicratic-logo">
-            <h2 class="modal-header-2">Bug Report</h2>
+            <h2 class="edicratic-modal-header-2">Bug Report</h2>
             <hr/>
     <div class="modal-body-edicratic">
         <textarea id="feedback-edicratic-text" placeholder="Enter feedback here..." class="edicratic-textarea"></textarea>

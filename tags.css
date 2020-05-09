@@ -18,14 +18,6 @@
   background-color:#d3d3d3 !important;
 }
 
-.show-more {
-  position: relative;
-}
-
-.show-more:hover {
-  background-color: darkgray;
-}
-
 .edicratic-tooltip {
     float: left !important;
     text-align: center;
@@ -82,7 +74,7 @@
     padding: 0 !important;
 }
 
-.inner-link {
+.edicratic-inner-link {
     margin-top: 4rem;
     color: #0645ad;
     cursor: pointer;
