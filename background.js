@@ -32,7 +32,42 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         console.log(error);
         sendResponse([null, error]);
       });
-} else if (request.message === 'NYTimes') {
+}else if (request.message === "callWebCheckAPI"){
+  console.log("calling the internet");
+  url = BASE_URL + request.input;
+  fetch(url, request.params).then(function(response) {
+    console.log("a response");
+    requestFailed = false;
+    if(response.status === 401){
+      requestFailed = true;
+      chrome.storage.local.set({'authStatus': "Logged Out"}, function() {
+        //Handle Error 
+        if (chrome.runtime.lastError){
+          console.log("failed to save status, fatal error");
+        }
+        console.log("Hi!")
+      });
+    } else if (response.status !== 200){
+      requestFailed = true;
+    }
+    return response.text().then(function(text) {
+      if (requestFailed){
+        console.log("failed");
+        sendResponse([null, text]);
+      }else{
+        sendResponse([{
+          body: text,
+          status: response.status,
+          statusText: response.statusText,
+        }, null]);
+      }
+    });
+  }, function(error) {
+    console.log("here?");
+    console.log(error);
+    sendResponse([null, error]);
+  });
+}  else if (request.message === 'NYTimes') {
   //TODO attach auth here, Chris
   let url = `https://news.google.com/rss/search?q=${request.term}`;
   fetch(url).then(response => {
@@ -43,7 +78,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         statusText: response.statusText,
       }, null]);
     }, function(error) {
-      sendResponse[null, error];
+      sendResponse([null, error]);
     });
   })
 } else if(request.message === 'basicGET') {
@@ -55,9 +90,11 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         statusText: response.statusText,
       }, null]);
     }, function(error) {
-      sendResponse[null, error];
+      sendResponse([null, error]);
     });
   })
+}else if (request.message === 'runOAuthFlow'){
+  oauthFlow();
 }
 return true;
 });
@@ -71,7 +108,11 @@ function getToken(id_token){
       let params =  {method:"POST", body: JSON.stringify({body:{oauth2_identifier:{type: "google", id_token: id_token}}}),
                       'Content-Type': 'application/json'};
       fetch(BASE_URL + "/token",params).then(res => {
-          resolve(res);
+          if(res.status === 200){
+            resolve(res);
+          }else{
+            reject(res);
+          }
       }).catch(err => {
           reject(err);
       });
@@ -115,13 +156,15 @@ function oauthFlow(){
                           console.log(response);
                           id_token = urlParams.get("id_token");
                           getToken(id_token).then(res => {
-                              console.log(res);
+                            chrome.storage.local.set({'authStatus': "Authenticated"});
                           }).catch(err => {
+                              chrome.storage.local.set({'authStatus': "Logged Out"});
                               console.log(err);
                           });
                       break;
                       case 'Denied':
                           console.log("DENIEDDD");
+                          chrome.storage.local.set({'authStatus': "Logged Out"});
                           // Example: error_subtype=access_denied&error=immediate_failed
                           console.log(response);
                       break;
@@ -131,10 +174,14 @@ function oauthFlow(){
                           id_token = urlParams.get("id_token");
                           if (id_token == null || id_token == undefined){
                               console.log("an actual error")
+                              //TODO Handle / log this somehow
+                              chrome.storage.local.set({'authStatus': "Logged Out"});
                           }else{
                               getToken(id_token).then(res => {
+                                  chrome.storage.local.set({'authStatus': "Authenticated"});
                                   console.log(res);
                               }).catch(err => {
+                                  chrome.storage.local.set({'authStatus': "Logged Out"});
                                   console.log(err);
                               });
                           }
