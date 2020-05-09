@@ -209,6 +209,8 @@ function updatePointerColor(id) {
     let pointer = document.getElementById(`${id}-pointer`);
     if(onLeft[id] && onTop[id] && idToSelected[id] === 'Information') {
         pointer.classList.add(GRAY_POINTER_CLASSNAME);
+    } else if (onTop[id] && onLeft[id] === undefined && idToSelected[id] === 'News') {
+        pointer.classList.add(GRAY_POINTER_CLASSNAME);
     } else {
         pointer.classList.remove(GRAY_POINTER_CLASSNAME);
     }
@@ -327,7 +329,7 @@ function positionTooltips(id) {
         pointer.style.left = `${pointerDistance - 1}px`;
 
     } else {
-        onLeft[id] = false;
+        onLeft[id] = undefined;
         span.style.left = `${x - spanWidth / 2 + anchor.clientWidth / 2}px`;
         pointer.style.left = `${pointerDistance}px`;
     }
