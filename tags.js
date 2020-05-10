@@ -464,7 +464,6 @@ function getWebUrl(url) {
 function makePostRequest() {
     PREVIOUS_TEXT = document.body.innerText;
     const spinner = document.createElement('div');
-    //spinner.className = "loading";
     spinner.classList.add('loading-edicratic');
     document.body.appendChild(spinner);
     let data = {"blob": document.body.innerText.substring(0, 50000), details: {sort: true, url: window.location.href}};
@@ -483,7 +482,7 @@ function makePostRequest() {
         }
     }).then(data =>{
         //well so is this hacky
-        spinner.parentElement.removeChild(spinner);
+        if(spinner) spinner.style.display = 'none';
         body = JSON.parse(data.body);
         console.log(body);
         processEntities(body);
@@ -492,8 +491,8 @@ function makePostRequest() {
         });
     }).catch(e => {
         console.log(e);
-        spinner.parentElement.removeChild(spinner);
-        alert("Oops. Smething went wrong :(. Please try again. Error: " + e + "\n If your issue is persistent, go to webcheck.edicratic.com/support.html for help.");
+        if(spinner) spinner.style.display = 'none';
+        alert("Oops. Something went wrong :(. Please try again." + "\nIf your issue is persistent, go to webcheck.edicratic.com/support.html for help.");
     });
 }
 
