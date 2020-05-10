@@ -348,16 +348,21 @@ function fetchWebCheck(input, params) {
 
   //TODO rename NYTimes method and endpoint method
 
-async function testEndpoint(term, id, tooltipField) {
+async function testEndpoint(term, id) {
     await sleep(10);
     console.log(term);
     let content = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">`;
-    if (tooltipField) tooltipField.innerHTML = content + 'Searching...</div>';
     let resultNYTimes = await fetchNewYorkTimes(term);
     let dataNYTimes = await resultNYTimes.text();
     let str = await new window.DOMParser().parseFromString(dataNYTimes, "text/xml");
 
     let items = str.querySelectorAll("item");
+    if(!items || items.length === 0) {
+        idToData[id]['News'] =  `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">No Results Found</div>`;
+        let tooltipField = document.getElementById(`${id}-content`);
+        if(idToSelected[id] === 'News') tooltipField.innerHTML = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">No Results Found</div>`
+        return;
+    }
     items = Array.prototype.slice.call(items, 0).slice(0, 5);
     items.sort((a, b) => {
         let element1 = a.getElementsByTagName('pubDate')[0];
@@ -395,14 +400,7 @@ async function testEndpoint(term, id, tooltipField) {
             + `${empty ? '' : '<br/><br/>'}<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${url}', '_blank')">Read Article</a></span></p>
         <a id="${updatedId}"class="${INNER_LINK} ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
             content += newElement;
-            if(tooltipField && idToSelected[id] === 'News') {
-                if(i === 0) {
-                    tooltipField.getElementsByClassName('info-edicratic')[0].innerHTML = newElement;
-                } else {
-                    tooltipField.getElementsByClassName('info-edicratic')[0].innerHTML += newElement;
-                }
-                addShowMoreListeners(id);
-            } else if(idToSelected[id] === 'News') {
+            if(idToSelected[id] === 'News') {
                 let tooltipField = document.getElementById(`${id}-content`);
                 if(i === 0) {
                     tooltipField.getElementsByClassName('info-edicratic')[0].innerHTML = newElement;
