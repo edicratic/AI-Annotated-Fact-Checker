@@ -684,8 +684,7 @@ function separateChildNodes(newNodes) {
 }
 
 function handleHighlightEnabling(result) {
-    let isHighlightEnabled = result['highlight-enabled'];
-    if(isHighlightEnabled || isHighlightEnabled === undefined) {
+    if(result['highlight-enabled']) {
         document.body.addEventListener('mouseup', analyzeTextForSending);
         document.body.addEventListener("mousedown", checkAndRemoveSpans);
     }

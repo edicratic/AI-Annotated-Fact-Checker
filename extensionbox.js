@@ -1,13 +1,45 @@
-QUICK_LOOK_UP_ENABLED = 'edicratic-quick-look-up-enabled';
 let changeColor = document.getElementById('changeColor');
 let check = document.getElementById('edicratic-check');
 let invalidMessage = document.getElementById('edicratic-invalid');
 let icon = document.getElementById('info-icon-edicratic');
 let checkBox = document.getElementById("enable-quick-look-up");
 let bugReport = document.getElementById('edicratic-bug-report');
-let isQuickLookUpEnabled = localStorage[QUICK_LOOK_UP_ENABLED];
-let sendVal = isQuickLookUpEnabled === 'true' || isQuickLookUpEnabled === undefined;
+let buttonIcon = document.getElementById('changeColor-icon');
 if(localStorage['isLoadedEdicratic'] === 'true') changeColor.style.display = 'none';
+
+chrome.storage.local.get(['authStatus'], function(result) {
+  if(chrome.runtime.lastError || result.authStatus === null || result.authStatus === undefined || result.authStatus === "Logged Out"){
+      chrome.runtime.sendMessage({input: "/auth-status",params: {method: "GET"}, message: "callWebCheckAPI"}, messageResponse => {
+          const [response, error] = messageResponse;
+          if (response === null) {
+              setButtonLogin(changeColor, buttonIcon)
+          } else {
+              setButtonNormal(changeColor, buttonIcon);
+          }
+        });
+      
+  } else if(result.authStatus === "Authenticated"){
+      setButtonNormal(changeColor, buttonIcon);
+  }
+});
+
+function setButtonLogin(changeColor, buttonIcon) {
+  console.log('login');
+  changeColor.style.backgroundColor = '#3958ae';
+  buttonIcon.style.display = 'none';
+  let text = document.getElementById('webcheck-text');
+  text.innerText = 'Login To Webcheck';
+  changeColor.onclick = () => chrome.runtime.sendMessage({message: "runOAuthFlow"})
+}
+
+function setButtonNormal(changeColor, buttonIcon) {
+  changeColor.style.backgroundColor = '';
+  let text = document.getElementById('webcheck-text');
+  text.textContent = 'WebCheck This';
+  buttonIcon.style.display = 'inline';
+  changeColor.onclick = () => performWebCheck();
+
+}
 
 updateBox(checkBox);
 checkBox.onclick = () => handleCheckBoxClick();
@@ -27,24 +59,14 @@ if (isValid === 'true') {
 function handleCheckBoxClick() {
   chrome.storage.local.get(["highlight-enabled"], (result) => {
     let val = result['highlight-enabled'];
-    let enabled;
-    if (val || val == undefined) {
-      enabled = false;
-    } else {
-      enabled = true;
-    }
-    chrome.storage.local.set({'highlight-enabled': enabled});
+    chrome.storage.local.set({'highlight-enabled': !val});
   });
 }
 
 function updateBox(checkBox) {
     chrome.storage.local.get(["highlight-enabled"], (result) => {
       let val = result['highlight-enabled'];
-      if (val || val == undefined) {
-        checkBox.checked = true;
-      } else {
-        checkBox.checked = false;
-      }
+      checkBox.checked = !!val;
     });
 }
 
@@ -68,4 +90,3 @@ function handleBugReport() {
   });
 }
 
-changeColor.onclick = (element) => performWebCheck();
