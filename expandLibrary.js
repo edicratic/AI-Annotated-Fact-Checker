@@ -5,7 +5,8 @@ TOOL_TIP_TEXT_CLASSNAME_BOTTOM = 'tooltiptext-bottom'
 YES_CLASS_NAME = 'edicratic-yes';
 NO_CLASS_NAME = 'edicratic-no';
 LOG_URL = "/log"
-//Chris, modify this as you please
+RIGHT_AND_TOP = 'tooltiptext-top-right';
+RIGHT_AND_BOTTOM = 'tooltiptext-bottom-right'
 NUMBER_OF_CHARCATERS_IN_PARAGRAPH = 500;
 INVALID_DESCRIPTION = "Disambiguation page providing links to topics that could be referred to by the same search term";
 
@@ -23,16 +24,27 @@ function analyzeTextForSending() {
 
     let tooltip = document.createElement('span');
     tooltip.className = TOOL_TIP_CLASSNAME;
-    tooltip.innerHTML = `<p class="${TOOL_TIP_TEXT_CLASSNAME_TOP}">Do you want us to look up this highlighted text for you?<br/><br/><div class="${NO_CLASS_NAME}">No</div><div class="${YES_CLASS_NAME}">Yes</div></p>`
+    tooltip.innerHTML = `<p class="${TOOL_TIP_TEXT_CLASSNAME_TOP}">Do you want us to look up this highlighted text for you?<div class="${NO_CLASS_NAME}">No</div><div class="${YES_CLASS_NAME}">Yes</div></p>`
     tooltip.setAttribute('data-content', text);
     document.body.prepend(tooltip);
     let paragraph = tooltip.children[0];
     var onBottom = rect.top >= tooltip.clientHeight ;
     let halfWidth = (rect.right - rect.left) / 2;
-    //tooltip.style.width = `${rect.right - rect.left}px`
-    tooltip.style.top = onBottom ? `${window.pageYOffset + rect.top - tooltip.clientHeight - 20}px` : `${window.pageYOffset + rect.bottom + 30}px`;
-    tooltip.style.left = `${rect.left + halfWidth}px`
     if(onBottom) paragraph.classList.replace(TOOL_TIP_TEXT_CLASSNAME_TOP, TOOL_TIP_TEXT_CLASSNAME_BOTTOM);
+
+    tooltip.style.top = onBottom ? `${window.pageYOffset + rect.top - tooltip.clientHeight - 20}px` : `${window.pageYOffset + rect.bottom + 30}px`;
+    if(rect.left > window.innerWidth - rect.left) {
+      console.log('a');
+      tooltip.style.left = `${rect.left - 400 + halfWidth}px`
+      if (onBottom) {
+        paragraph.classList.replace(TOOL_TIP_TEXT_CLASSNAME_BOTTOM, RIGHT_AND_BOTTOM);
+      } else {
+        paragraph.classList.replace(TOOL_TIP_TEXT_CLASSNAME_TOP, RIGHT_AND_TOP);
+      }
+    } else {
+      console.log('b');
+      tooltip.style.left = `${rect.left + halfWidth}px`
+    }
     let x = document.getElementsByClassName(NO_CLASS_NAME)[0];
     let check = document.getElementsByClassName(YES_CLASS_NAME)[0];
     x.onclick = (e) => {
