@@ -21,11 +21,10 @@
 
   .edicratic-logo {
       float: left !important;
-      padding-left: 3% !important;
-      margin-right: 2% !important;
-      padding-top: 3% !important;
+      padding: 10px;
       z-index: 1 !important;
-      height: 50% !important;
+      width: 70px;
+      height: 70px;
   }
   
   /* Modal Content */

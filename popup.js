@@ -13,7 +13,6 @@ localStorage['isLoadedEdicratic'] = false;
 const INVALID_SEARCH_URLS = [
     // 'www.facebook.com/',
 ]
-
 evaluatePageForChecked();
 checkCurrentPage();
 chrome.storage.local.get(['authStatus'], function(result) {
@@ -21,17 +20,14 @@ chrome.storage.local.get(['authStatus'], function(result) {
         chrome.runtime.sendMessage({input: "/auth-status",params: {method: "GET"}, message: "callWebCheckAPI"}, messageResponse => {
             const [response, error] = messageResponse;
             if (response === null) {
-               chrome.runtime.sendMessage({message: "runOAuthFlow"});
-               //TODO @Yukt
-               console.log("HERERERE CHANGE THE UIIIIII");
+                chrome.storage.local.set({'buttonUI': true});
             } else {
-                chrome.storage.local.set({'authStatus': 'Authenticated'});
+                chrome.storage.local.set({'buttonUI': false});
             }
           });
         
-    }
-    else if(result.authStatus === "Authenticated"){
-        //Do The Normal Thing
+    } else if(result.authStatus === "Authenticated"){
+        chrome.storage.local.set({'buttonUI': false});
     }
   });
 

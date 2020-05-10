@@ -139,18 +139,17 @@ function handleTabClick(e, id) {
     }
     currentTab.classList.add('edicratic-selected');
     idToSelected[id] = currentTab.innerText || currentTab.textContent;
-    updatePointerColor(id);
+    //updatePointerColor(id);
     let tooltipChildren = tooltip.children;
     let index = 0;
     for(var i = 0; i < tooltipChildren.length; i++) {
         if(tooltipChildren[i].id === `${id}-content`) {
             index = i;
             let innerHTML = idToData[id][currentTab.textContent || currentTab.innerText];
-            if(innerHTML) {
+            if(innerHTML && innerHTML !== ' ') {
                 tooltipChildren[i].innerHTML = innerHTML;
             } else {
-                tooltipChildren[i].innerHTML = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">`;
-                testEndpoint(idToTerm[id], id, tooltipChildren[index]);
+                tooltipChildren[i].innerHTML = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">Searching...</div>`;
             }
 
         }
@@ -190,7 +189,7 @@ function modifyAllText(regex, entity, matches, childList, set) {
                 var newElement = document.createElement('div');
                 newElement.style.display = "inline";
                 newElement.innerHTML = text;
-                newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId);
+                newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId, entity);
                 if(child.nodeName === '#comment') continue;
                 if(child.nodeName !== "#text") {
                     child.appendChild(newElement);
@@ -241,7 +240,7 @@ function createTooltip(data, id) {
 
 }
 
-function mouseOverHandle(e, id) {
+function mouseOverHandle(e, id, text) {
     if (e.target && e.target.id) {
         id = e.target.id;
         id = id.substring(0, id.indexOf('-'));
@@ -250,6 +249,11 @@ function mouseOverHandle(e, id) {
         }
         OPEN_SPAN = id;
         positionTooltips(id);
+        if (!idToData[id]['News'] && text) {
+            idToData[id]['News'] = ' ';
+            testEndpoint(text, id);
+        }
+
     }
 }
 
@@ -303,7 +307,7 @@ function positionTooltips(id) {
         pointer.classList.remove(ARROW_DOWN_CLASSNAME);
         pointer.classList.add(ARROW_UP_CLASSNAME);
     }
-    updatePointerColor(id);
+    //updatePointerColor(id);
 }
 
 function removeSpan(id) {
@@ -345,6 +349,7 @@ async function testEndpoint(term, id, tooltipField) {
     let resultNYTimes = await fetchNewYorkTimes(term);
     let dataNYTimes = await resultNYTimes.text();
     let str = await new window.DOMParser().parseFromString(dataNYTimes, "text/xml");
+
     const items = str.querySelectorAll("item");
     for(var i = 0; i < items.length && i < 5; i++) {
         let item = items[i];
@@ -376,6 +381,14 @@ async function testEndpoint(term, id, tooltipField) {
         <a id="${updatedId}"class="${INNER_LINK} ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
             content += newElement;
             if(tooltipField && idToSelected[id] === 'News') {
+                if(i === 0) {
+                    tooltipField.getElementsByClassName('info-edicratic')[0].innerHTML = newElement;
+                } else {
+                    tooltipField.getElementsByClassName('info-edicratic')[0].innerHTML += newElement;
+                }
+                addShowMoreListeners(id);
+            } else if(idToSelected[id] === 'News') {
+                let tooltipField = document.getElementById(`${id}-content`);
                 if(i === 0) {
                     tooltipField.getElementsByClassName('info-edicratic')[0].innerHTML = newElement;
                 } else {
@@ -684,8 +697,7 @@ function separateChildNodes(newNodes) {
 }
 
 function handleHighlightEnabling(result) {
-    let isHighlightEnabled = result['highlight-enabled'];
-    if(isHighlightEnabled || isHighlightEnabled === undefined) {
+    if(result['highlight-enabled']) {
         document.body.addEventListener('mouseup', analyzeTextForSending);
         document.body.addEventListener("mousedown", checkAndRemoveSpans);
     }
