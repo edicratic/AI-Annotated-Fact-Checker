@@ -4,8 +4,7 @@ TOOL_TIP_TEXT_CLASSNAME_TOP = 'tooltiptext-top';
 TOOL_TIP_TEXT_CLASSNAME_BOTTOM = 'tooltiptext-bottom'
 CHECK_CLASS_NAME = 'fa fa-check fa-2x edicratic-yes';
 X_CLASS_NAME = 'fa fa-times fa-2x edicratic-no';
-BASE_URL = "https://q329xt0jt9.execute-api.us-east-1.amazonaws.com/default";
-LOG_URL = BASE_URL + "/log"
+LOG_URL = "/log"
 //Chris, modify this as you please
 NUMBER_OF_CHARCATERS_IN_PARAGRAPH = 500;
 INVALID_DESCRIPTION = "Disambiguation page providing links to topics that could be referred to by the same search term";

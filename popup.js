@@ -16,26 +16,22 @@ const INVALID_SEARCH_URLS = [
 
 evaluatePageForChecked();
 checkCurrentPage();
-console.log("popuo.js called");
 chrome.storage.local.get(['authStatus'], function(result) {
-    console.log("got sutff")
-    console.log(result.authStatus);
-    if(chrome.runtime.lastError || result.authStatus === null || result.authStatus === undefined ||result.authStatus === "Logged Out"){
+    if(chrome.runtime.lastError || result.authStatus === null || result.authStatus === undefined || result.authStatus === "Logged Out"){
         chrome.runtime.sendMessage({input: "/auth-status",params: {method: "GET"}, message: "callWebCheckAPI"}, messageResponse => {
             const [response, error] = messageResponse;
             if (response === null) {
                chrome.runtime.sendMessage({message: "runOAuthFlow"});
+               //TODO @Yukt
                console.log("HERERERE CHANGE THE UIIIIII")
             } else {
-                chrome.local.set({'authStatus': 'Authenticated'});
+                chrome.storage.local.set({'authStatus': 'Authenticated'});
             }
           });
         
     }
     else if(result.authStatus === "Authenticated"){
         //Do The Normal Thing
-    }else if (result.authStatus === "Error"){
-        //TODO something went horribly wrong if this occurs. 
     }
   });
 

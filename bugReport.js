@@ -60,7 +60,6 @@ function sendLog(url, body) {
                }
              }
       chrome.runtime.sendMessage({input: url,params, message:"callWebCheckAPI", needsAuthHeaders: true}, messageResponse => {
-        //   console.log(messageResponse);
         const [response, error] = messageResponse;
         if (response === null) {
           reject(error);

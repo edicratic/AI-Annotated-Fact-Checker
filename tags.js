@@ -60,7 +60,7 @@ async function modifySingleNode(node, text) {
     var result = await fetchWiki(url);
     var data = await result.json();
 
-    if(!data || !data.query) {
+    if(!data || !data.query || !data.query.pages || data.query.pages.length === 0) {
         alert("Sorry, could not find a match for that :(. Try to highlight specific terms");
         return;
     }
@@ -106,25 +106,10 @@ async function modifySingleNode(node, text) {
         tabChildren[i].onclick = (e) => handleTabClick(e, uniqueId);
     }
     idToSelected[uniqueId] = 'Information';
-    tooltip.onmouseleave = (e) => {
-        if(e.target) {
-            let id = e.target.id;
-            id = id.substring(0, id.indexOf('-'));
-            //removeSpan(id);
-        }
-    }
     document.body.prepend(tooltip)
     addShowMoreListeners(uniqueId);
     tooltip.onclick = e => e.preventDefault();
     testEndpoint(text, uniqueId);
-}
-
-async function addNewYorkTimesData(id, term) {
-    let resultNYTimes = await fetchNewYorkTimes(term);
-    let dataNYTimes = await resultNYTimes.json();
-    let NYTimesContent = processNYTimes(dataNYTimes, id);
-    idToData[id]['News'] = NYTimesContent;
-    addShowMoreListeners(id);
 }
 
 function addShowMoreListeners(id) {
@@ -171,38 +156,6 @@ function handleTabClick(e, id) {
         }
     }
     addShowMoreListeners(id);
-}
-
-function processNYTimes(data, id) {
-    if(!data || !data.response || !data.response.docs || data.response.docs.length === 0) {
-        let tabs = document.getElementById(`${id}-tabs`);
-        let tabChildren = tabs.children;
-        for (var i = 0; i < tabChildren.length; i++) {
-            if(tabChildren[i].textContent === 'News') {
-                tabChildren[i].parentElement.removeChild(tabChildren[i]);
-                return;
-            }
-        }
-    }
-        let articles = data.response.docs;
-        let content = `<h4>News Articles From Today</h4><hr/><div class="info-edicratic">`;
-        for (var i = 0; i < articles.length; i++) {
-            //TODO sort by category. add author attribution
-            let article = articles[i];
-            let link = article.web_url;
-            let title = article.headline.main;
-            let pageDescription = article.abstract;
-            let firstParagraph = article.lead_paragraph;
-            let updatedId = `${Math.floor(Math.random() * 1000000)}` + id + `${i}`;
-            let imageSource = article.multimedia && article.multimedia[0] && article.multimedia[0].url ?
-            `https://www.nytimes.com/${article.multimedia[0].url}` : undefined;
-            content += `<b class="${ENTITY_HEADER}">${title}:</b><p class=${PARAGRAPH_CLASS_NAME}>
-            ${pageDescription}<span style="display: none" id="${updatedId}-hidden">
-            <br/><br/>${firstParagraph} <br/><br/>` + (imageSource ? `<img class='edicratic-image-nyt' src="${imageSource}"/><br/><br/>` : ``) 
-            + `<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${link}', '_blank')">Read Article</a></span></p>
-            <a id="${updatedId}"class="${INNER_LINK} ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
-        }
-        return content + '</div>';
 }
 
 function updatePointerColor(id) {
@@ -439,7 +392,13 @@ async function testEndpoint(term, id, tooltipField) {
 
 function extractMetaData(url) {
     return new Promise((resolve, reject ) => {
-        getWebUrl(url).then(res => res.text()).then(data => {
+        getWebUrl(url).then(res => {
+            if (res.status === 200){
+                return res.text();
+            }else{
+                throw new Error(res.statusText);
+            }
+        }).then(data => {
             let el = document.createElement('div');
             el.innerHTML = data;
             let metaTags = el.getElementsByTagName('meta');
@@ -467,7 +426,7 @@ function extractMetaData(url) {
             resolve(new Response(body, {
                 status: 200,
             }));
-        });
+        }).catch(err => {reject(err)});
     });
 
 }
@@ -510,22 +469,18 @@ function makePostRequest() {
             throw new Error(result.status);
         }
     }).then(data =>{
-      //well so is thius hacky
-      spinner.parentElement.removeChild(spinner);
-      if(data == undefined){
-        console.log("errr");
-      }else{
+        //well so is this hacky
+        spinner.parentElement.removeChild(spinner);
         body = JSON.parse(data.body);
         console.log(body);
         processEntities(body);
         chrome.runtime.sendMessage({
             data: DATA_LOADED
         });
-      }
     }).catch(e => {
         console.log(e);
         spinner.parentElement.removeChild(spinner);
-        alert("Oops. Smething went wrong :(. Please try again. Error: " + e)
+        alert("Oops. Smething went wrong :(. Please try again. Error: " + e + "\n If your issue is persistent, go to webcheck.edicratic.com/support.html for help.");
     });
 }
 

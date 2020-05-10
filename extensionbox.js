@@ -7,7 +7,6 @@ let checkBox = document.getElementById("enable-quick-look-up");
 let bugReport = document.getElementById('edicratic-bug-report');
 let isQuickLookUpEnabled = localStorage[QUICK_LOOK_UP_ENABLED];
 let sendVal = isQuickLookUpEnabled === 'true' || isQuickLookUpEnabled === undefined;
-var manifest = chrome.runtime.getManifest();
 if(localStorage['isLoadedEdicratic'] === 'true') changeColor.style.display = 'none';
 
 updateBox(checkBox);
@@ -48,47 +47,7 @@ function updateBox(checkBox) {
       }
     });
 }
-/*
-function secureWebCheck(element, callback){
-  chrome.identity.getAuthToken({
-   interactive: true
- }, function(token) {
-   auth = {type:"Google", token: token, isAuth: true, message:"authCredentials"}
-   if (chrome.runtime.lastError) {
-     //TODO handle failure to authenticate
-     //Tell the user something went wrong
-     console.log(chrome.runtime.lastError.message);
-     return;
-   }
-   chrome.storage.local.get(['email'], (res) => {
-     console.log(Object.entries(res));
-     console.log(Object.entries(res).length);
-     console.log(Object.entries(res).length == 0);
-     if(chrome.runtime.lastError || Object.entries(res).length == 0){
-       var x = new XMLHttpRequest();
-       x.open('GET', 'https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=' + token);
-       x.onload = function() {
-         let response = JSON.parse(x.response);
-         chrome.storage.local.set({"email": response["email"], "first_name": response["given_name"]}, function() {
-           if(chrome.runtime.lastError){
-             auth["email"] = "failedToGet@mail.com";
-             callback(element,auth);
-             console.log("failed to write to localstorage ... what do we do?");
-           }else{
-             auth["email"] = response["email"];
-             callback(element,auth);
-           }
-         });
-       };
-       x.send();
-     }else{
-       auth["email"] = res.email
-       callback(element,auth);
-     }
-   });
- });
-}
-*/
+
 function performWebCheck(){
   chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
       let specTab = tabs[0]; 

@@ -43,6 +43,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       chrome.storage.local.set({'authStatus': "Logged Out"}, function() {
         //Handle Error 
         if (chrome.runtime.lastError){
+          //TODO 
           console.log("failed to save status, fatal error");
         }
         console.log("Hi!")
@@ -52,7 +53,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     }
     return response.text().then(function(text) {
       if (requestFailed){
-        console.log("failed");
         sendResponse([null, text]);
       }else{
         sendResponse([{
