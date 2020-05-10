@@ -263,6 +263,7 @@ function createTooltip(data, id) {
 
     let pointer = document.createElement('div');
     pointer.className = 'edicratic-tooltip-bottom';
+    pointer.style.display = 'none';
     pointer.id = `${id}-pointer`;
     document.body.appendChild(pointer);
 
@@ -333,10 +334,6 @@ function positionTooltips(id) {
         span.style.left = `${x - spanWidth / 2 + anchor.clientWidth / 2}px`;
         pointer.style.left = `${pointerDistance}px`;
     }
-
-    
-
-
 
     let top = anchor.getBoundingClientRect().top;
     let bottom = window.innerHeight - top;
