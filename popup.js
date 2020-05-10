@@ -23,7 +23,7 @@ chrome.storage.local.get(['authStatus'], function(result) {
             if (response === null) {
                chrome.runtime.sendMessage({message: "runOAuthFlow"});
                //TODO @Yukt
-               console.log("HERERERE CHANGE THE UIIIIII")
+               console.log("HERERERE CHANGE THE UIIIIII");
             } else {
                 chrome.storage.local.set({'authStatus': 'Authenticated'});
             }

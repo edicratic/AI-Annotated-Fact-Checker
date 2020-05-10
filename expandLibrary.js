@@ -99,7 +99,7 @@ function sendBackData(paragraph, text) {
       url: window.location.href,
       annotation_type: "missing"
     };
-    sendData(LOG_URL, body)
+    sendData(LOG_URL, body);
 }
 
 async function lookUpTerm(term) {
