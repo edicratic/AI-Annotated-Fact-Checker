@@ -357,7 +357,15 @@ async function testEndpoint(term, id, tooltipField) {
     let dataNYTimes = await resultNYTimes.text();
     let str = await new window.DOMParser().parseFromString(dataNYTimes, "text/xml");
 
-    const items = str.querySelectorAll("item");
+    let items = str.querySelectorAll("item");
+    items = Array.prototype.slice.call(items, 0).slice(0, 5);
+    items.sort((a, b) => {
+        let element1 = a.getElementsByTagName('pubDate')[0];
+        let element2 = b.getElementsByTagName('pubDate')[0];
+        let date1 = element1 ? element1 .textContent : null;
+        let date2 = element2 ? element2.textContent : null;
+        return date1 && date2 ? new Date(date2) - new Date(date1) : 0;
+    });
     for(var i = 0; i < items.length && i < 5; i++) {
         let item = items[i];
         let children = item.children;
@@ -380,10 +388,10 @@ async function testEndpoint(term, id, tooltipField) {
             let updatedId = `${Math.floor(Math.random() * 1000000)}` + id;
             let empty = data.description === 'EMPTY';
             let dateString = new Date(date).toDateString();
-            let newElement = `<b class="${ENTITY_HEADER}">${title}:</b><br/><i>${dateString}</i><p class=${PARAGRAPH_CLASS_NAME}>
+            let newElement = `<b class="${stripHtml(ENTITY_HEADER)}">${title}:</b><br/><i>${dateString}</i><p class=${PARAGRAPH_CLASS_NAME}>
             <span style="display: none" id="${updatedId}-hidden">` + 
             (source ? `<img ${empty ? 'style="width:100%; height:100%;margin-bottom: 1rem;"' : ''}class='edicratic-image-nyt' src="${source}"/>` : ``)  +
-            `${!empty ? data.description : ''}`
+            `${!empty ? stripHtml(data.description) : ''}`
             + `${empty ? '' : '<br/><br/>'}<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${url}', '_blank')">Read Article</a></span></p>
         <a id="${updatedId}"class="${INNER_LINK} ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
             content += newElement;
