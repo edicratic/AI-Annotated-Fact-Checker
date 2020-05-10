@@ -59,11 +59,18 @@ async function modifySingleNode(node, text) {
     var url = getWikiUrl(text);
     var result = await fetchWiki(url);
     var data = await result.json();
+    var regex = undefined;
+    try {
+        var regex = new RegExp(text);
+    } catch(e) {
+        console.log(e);
+    }
 
-    if(!data || !data.query || !data.query.pages || data.query.pages.length === 0) {
+    if(!node || !node.textContent || !data || !data.query || !data.query.pages || data.query.pages.length === 0 || !regex || !node.textContent.match(regex)) {
         alert("Sorry, could not find a match for that :(. Try to highlight specific terms");
         return;
     }
+
     var pages = data.query.pages;
     var matches = getMatches(pages);
     var innerText = node.textContent;
@@ -372,8 +379,8 @@ async function testEndpoint(term, id, tooltipField) {
             let source = data.source;
             let updatedId = `${Math.floor(Math.random() * 1000000)}` + id;
             let empty = data.description === 'EMPTY';
-
-            let newElement = `<b class="${ENTITY_HEADER}">${title}:</b><p class=${PARAGRAPH_CLASS_NAME}>
+            let dateString = new Date(date).toDateString();
+            let newElement = `<b class="${ENTITY_HEADER}">${title}:</b><br/><i>${dateString}</i><p class=${PARAGRAPH_CLASS_NAME}>
             <span style="display: none" id="${updatedId}-hidden">` + 
             (source ? `<img ${empty ? 'style="width:100%; height:100%;margin-bottom: 1rem;"' : ''}class='edicratic-image-nyt' src="${source}"/>` : ``)  +
             `${!empty ? data.description : ''}`

@@ -3,10 +3,8 @@
     border-bottom: 1px black !important;
     position: absolute!important;
     background-color: darkgray;
+    width: 250px;
     height: auto;
-    min-width: 100px;
-    max-width: 250px;
-    max-height: 250px;
     background-color: #f5f5f5 !important;
     z-index: 100000;
 }
@@ -36,11 +34,11 @@
     content: "";
     position: absolute;
     bottom: 100%;
-    left: 50%;
+    left: 10px;
     margin-left: -10px;
     border-width: 10px;
     border-style: solid;
-    border-color: #555 transparent transparent transparent;
+    border-color: transparent transparent #f5f5f5 transparent;
   }
 
   .edicratic-add-library-tooltip .tooltiptext-bottom {
@@ -60,21 +58,23 @@
     content: "";
     position: absolute;
     top: 100%;
-    left: 50%;
+    left: 10px;
     margin-left: -10px;
     border-width: 10px;
     border-style: solid;
-    border-color: #555 transparent transparent transparent;
+    border-color: #f5f5f5 transparent transparent transparent;
   }
   
 .edicratic-yes {
-    padding: 0.2rem;
     float:right;
+    padding: 0.7rem;
+    text-decoration: none !important;
 }
 
 .edicratic-no {
-    padding: 0.2rem;
     float:left;
+    padding: 0.7rem;
+    text-decoration: none !important;
 }
 .edicratic-no:hover {
     background-color: #15c39a !important;

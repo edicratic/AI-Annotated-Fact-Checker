@@ -2,8 +2,8 @@ EDICRATIC_HIGHLIGHTED_TEXT_CLASS = 'edicratic-highlighted-text-class'
 TOOL_TIP_CLASSNAME = 'edicratic-add-library-tooltip'
 TOOL_TIP_TEXT_CLASSNAME_TOP = 'tooltiptext-top';
 TOOL_TIP_TEXT_CLASSNAME_BOTTOM = 'tooltiptext-bottom'
-CHECK_CLASS_NAME = 'fa fa-check fa-2x edicratic-yes';
-X_CLASS_NAME = 'fa fa-times fa-2x edicratic-no';
+YES_CLASS_NAME = 'edicratic-yes';
+NO_CLASS_NAME = 'edicratic-no';
 LOG_URL = "/log"
 //Chris, modify this as you please
 NUMBER_OF_CHARCATERS_IN_PARAGRAPH = 500;
@@ -23,18 +23,20 @@ function analyzeTextForSending() {
 
     let tooltip = document.createElement('span');
     tooltip.className = TOOL_TIP_CLASSNAME;
-    tooltip.innerHTML = `<p class="${TOOL_TIP_TEXT_CLASSNAME_TOP}">Do you want us to look up this highlighted text for you?</p><br/><br/><i class="${X_CLASS_NAME}"></i><i class="${CHECK_CLASS_NAME}"></i></p>`
+    tooltip.innerHTML = `<p class="${TOOL_TIP_TEXT_CLASSNAME_TOP}">Do you want us to look up this highlighted text for you?<br/><br/><div class="${NO_CLASS_NAME}">No</div><div class="${YES_CLASS_NAME}">Yes</div></p>`
     tooltip.setAttribute('data-content', text);
     document.body.prepend(tooltip);
     let paragraph = tooltip.children[0];
     var onBottom = rect.top >= tooltip.clientHeight ;
-    tooltip.style.width = `${rect.right - rect.left}px`
+    let halfWidth = (rect.right - rect.left) / 2;
+    //tooltip.style.width = `${rect.right - rect.left}px`
     tooltip.style.top = onBottom ? `${window.pageYOffset + rect.top - tooltip.clientHeight - 20}px` : `${window.pageYOffset + rect.bottom + 30}px`;
-    tooltip.style.left = `${rect.left}px`
+    tooltip.style.left = `${rect.left + halfWidth}px`
     if(onBottom) paragraph.classList.replace(TOOL_TIP_TEXT_CLASSNAME_TOP, TOOL_TIP_TEXT_CLASSNAME_BOTTOM);
-    let x = document.getElementsByClassName(X_CLASS_NAME)[0];
-    let check = document.getElementsByClassName(CHECK_CLASS_NAME)[0];
+    let x = document.getElementsByClassName(NO_CLASS_NAME)[0];
+    let check = document.getElementsByClassName(YES_CLASS_NAME)[0];
     x.onclick = (e) => {
+        
         e.preventDefault();
         clearSelection();
         removeHighlightedSpans();
