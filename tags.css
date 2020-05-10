@@ -218,7 +218,7 @@ html body {
   display: flex;
   overflow: hidden;
   overflow-wrap: break-word;
-  overflow-x: scroll;
+  overflow-x: hidden;
   overflow-y: hidden;
   background-color: lightgray;
   height: 30px;
