@@ -83,6 +83,8 @@ html body {
     color: #0645ad;
     cursor: pointer;
     position: relative;
+    text-decoration: none !important;
+    border-bottom: none !important;
 }
 
 /* img {
@@ -308,7 +310,8 @@ html body {
 .edicratic-entity-link {
   color: #8c1515;
   cursor: pointer;
-
+  text-decoration: none !important;
+  border-bottom: none !important;
 }
 
 /*media queries*/
