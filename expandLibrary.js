@@ -161,7 +161,7 @@ function fetchWiki(input) {
                      'Content-Type': 'application/json',
                  }
                }
-        chrome.runtime.sendMessage({input: url,params,message: "callInternet",needsAuthHeaders: true}, messageResponse => {
+        chrome.runtime.sendMessage({input: url,params,message: "callWebCheckAPI",needsAuthHeaders: true}, messageResponse => {
           //   console.log(messageResponse);
           const [response, error] = messageResponse;
           if (response === null) {
