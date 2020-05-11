@@ -3,14 +3,23 @@ html body {
 }
 
 .edicratic-anchor-tag-style {
-    border-bottom: 5px solid #15c39a !important;
-    margin-bottom: -5px !important;
+    /* border-bottom: 5px solid #15c39a !important; */
+    /* margin-bottom: -5px !important; */
     box-sizing:border-box;
     /* background-color: #15c39a; */
     padding-bottom: 0px !important;
     position: relative !important;
     display: inline-block !important;
     cursor: pointer;
+}
+
+.edicratic-underline {
+  height: 5px;
+  position: absolute;
+  visibility: visible;
+  display: block;
+  background: rgb(21, 195, 154);
+  z-index: 10;
 }
 
 .edicratic-transparent-border {

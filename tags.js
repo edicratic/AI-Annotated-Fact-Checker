@@ -24,8 +24,10 @@ ENTITY_HEADER = 'edicratic-entity-header'
 ENTITY_LINK_CLASS_NAME = 'edicratic-entity-link';
 IMAGE_NYT_CLASSNAME = 'edicratic-image-nyt';
 GRAY_POINTER_CLASSNAME = 'edicratic-grey-pointer';
+UNDERLINE_CLASS_NAME = 'edicratic-underline'
 
 window.addEventListener('scroll', adjustSpansBasedOnHeight);
+window.addEventListener('scroll', updateOverlays);
 
 chrome.storage.local.get(["highlight-enabled"], result => handleHighlightEnabling(result));
 chrome.storage.onChanged.addListener((changes, namespace) => handleStorageChange(changes, namespace));
@@ -84,6 +86,7 @@ async function modifySingleNode(node, text) {
     newElement.innerHTML = innerText;
     newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId);
     node.parentElement.replaceChild(newElement, node);
+    addUnderline(uniqueId);
 
     var tooltip = document.createElement('span');
     tooltip.id = `${uniqueId}-parent`;
@@ -203,6 +206,7 @@ function modifyAllText(regex, entity, matches, childList, set) {
                 } else {
                     child.parentElement.replaceChild(newElement, child);
                 }
+                addUnderline(uniqueId);
                 set.add(newElement);
                 createTooltip(data, uniqueId);
                 //testEndpoint(entity,uniqueId);
@@ -211,6 +215,33 @@ function modifyAllText(regex, entity, matches, childList, set) {
                 modifyAllText(regex, entity, matches, nextList, set)
             }
     }
+    }
+}
+
+function addUnderline(id) {
+    let entity = document.getElementById(`${id}-parent-parent`);
+    if(!entity) {
+        console.log(id);
+        return;
+    }
+    let underline = document.createElement('div');
+    underline.className = `${UNDERLINE_CLASS_NAME}`;
+    underline.id = `${id}-underline`;
+    underline.style.width = `${entity.clientWidth}px`;
+    underline.style.top = `${entity.getBoundingClientRect().top + entity.clientHeight + window.pageYOffset}px`;
+    underline.style.left = `${entity.getBoundingClientRect().left}px`;
+    document.body.prepend(underline);
+}
+
+function adjustAllUnderlines(underlines) {
+    for (var i = 0; i < underlines.length; i++) {
+        let underline = underlines[i];
+        let id = underline.id;
+        id = id.substring(0, id.indexOf('-'));
+        let entity = document.getElementById(`${id}-parent-parent`);
+        underline.style.width = `${entity.clientWidth}px`;
+        underline.style.top = `${entity.getBoundingClientRect().top + entity.clientHeight + window.pageYOffset}px`;
+        underline.style.left = `${entity.getBoundingClientRect().left}px`;
     }
 }
 
@@ -514,6 +545,7 @@ async function processEntities(entities) {
        lookUpTerm(entities[i].entity);
        await sleep(10);
    }
+   adjustAllUnderlines(document.getElementsByClassName(UNDERLINE_CLASS_NAME));
 }
 
 function stripHtml(html) {
@@ -724,4 +756,9 @@ function handleStorageChange(changes, namespace) {
         document.body.removeEventListener('mouseup', analyzeTextForSending);
         document.body.removeEventListener("mousedown", checkAndRemoveSpans);
     }
+}
+
+function updateOverlays() {
+    console.log('updating');
+    adjustAllUnderlines(document.getElementsByClassName(UNDERLINE_CLASS_NAME));
 }
