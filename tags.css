@@ -266,7 +266,7 @@ html body {
   border-width: 12px;
   border-style: solid;
   display: block;
-  z-index: 100000000;
+  z-index: 100000;
 }
 
 .edicratic-entity-header {
