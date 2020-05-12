@@ -12,7 +12,8 @@ chrome.runtime.onMessage.addListener(
             createModal();
             //TODO check Auth
             //alert("Please log in to report a bug");
-        }
+      }
+      return true;
   });
 
 

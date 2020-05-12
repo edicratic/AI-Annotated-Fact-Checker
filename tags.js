@@ -42,6 +42,7 @@ chrome.runtime.onMessage.addListener(
         //window.addEventListener('scroll', checkForSizeChange);
         makePostRequest(request);
     }
+    return true;
   });
 
 function init(data, entity) {

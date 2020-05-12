@@ -20,7 +20,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       console.log("calling the internet");
       fetch(request.input, request.params).then(function(response) {
         console.log("a response");
-        return response.text().then(function(text) {
+        response.text().then(function(text) {
           sendResponse([{
             body: text,
             status: response.status,
@@ -51,7 +51,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     } else if (response.status !== 200){
       requestFailed = true;
     }
-    return response.text().then(function(text) {
+    response.text().then(function(text) {
       if (requestFailed){
         sendResponse([null, text]);
       }else{
@@ -71,7 +71,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   //TODO attach auth here, Chris
   let url = `https://news.google.com/rss/search?q=${request.term}`;
   fetch(url).then(response => {
-    return response.text().then(text => {
+    response.text().then(text => {
       sendResponse([{
         body: text,
         status: response.status,
@@ -83,7 +83,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   })
 } else if(request.message === 'basicGET') {
   fetch(request.url).then(response => {
-    return response.text().then(text => {
+    response.text().then(text => {
       sendResponse([{
         body: text,
         status: response.status,

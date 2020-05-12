@@ -41,6 +41,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     } else if(message.data === MODAL_OPENED) {
         window.close();
     }
+    return true;
 });
 
 
