@@ -118,8 +118,14 @@ function sendBackData(paragraph, text) {
 
 async function lookUpTerm(term) {
     var URL = getWikiUrl(term);
-    var result = await fetchWiki(URL);
-    var data = await result.json();
+    var data;
+    try {
+      var result = await fetchWiki(URL);
+      data = await result.json();
+    } catch (e) {
+      console.log(e);
+      return;
+    }
     if(!data || !data.query || !data.query.pages || data.query.pages.length === 0) return;
     init(data, term);
 }

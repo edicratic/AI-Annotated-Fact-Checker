@@ -62,8 +62,13 @@ function init(data, entity) {
 
 async function modifySingleNode(node, text) {
     var url = getWikiUrl(text);
-    var result = await fetchWiki(url);
-    var data = await result.json();
+    var data;
+    try {
+        var result = await fetchWiki(url);
+        data = await result.json();
+    } catch(e) {
+        console.log(e);
+    }
     var regex = undefined;
     try {
         var regex = new RegExp(text);
@@ -357,9 +362,15 @@ async function testEndpoint(term, id) {
     await sleep(10);
     console.log(term);
     let content = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">`;
-    let resultNYTimes = await fetchNewYorkTimes(term);
-    let dataNYTimes = await resultNYTimes.text();
-    let str = await new window.DOMParser().parseFromString(dataNYTimes, "text/xml");
+    var str;
+    try {
+        let resultNYTimes = await fetchNewYorkTimes(term);
+        let dataNYTimes = await resultNYTimes.text();
+        str = await new window.DOMParser().parseFromString(dataNYTimes, "text/xml");
+    } catch(e) {
+        console.log(e);
+        return;
+    }
 
     let items = str.querySelectorAll("item");
     if(!items || items.length === 0) {
