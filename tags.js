@@ -25,6 +25,8 @@ ENTITY_LINK_CLASS_NAME = 'edicratic-entity-link';
 IMAGE_NYT_CLASSNAME = 'edicratic-image-nyt';
 GRAY_POINTER_CLASSNAME = 'edicratic-grey-pointer';
 IMAGE_BELOW_TEXT = 'edicratic-image-below';
+GOOGLE_SEARCH_IMAGE_META = 'og:image';
+GOOGLE_SEARCH_DESCRIPTION_META = 'og:description';
 
 window.addEventListener('scroll', adjustSpansBasedOnHeight);
 
@@ -437,26 +439,18 @@ function extractMetaData(url) {
             let el = document.createElement('div');
             el.innerHTML = data;
             let metaTags = el.getElementsByTagName('meta');
-            let images = el.getElementsByTagName('img');
-            var description = "";
-            var image;
+            var description = "EMPTY";
+            var image = '';
             for (var i = 0; i < metaTags.length; i++) {
-                let content = metaTags[i].content;
-                if(content && content.length >= description.length && !content.includes('http') 
-                && !content.includes('://') && content.split(",").length < 5 && !content.includes('{')) {
-                    description = metaTags[i].content;
+                let tag = metaTags[i];
+                let property = tag.getAttribute('property');
+                if (property === GOOGLE_SEARCH_DESCRIPTION_META) {
+                    description = tag.content;
+                } else if (property === GOOGLE_SEARCH_IMAGE_META) {
+                    image = tag.content;
                 }
             }
-            for (var i = 0; i < images.length; i++) {
-                let currentImage = images[i];
-                if(!image || currentImage.naturalWidth * currentImage.naturalHeight > image.naturalWidth * image.naturalHeight) {
-                    image = currentImage;
-                }
-            }
-            if(!description || description.length < 100) {
-                description = 'EMPTY';
-            }
-            let source = image && image.src && image.src.includes('https') ? image.src : '';
+            let source = image && image.includes('https') ? image : '';
             body = JSON.stringify({description, source});
             resolve(new Response(body, {
                 status: 200,
