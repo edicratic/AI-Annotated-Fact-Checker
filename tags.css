@@ -313,6 +313,7 @@ html body {
   width: 30%;
   height: 30%;
   text-align: center;
+  display: inline;
 }
 
 .edicratic-entity-link {
