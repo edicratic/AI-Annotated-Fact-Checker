@@ -24,6 +24,7 @@ ENTITY_HEADER = 'edicratic-entity-header'
 ENTITY_LINK_CLASS_NAME = 'edicratic-entity-link';
 IMAGE_NYT_CLASSNAME = 'edicratic-image-nyt';
 GRAY_POINTER_CLASSNAME = 'edicratic-grey-pointer';
+IMAGE_BELOW_TEXT = 'edicratic-image-below';
 
 window.addEventListener('scroll', adjustSpansBasedOnHeight);
 
@@ -126,7 +127,7 @@ function addShowMoreListeners(id) {
     for(var i = 0; i < images.length; i++) {
         images[i].onerror = (e) => {
             let br = document.createElement('br');
-            e.target.parentElement.replaceChild(br, e.target);
+            if(e.target.parentElement) e.target.parentElement.replaceChild(br, e.target);
         };
     }
     for(var i = 0; i < showMoreLinks.length; i++) {
@@ -387,15 +388,22 @@ async function testEndpoint(term, id) {
             }
         }
         if(title && url && date) {
-            let res = await extractMetaData(url);
-            let data = await res.json();
+            let data;
+            let res;
+            try {
+                res = await extractMetaData(url);
+                data = await res.json();
+            } catch(e) {
+                console.log(e)
+                continue;
+            }
             let source = data.source;
             let updatedId = `${Math.floor(Math.random() * 1000000)}` + id;
             let empty = data.description === 'EMPTY';
             let dateString = new Date(date).toDateString();
-            let newElement = `<b class="${stripHtml(ENTITY_HEADER)}">${title}:</b><br/><i>${dateString}</i><p class=${PARAGRAPH_CLASS_NAME}>
-            <span style="display: none" id="${updatedId}-hidden">` + 
-            (source ? `<img ${empty ? 'style="width:100%; height:100%;margin-bottom: 1rem;"' : ''}class='edicratic-image-nyt' src="${source}"/>` : ``)  +
+            let newElement = `<b class="${stripHtml(ENTITY_HEADER)}">${title}:</b><br/><i>${dateString}</i><p class=${PARAGRAPH_CLASS_NAME}>`
+            + (source ? `<img id="${updatedId}-image" onError="this.parentElement.removeChild(this);" src="${source}" class="${IMAGE_BELOW_TEXT}"/>` : ``) + `<span style="display: none" id="${updatedId}-hidden">` + 
+            (source ? `<img onError="this.parentElement.removeChild(this);" ${empty ? 'style="width:100%; height:100%;margin-bottom: 1rem;"' : ''}class='edicratic-image-nyt' src="${source}"/>` : ``)  +
             `${!empty ? stripHtml(data.description) : ''}`
             + `${empty ? '' : '<br/><br/>'}<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${url}', '_blank')">Read Article</a></span></p>
         <a id="${updatedId}"class="${INNER_LINK} ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
@@ -422,7 +430,8 @@ function extractMetaData(url) {
             if (res.status === 200){
                 return res.text();
             }else{
-                throw new Error(res.statusText);
+                console.log(res.statusText);
+                reject(new Error(res.statusText));
             }
         }).then(data => {
             let el = document.createElement('div');
@@ -440,14 +449,14 @@ function extractMetaData(url) {
             }
             for (var i = 0; i < images.length; i++) {
                 let currentImage = images[i];
-                if(!image || currentImage.clientWidth * currentImage.clientHeight > image.clientWidth * image.clientHeight) {
+                if(!image || currentImage.naturalWidth * currentImage.naturalHeight > image.naturalWidth * image.naturalHeight) {
                     image = currentImage;
                 }
             }
             if(!description || description.length < 100) {
                 description = 'EMPTY';
             }
-            let source = image ? image.src : '';
+            let source = image && image.src && image.src.includes('https') ? image.src : '';
             body = JSON.stringify({description, source});
             resolve(new Response(body, {
                 status: 200,
@@ -531,20 +540,15 @@ function adjustSpansBasedOnHeight() {
 function showHiddenText(e) {
     let id = e.target.id;
     let hiddenText = document.getElementById(`${id}-hidden`);
-    let image = hiddenText.getElementsByClassName(IMAGE_NYT_CLASSNAME)[0];
-    let newLines = hiddenText.getElementsByClassName('image-newline');
-    if(image && image.naturalWidth * image.naturalHeight < 200) {
-        image.parentElement.removeChild(image);
-        for (var i = 0; i < newLines.length; i++) {
-            newLines[i].parentElement.removeChild(newLines[i]);
-        }
-    }
+    let hiddenImage = document.getElementById(`${id}-image`);
     if (hiddenText.style.display === 'none') {
         e.target.textContent = 'Show Less';
         hiddenText.style.display = 'inline';
+        if(hiddenImage) hiddenImage.style.display = 'none';
     } else {
         e.target.textContent = 'Show More';
         hiddenText.style.display = 'none';
+        if(hiddenImage) hiddenImage.style.display = 'inline';
     }
 }
 
@@ -624,19 +628,26 @@ function invalidPositionHelper(element) {
 
 function proccessWikiData(items, id) {
     let content = `<h4>Wiki Articles</h4><hr/><div class="info-edicratic">`;
+    items.sort((a, b) => {
+        if(a.thumbnail && b.thumbnail) return 0;
+        if(!a.thumbnail && !b.thumbnail) return 0;
+        if(a.thumbnail && !b.thumbnail) return -1;
+        return 1;
+    });
     for (var i = 0; i < items.length; i++) {
         let item = items[i];
         let wikilink = `https://en.wikipedia.org/?curid=${item.pageid}`
         let pageDescription = stripHtml(item.extract) || item.description;
         if (!pageDescription) continue;
         let words = pageDescription.split(' ');
-        let visibleArray = words.slice(0, 10);
-        let hiddenArray = words.slice(10);
+        let visibleArray = words.slice(0, 20);
+        let hiddenArray = words.slice(20);
         let modiifiedId = 't' + `${i}` + id + `${Math.floor(Math.random() * 1000000)}`;
-        content += `<b class="${ENTITY_HEADER}">${item.title}:</b><p class=${PARAGRAPH_CLASS_NAME}>
-        ${visibleArray.join(' ')}<span id="${modiifiedId}-show-more-hidden" style="display: none">
-        ${hiddenArray.join(' ')} <br/><br/>` + (item.thumbnail ? `<img class='edicratic-image' src="${item.thumbnail.source}"/><br/><br/>` : ``) 
-        + `<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${wikilink}', '_blank')">Learn More</a></span></p>
+        content += `<b class="${ENTITY_HEADER}">${item.title}:</b><p class=${PARAGRAPH_CLASS_NAME}>`
+        + (item.thumbnail ? `<img class='edicratic-image' src="${item.thumbnail.source}"/>` : ``) +
+        `${visibleArray.join(' ')}<span id="${modiifiedId}-show-more-hidden" style="display: none">
+        ${hiddenArray.join(' ')} <br/><br/>` + `<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${wikilink}', '_blank')">
+        Learn More</a></span></p>
         <a id="${modiifiedId}-show-more" class="${INNER_LINK} ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
     }
     return content + '</div>';

@@ -293,10 +293,11 @@ html body {
 }
 
 .edicratic-image {
-  width: auto;
-  height: 50px;
-  /* border-radius: 50%; */
-  display: inline !important;
+  width: 100px;
+  height: 70px;
+  margin-top: 0;
+  padding: 5px;
+  float: left;
 }
 
 .edicratic-image-nyt {
@@ -305,6 +306,13 @@ html body {
   height: 100%;
   padding-right: 1rem;
   float: left;
+}
+
+.edicratic-image-below {
+  margin-top: 0;
+  width: 30%;
+  height: 30%;
+  text-align: center;
 }
 
 .edicratic-entity-link {
