@@ -40,6 +40,19 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         load(true);
     } else if(message.data === MODAL_OPENED) {
         window.close();
+    } else if (message.data === 'webCheckLoadScript') {
+        let id = sender.tab.id;
+        if (message.loaded) {
+            chrome.tabs.sendMessage(id, {message: "runWebCheck"});
+        } else {
+            chrome.tabs.insertCSS(id, {file: 'expandLibrary.css'});
+            chrome.tabs.executeScript(id, {file: 'expandLibrary.js'});
+            chrome.tabs.insertCSS(id, {file: 'tags.css'});
+            chrome.tabs.executeScript(id, {file: 'tags.js'}, () => {
+                 chrome.tabs.sendMessage(id, {message: "runWebCheck"});
+             });
+
+        }
     }
     return true;
 });

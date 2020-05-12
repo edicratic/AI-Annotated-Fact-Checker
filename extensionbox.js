@@ -73,9 +73,10 @@ function updateBox(checkBox) {
 function performWebCheck(){
   chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
       let specTab = tabs[0]; 
-      chrome.tabs.sendMessage(specTab.id, {message: "runWebCheck"});
+      chrome.tabs.executeScript(specTab.id, {
+        code: `chrome.runtime.sendMessage({data: 'webCheckLoadScript', loaded: typeof scriptAlreadyLoaded === "undefined" ? false : scriptAlreadyLoaded});`
+      });
       changeColor.style.display = "none"
-      check.style.display = "";
   });
 }
 
@@ -89,4 +90,3 @@ function handleBugReport() {
     });
   });
 }
-

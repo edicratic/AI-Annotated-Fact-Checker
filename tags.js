@@ -1,3 +1,4 @@
+var scriptAlreadyLoaded = true;
 ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
 TOOL_TIP_CLASS_NAME = 'edicratic-tooltip';
 POST_URL = '/process';
@@ -628,12 +629,12 @@ function invalidPositionHelper(element) {
 
 function proccessWikiData(items, id) {
     let content = `<h4>Wiki Articles</h4><hr/><div class="info-edicratic">`;
-    items.sort((a, b) => {
-        if(a.thumbnail && b.thumbnail) return 0;
-        if(!a.thumbnail && !b.thumbnail) return 0;
-        if(a.thumbnail && !b.thumbnail) return -1;
-        return 1;
-    });
+    // items.sort((a, b) => {
+    //     if(a.thumbnail && b.thumbnail) return 0;
+    //     if(!a.thumbnail && !b.thumbnail) return 0;
+    //     if(a.thumbnail && !b.thumbnail) return -1;
+    //     return 1;
+    // });
     for (var i = 0; i < items.length; i++) {
         let item = items[i];
         let wikilink = `https://en.wikipedia.org/?curid=${item.pageid}`
