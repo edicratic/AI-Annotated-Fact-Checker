@@ -5,6 +5,7 @@ let icon = document.getElementById('info-icon-edicratic');
 let checkBox = document.getElementById("enable-quick-look-up");
 let bugReport = document.getElementById('edicratic-bug-report');
 let buttonIcon = document.getElementById('changeColor-icon');
+let loader = document.getElementById('loader');
 if(localStorage['isLoadedEdicratic'] === 'true') changeColor.style.display = 'none';
 
 chrome.storage.local.get(['authStatus'], function(result) {
@@ -77,6 +78,7 @@ function performWebCheck(){
         code: `chrome.runtime.sendMessage({data: 'webCheckLoadScript', loaded: typeof scriptAlreadyLoaded === "undefined" ? false : scriptAlreadyLoaded});`
       });
       changeColor.style.display = "none"
+      loader.style.display = "";
   });
 }
 

@@ -42,6 +42,7 @@
 <div id="changeColor" class="button">
   <i id="changeColor-icon" class="edit icon"></i><div id="webcheck-text">WebCheck This</div>
 </div>
+<div style="display: none" id="loader"></div>
   <h2 class="edicratic-invalid" id="edicratic-invalid">
     Sorry, can't WebCheck this page. <a href='https://www.edicratic.com/home' target="_blank" class="inner-link">Here</a> are some good pages to WebCheck.
   </h2>
@@ -150,6 +151,28 @@
   bottom: 125%;
   left: 10%;
   /* margin-left: -80px; */
+}
+
+#loader {
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 10px;
+  height: 10px;
+  float: right;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 /* Toggle this class when clicking on the popup container (hide and show the popup) */
 .popup .show {
