@@ -407,8 +407,10 @@ async function testEndpoint(term, id) {
             + (source ? `<img id="${updatedId}-image" onError="this.parentElement.removeChild(this);" src="${source}" class="${IMAGE_BELOW_TEXT}"/>` : ``) + `<span style="display: none" id="${updatedId}-hidden">` + 
             (source ? `<img onError="this.parentElement.removeChild(this);" ${empty ? 'style="width:100%; height:100%;margin-bottom: 1rem;"' : ''}class='edicratic-image-nyt' src="${source}"/>` : ``)  +
             `${!empty ? stripHtml(data.description) : ''}`
-            + `${empty ? '' : '<br/><br/>'}<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${url}', '_blank')">Read Article</a></span></p>
-        <a id="${updatedId}"class="${INNER_LINK} ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
+            + `${empty ? '' : '<br/><br/>'}</span></p>` +
+            (empty ? `` : `<a id="${updatedId}"class="${INNER_LINK} ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`) +
+            `<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${url}', '_blank')">Read Article</a><br/><br/>`
+       
             content += newElement;
             if(idToSelected[id] === 'News') {
                 let tooltipField = document.getElementById(`${id}-content`);
@@ -444,9 +446,12 @@ function extractMetaData(url) {
             for (var i = 0; i < metaTags.length; i++) {
                 let tag = metaTags[i];
                 let property = tag.getAttribute('property');
-                if (property === GOOGLE_SEARCH_DESCRIPTION_META) {
+                let name = tag.getAttribute('name');
+                if (property === GOOGLE_SEARCH_DESCRIPTION_META
+                || name === GOOGLE_SEARCH_DESCRIPTION_META) {
                     description = tag.content;
-                } else if (property === GOOGLE_SEARCH_IMAGE_META) {
+                } else if (property === GOOGLE_SEARCH_IMAGE_META
+                    || name === GOOGLE_SEARCH_IMAGE_META) {
                     image = tag.content;
                 }
             }
