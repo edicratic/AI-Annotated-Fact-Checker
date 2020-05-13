@@ -47,6 +47,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         } else {
             chrome.tabs.insertCSS(id, {file: 'expandLibrary.css'});
             chrome.tabs.executeScript(id, {file: 'expandLibrary.js'});
+            chrome.tabs.executeScript(id, {file: 'user.js'});
             chrome.tabs.insertCSS(id, {file: 'tags.css'});
             chrome.tabs.executeScript(id, {file: 'tags.js'}, () => {
                  chrome.tabs.sendMessage(id, {message: "runWebCheck"});

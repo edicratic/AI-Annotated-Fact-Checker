@@ -37,8 +37,8 @@
     },
     "content_scripts": [
         {
-            "js": ["fontawesome.js", "tags.js", "expandLibrary.js"],
-            "css": ["fontawesome.css", "tags.css", "expandLibrary.css"],
+            "js": ["user.js", "tags.js", "expandLibrary.js"],
+            "css": ["tags.css", "expandLibrary.css"],
             "matches": ["http://*/*", "https://*/*"]
         }
     ],
