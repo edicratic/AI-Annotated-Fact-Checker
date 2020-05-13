@@ -92,7 +92,9 @@ function recordWebCheck(id) {
 }
 
 function invalidateInformation() {
-    chrome.storage.local.get(["edicratic-information"], () => {
+    chrome.storage.local.get(["edicratic-information"], (result) => {
+        let arrayOfHovers = result['edicratic-information'];
+        console.log(arrayOfHovers);
         //put endpoint here
         chrome.storage.local.set({'edicratic-information': []});
 
