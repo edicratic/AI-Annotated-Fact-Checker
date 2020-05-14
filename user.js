@@ -3,6 +3,7 @@ sessionTimeStamp = undefined;
 webcheckId = undefined;
 tabSwitchTime = undefined;
 startTime = undefined;
+LOG_URL = "/log"
 
 function startTimer(text, target) {
     let timeStamp = target.dataset['unique'];
@@ -95,7 +96,29 @@ function invalidateInformation() {
     chrome.storage.local.get(["edicratic-information"], (result) => {
         let arrayOfHovers = result['edicratic-information'];
         console.log(arrayOfHovers);
-        //put endpoint here
+        if(arrayOfHovers.length > 0){
+            params = {
+                method: "POST",
+                body: JSON.stringify({
+                    body: {
+                        type: "Hover",
+                        content: arrayOfHovers,
+                    } 
+                }),
+                headers: {
+                   'Content-Type': 'application/json',
+               }
+             }
+            chrome.runtime.sendMessage({input: LOG_URL,params, message:"callWebCheckAPI"}, messageResponse => {
+                const [response, error] = messageResponse;
+                if (response === null) {
+                    console.log(error);
+                } else {
+                    const body = response.body ?  new Blob([response.body]) : undefined;
+                    console.log(body);
+                }
+            });
+        }
         chrome.storage.local.set({'edicratic-information': []});
 
     })

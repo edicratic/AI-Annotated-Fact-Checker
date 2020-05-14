@@ -556,8 +556,8 @@ function makePostRequest() {
         }
     }).then(data =>{
         //make field below valid
-        recordWebCheck(data.id || 'NO_ID');
         if(spinner) spinner.style.display = 'none';
+        recordWebCheck(data.local_id || 'NO_ID');
         body = JSON.parse(data.body);
         console.log(body);
         processEntities(body);

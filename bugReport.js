@@ -1,5 +1,5 @@
 MODAL = 'edicratic-modal'
-LOG_URL = "/log"
+LOG_URL = "/reporting"
 MODAL_OPENED = 'MODAL_OPENED'
 document.body.addEventListener('mousedown', checkForModalClose);
 

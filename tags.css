@@ -293,9 +293,8 @@ html body {
 }
 
 .edicratic-image {
-  min-width: 60px;
-  max-width: 120px;
-  height: 65px;
+  width: auto;
+  max-height: 100;
   margin-top: 0px;
   padding: 3px;
   float: left;

@@ -13,7 +13,7 @@
     // });
 // });
 //TODO Yukt add the caching
-BASE_URL = "https://webcheck-api.edicratic.com"
+BASE_URL = "https://q329xt0jt9.execute-api.us-east-1.amazonaws.com/default"//"https://webcheck-api.edicratic.com"
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.message === "callInternet"){
