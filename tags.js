@@ -206,6 +206,8 @@ function modifyAllText(regex, entity, matches, childList, set) {
         const child = childList[i];
         if(!set.has(child) && child.className !== ANCHOR_CLASS_NAME && child.className !== TOOL_TIP_CLASS_NAME && child.tagName !== 'NAV') {
             set.add(child);
+            if(child.nodeName === '#comment' || child.nodeName === 'NOSCRIPT' || child.nodeName === 'IMG'
+                || child.nodeName === 'SCRIPT') continue;
             const nextList = child.childNodes;
             const length = nextList.length;
             var text = child.textContent;
@@ -223,7 +225,6 @@ function modifyAllText(regex, entity, matches, childList, set) {
                 newElement.style.display = "inline";
                 newElement.innerHTML = text;
                 newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId, entity);
-                if(child.nodeName === '#comment') continue;
                 if(child.nodeName !== "#text") {
                     child.appendChild(newElement);
                 } else {
