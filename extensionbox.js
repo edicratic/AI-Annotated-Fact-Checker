@@ -25,7 +25,6 @@ chrome.storage.local.get(['authStatus'], function(result) {
 });
 
 function setButtonLogin(changeColor, buttonIcon) {
-  console.log('login');
   changeColor.style.backgroundColor = '#3958ae';
   buttonIcon.style.display = 'none';
   let text = document.getElementById('webcheck-text');

@@ -95,7 +95,7 @@ function recordWebCheck(id) {
 function invalidateInformation() {
     chrome.storage.local.get(["edicratic-information"], (result) => {
         let arrayOfHovers = result['edicratic-information'];
-        console.log(arrayOfHovers);
+        // console.log(arrayOfHovers);
         if(arrayOfHovers.length > 0){
             params = {
                 method: "POST",
@@ -115,11 +115,9 @@ function invalidateInformation() {
                     console.log(error);
                 } else {
                     const body = response.body ?  new Blob([response.body]) : undefined;
-                    console.log(body);
+                    chrome.storage.local.set({'edicratic-information': []});
                 }
             });
         }
-        chrome.storage.local.set({'edicratic-information': []});
-
     })
 }

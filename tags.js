@@ -40,7 +40,7 @@ document.body.onmousemove = e => handleMouseMove(e);
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
     if (request.message === "runWebCheck"){
-        console.log('received');
+        // console.log('received');
         //window.addEventListener('scroll', checkForSizeChange);
         makePostRequest(request);
     }
@@ -399,7 +399,7 @@ function handleArticleClick(e, id) {
 
 async function testEndpoint(term, id) {
     await sleep(10);
-    console.log(term);
+    // console.log(term);
     let content = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">`;
     var str;
     try {
@@ -486,7 +486,7 @@ function extractMetaData(url) {
             if (res.status === 200){
                 return res.text();
             }else{
-                console.log(res.statusText);
+                // console.log(res.statusText);
                 reject(new Error(res.statusText));
             }
         }).then(data => {
@@ -541,7 +541,7 @@ function makePostRequest() {
     document.body.appendChild(spinner);
     invalidateInformation();
     let data = {"blob": document.body.innerText.substring(0, 50000), details: {sort: true, url: window.location.href}};
-    console.log(JSON.stringify(data));
+    // console.log(JSON.stringify(data));
     fetchWebCheck(POST_URL,  {
                       method: "POST",
                       body: JSON.stringify({body: data}),
@@ -551,7 +551,7 @@ function makePostRequest() {
         if (result.ok) {
             return result.json();
         } else {
-            console.log(result);
+            // console.log(result);
             throw new Error(result.status);
         }
     }).then(data =>{
@@ -559,7 +559,7 @@ function makePostRequest() {
         if(spinner) spinner.style.display = 'none';
         recordWebCheck(data.local_id || 'NO_ID');
         body = JSON.parse(data.body);
-        console.log(body);
+        // console.log(body);
         processEntities(body);
         chrome.runtime.sendMessage({
             data: DATA_LOADED

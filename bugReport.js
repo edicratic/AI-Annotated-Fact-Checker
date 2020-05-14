@@ -6,7 +6,7 @@ document.body.addEventListener('mousedown', checkForModalClose);
 
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
-      console.log(request);
+      // console.log(request);
       if (request.message === "bugReport"){
         //if auth set to true in local storage
             createModal();
@@ -19,7 +19,7 @@ chrome.runtime.onMessage.addListener(
 
 
 function createModal() {
-    console.log("creating a modal");
+    // console.log("creating a modal");
     if(!document.getElementById(MODAL)) {
         let div = document.createElement('div');
         div.className = 'edicratic-modal';
@@ -79,8 +79,6 @@ function handleFeedbackButtonClick() {
     let currentUrl = window.location.href;
     let textAreaFeedback = document.getElementById('feedback-edicratic-text');
     let text = textAreaFeedback.value;
-    console.log(currentUrl);
-    console.log(text);
     params = {type: "Feedback", content: text, url: currentUrl};
     sendLog(LOG_URL, params);
     removeModal();

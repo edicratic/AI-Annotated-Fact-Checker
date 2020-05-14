@@ -1,25 +1,11 @@
-// chrome.runtime.onInstalled.addListener(function() {
-//     chrome.storage.sync.set({color: '#3aa757'}, function() {
-//       console.log("The color is green.");
-//     });
-    // chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
-    //     chrome.declarativeContent.onPageChanged.addRules([{
-    //       conditions: [new chrome.declarativeContent.PageStateMatcher({
-    //         pageUrl: {hostEquals: 'developer.chrome.com'},
-    //       })
-    //       ],
-    //           actions: [new chrome.declarativeContent.ShowPageAction()]
-    //     }]);
-    // });
-// });
 //TODO Yukt add the caching
 BASE_URL = "https://q329xt0jt9.execute-api.us-east-1.amazonaws.com/default"//"https://webcheck-api.edicratic.com"
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.message === "callInternet"){
-      console.log("calling the internet");
+      // console.log("calling the internet");
       fetch(request.input, request.params).then(function(response) {
-        console.log("a response");
+        // console.log("a response");
         response.text().then(function(text) {
           sendResponse([{
             body: text,
@@ -28,15 +14,15 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
           }, null]);
         });
       }, function(error) {
-        console.log("here?");
+        // console.log("here?");
         console.log(error);
         sendResponse([null, error]);
       });
 }else if (request.message === "callWebCheckAPI"){
-  console.log("calling the internet");
+  // console.log("calling the internet");
   url = BASE_URL + request.input;
   fetch(url, request.params).then(function(response) {
-    console.log("a response");
+    // console.log("a response");
     requestFailed = false;
     if(response.status === 401){
       requestFailed = true;
@@ -46,7 +32,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
           //TODO 
           console.log("failed to save status, fatal error");
         }
-        console.log("Hi!")
+        // console.log("Hi!")
       });
     } else if (response.status !== 200){
       requestFailed = true;
@@ -63,7 +49,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       }
     });
   }, function(error) {
-    console.log("here?");
+    // console.log("here?");
     console.log(error);
     sendResponse([null, error]);
   });
@@ -135,7 +121,7 @@ function oauthFlow(){
   chrome.tabs.create({'url': 'about:blank'}, function(authenticationTab) {
       chrome.tabs.onUpdated.addListener(function googleAuthorizationHook(tabId, changeInfo, tab) {
           if (tabId === authenticationTab.id) {
-              console.log(tab.title);
+              // console.log(tab.title);
 			  if (tab.title === null || tab.title === undefined){
 				  return;
 			  }
@@ -147,13 +133,13 @@ function oauthFlow(){
                   chrome.tabs.remove(tabId);
 
                   var response = titleParts[1];
-                  console.log("hey");
+                  // console.log("hey");
                   const urlParams = new URLSearchParams(response);
                   let id_token = null;
                   switch (result) {
                       case 'Success':
-                          console.log("SUCCESSS")
-                          console.log(response);
+                          // console.log("SUCCESSS")
+                          // console.log(response);
                           id_token = urlParams.get("id_token");
                           getToken(id_token).then(res => {
                             chrome.storage.local.set({'authStatus': "Authenticated"});
@@ -163,14 +149,14 @@ function oauthFlow(){
                           });
                       break;
                       case 'Denied':
-                          console.log("DENIEDDD");
+                          // console.log("DENIEDDD");
                           chrome.storage.local.set({'authStatus': "Logged Out"});
                           // Example: error_subtype=access_denied&error=immediate_failed
-                          console.log(response);
+                          // console.log(response);
                       break;
                       case 'Error':
                           console.log("ERRRORRROROOR");
-                          console.log(response);
+                          // console.log(response);
                           id_token = urlParams.get("id_token");
                           if (id_token == null || id_token == undefined){
                               console.log("an actual error")
@@ -179,7 +165,7 @@ function oauthFlow(){
                           }else{
                               getToken(id_token).then(res => {
                                   chrome.storage.local.set({'authStatus': "Authenticated"});
-                                  console.log(res);
+                                  // console.log(res);
                               }).catch(err => {
                                   chrome.storage.local.set({'authStatus': "Logged Out"});
                                   console.log(err);
