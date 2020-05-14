@@ -249,6 +249,7 @@ html body {
   margin-inline-start: 0px !important;
   margin-inline-end: 0px !important;
   font-weight: bold !important;
+  font-size: 18px;
 }
 
 .edicratic-tooltip .edicratic-tab:hover {

@@ -1,0 +1,6 @@
+#!/bin/sh
+for js in *.js
+do
+        java -jar ../closure-compiler.jar --js $js --js_output_file $js.min
+        mv $js.min $js
+done
