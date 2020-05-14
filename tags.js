@@ -310,7 +310,7 @@ function positionTooltips(id) {
     span.style.display = 'block';
     let anchorRight = anchor.getBoundingClientRect().right;
     let anchorLeft = anchor.getBoundingClientRect().left;
-    let spanWidth = (Math.min(anchorRight + anchorLeft) / 2, 400);
+    let spanWidth = 400;
     span.style.width = `${spanWidth}px`
     let pointer = document.getElementById(`${id}-pointer`);
     pointer.style.display = 'block';
