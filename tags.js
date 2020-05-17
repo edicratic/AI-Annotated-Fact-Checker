@@ -29,6 +29,7 @@ IMAGE_BELOW_TEXT = 'edicratic-image-below';
 GOOGLE_SEARCH_IMAGE_META = 'og:image';
 GOOGLE_SEARCH_DESCRIPTION_META = 'og:description';
 WIKI_CLASS_NAME = 'edicratic-image';
+SCHOLAR = 'Schorlarly Articles'
 
 window.addEventListener('scroll', adjustSpansBasedOnHeight);
 
@@ -232,6 +233,7 @@ function modifyAllText(regex, entity, matches, childList, set) {
                 }
                 set.add(newElement);
                 createTooltip(data, uniqueId);
+                lookUpTermScholarly(entity, uniqueId);
                 //testEndpoint(entity,uniqueId);
             }
             if (length !== 0) {
@@ -259,6 +261,7 @@ function createTooltip(data, id) {
     tabs.innerHTML = `
         <a class="edicratic-tab edicratic-selected">Information</a>
         <a class="edicratic-tab">News</a>
+        <a class="edicratic-tab">${SCHOLAR}</a>
     `
     tooltip.appendChild(tabs);
     idToSelected[id] = 'Information';
@@ -396,6 +399,49 @@ function handleArticleClick(e, id) {
     handleReadArticleProcess(category, url);
     removeSpan(id);
     window.open(url, '_blank');
+}
+
+async function lookUpTermScholarly(term, id) {
+    await sleep(10);
+    let str;
+    try {
+        let response = await fetchScholarlyData(term);
+        let data = await response.text();
+        str = await new window.DOMParser().parseFromString(data, "text/xml");
+        console.log(str);
+    } catch(e) {
+        console.log(e);
+        return;
+    }
+    let items = str.querySelectorAll("entry");
+    let content = `<h4>Most Relevant Scholarly Articles</h4><hr/><div class="info-edicratic>"`
+    for(var i = 0; i < items.length; i++) {
+        let children = items[i].children;
+        let pubDate;
+        let title;
+        let summary;
+        let link;
+        let authors = [];
+        for (var j = 0; j < children.length; j++) {
+            if (children[j].tagName === 'title') {
+                title = children[j].innerText || children[j].textContent;
+            } else if (children[j].tagName === 'published') {
+                pubDate = children[j].innerText || children[j].textContent;
+            } else if (children[j].tagName === 'author') {
+                let name = children[j].getElementsByTagName('author')[0];
+                authors.push(name.innerText || name.textContent);
+            } else if (children[j].tagName === 'summary') {
+                summary = children[j].innerText || children[j].textContent;
+            } else if (children[j].tagName === 'link') {
+                link = children[j].href;
+            }
+        }
+        if (!title || !summary) return;
+        let dateString = new Date(pubDate).toDateString();
+        let newElement = `<b>${title}</b><br/><i>${dateString}</i>`
+ 
+
+    }
 }
 
 async function testEndpoint(term, id) {

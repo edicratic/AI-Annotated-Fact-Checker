@@ -81,6 +81,19 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   })
 }else if (request.message === 'runOAuthFlow'){
   oauthFlow();
+} else if(request.message === 'scholarly') {
+  let url = `http://export.arxiv.org/api/query?search_query=all:${request.term}&start=0&max_results=5`;
+  fetch(url).then(response => {
+    response.text().then(text => {
+      sendResponse([{
+        body: text,
+        status: response.status,
+        statusText: response.statusText,
+      }, null])
+    }, function(error) {
+      sendResponse([null, error]);
+    })
+  })
 }
 return true;
 });

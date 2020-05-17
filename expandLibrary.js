@@ -169,6 +169,23 @@ function fetchWiki(input) {
     })
   }
 
+  function fetchScholarlyData(term) {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({message: 'scholarly', term}, messageResponse => {
+        const [response, error] = messageResponse;
+        if(response === null) {
+          reject(error);
+        } else {
+          const body = response.body ? new Blob([response.body]) : undefined;
+          resolve(new Response(body, {
+            status: response.status,
+            statusText: response.statusText,
+          }));
+        }
+      })
+    })
+  }
+
   function sendData(url, body) {
       return new Promise((resolve, reject) => {
         params = {
