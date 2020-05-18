@@ -17,7 +17,6 @@ function analyzeTextForSending() {
 }
 
 function sendBackData(paragraph, text) {
-    //we dont want an infinite loop, now do we
     let i = 0;
     while(paragraph.textContent.length < NUMBER_OF_CHARCATERS_IN_PARAGRAPH && i < 5) {
         paragraph = paragraph.parentElement;
@@ -26,7 +25,6 @@ function sendBackData(paragraph, text) {
     if(paragraph.textContent.length <= 100){
       return
     }
-    //TODO add processing
     let raw = paragraph.innerHTML;
 
     let body = {
@@ -57,12 +55,10 @@ function fetchWiki(input) {
     return new Promise((resolve, reject) => {
       let params = {method: "GET"}
       chrome.runtime.sendMessage({input,params,init,message: "callInternet"}, messageResponse => {
-        //   console.log(messageResponse);
         const [response, error] = messageResponse;
         if (response === null) {
           reject(error);
         } else {
-          // Use undefined on a 204 - No Content
           const body = response.body ? new Blob([response.body]) : undefined;
           resolve(new Response(body, {
             status: response.status,
@@ -83,8 +79,7 @@ function fetchWiki(input) {
         const [response, error] = messageResponse;
         if (response === null) {
           reject(error);
-        } else {
-          // Use undefined on a 204 - No Content
+        } else { 
           const body = response.body ? new Blob([response.body]) : undefined;
           resolve(new Response(body, {
             status: response.status,
@@ -105,7 +100,6 @@ function fetchWiki(input) {
                  }
                }
         chrome.runtime.sendMessage({input: url,params,message: "callWebCheckAPI",needsAuthHeaders: true}, messageResponse => {
-          //   console.log(messageResponse);
           const [response, error] = messageResponse;
           if (response === null) {
             reject(error);

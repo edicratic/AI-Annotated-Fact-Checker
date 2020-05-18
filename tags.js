@@ -297,8 +297,9 @@ function mouseOverHandle(e, id, text) {
             removeSpan(OPEN_SPAN);
         }
         OPEN_SPAN = id;
+        let isHighlightLookup = !!entityElement.dataset['unique'];
         positionTooltips(id);
-        if (!idToData[id]['News'] && text) {
+        if (!idToData[id]['News'] && text && !isHighlightLookup) {
             idToData[id]['News'] = ' ';
             testEndpoint(text, id);
         }
@@ -423,7 +424,7 @@ async function testEndpoint(term, id) {
         if(idToSelected[id] === 'News') tooltipField.innerHTML = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">No Results Found</div>`
         return;
     }
-    items = Array.prototype.slice.call(items, 0).slice(0, 5);
+    items = Array.prototype.slice.call(items, 0).slice(0, 6);
     items.sort((a, b) => {
         let element1 = a.getElementsByTagName('pubDate')[0];
         let element2 = b.getElementsByTagName('pubDate')[0];
@@ -431,7 +432,8 @@ async function testEndpoint(term, id) {
         let date2 = element2 ? element2.textContent : null;
         return date1 && date2 ? new Date(date2) - new Date(date1) : 0;
     });
-    for(var i = 0; i < items.length && i < 5; i++) {
+    let numArticles = 5;
+    for(var i = 0; i < items.length && i < numArticles; i++) {
         let item = items[i];
         let children = item.children;
         let title = null;
@@ -445,6 +447,10 @@ async function testEndpoint(term, id) {
             } else if (children[j].tagName === 'pubDate') {
                 date = children[j].innerText || children[j].textContent;
             }
+        }
+        if(url === window.location.href) {
+            numArticles++;
+            continue;
         }
         if(title && url && date) {
             let data;
