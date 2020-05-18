@@ -59,14 +59,14 @@ if (isValid === 'true') {
 function handleCheckBoxClick() {
   chrome.storage.local.get(["highlight-enabled"], (result) => {
     let val = result['highlight-enabled'];
-    chrome.storage.local.set({'highlight-enabled': !val});
+    chrome.storage.local.set({'highlight-enabled': val === false ? true : false});
   });
 }
 
 function updateBox(checkBox) {
     chrome.storage.local.get(["highlight-enabled"], (result) => {
       let val = result['highlight-enabled'];
-      checkBox.checked = !!val;
+      checkBox.checked = val === false ? false : true;
     });
 }
 

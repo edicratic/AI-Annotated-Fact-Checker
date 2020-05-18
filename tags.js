@@ -78,7 +78,8 @@ async function modifySingleNode(node, text) {
     }
 
     if(!node || !node.textContent || !data || !data.query || !data.query.pages || data.query.pages.length === 0 || !regex || !node.textContent.match(regex)) {
-        alert("Sorry, could not find a match for that :(. Try to highlight specific terms");
+        //alert("Sorry, could not find a match for that :(. Try to highlight specific terms");
+        document.body.classList.add('edicratic-red');
         return;
     }
 
@@ -129,6 +130,9 @@ async function modifySingleNode(node, text) {
     tooltip.onclick = e => e.preventDefault();
     tooltip.onmouseleave = e => handleMouseLeave(e);
     testEndpoint(text, uniqueId);
+
+    //make text green
+    document.body.classList.add('edicratic-green');
 }
 
 function addShowMoreListeners(id) {
@@ -776,9 +780,8 @@ function separateChildNodes(newNodes) {
 }
 
 function handleHighlightEnabling(result) {
-    if(result['highlight-enabled']) {
+    if(result['highlight-enabled'] !== false) {
         document.body.addEventListener('mouseup', analyzeTextForSending);
-        document.body.addEventListener("mousedown", checkAndRemoveSpans);
     }
 }
 
@@ -787,9 +790,7 @@ function handleStorageChange(changes, namespace) {
     let change = changes['highlight-enabled']['newValue'];
     if (change) {
         document.body.addEventListener('mouseup', analyzeTextForSending);
-        document.body.addEventListener("mousedown", checkAndRemoveSpans);
     } else {
         document.body.removeEventListener('mouseup', analyzeTextForSending);
-        document.body.removeEventListener("mousedown", checkAndRemoveSpans);
     }
 }
