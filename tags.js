@@ -172,7 +172,8 @@ function handleTabClick(e, id) {
         }
     }
     currentTab.classList.add('edicratic-selected');
-    idToSelected[id] = currentTab.innerText || currentTab.textContent;
+    let type = currentTab.innerText || currentTab.textContent;
+    idToSelected[id] = type;
     handleTabSwitchProcesssing(previousTabText,idToSelected[id]);
     let tooltipChildren = tooltip.children;
     let index = 0;
@@ -183,7 +184,7 @@ function handleTabClick(e, id) {
             if(innerHTML && innerHTML !== ' ') {
                 tooltipChildren[i].innerHTML = innerHTML;
             } else {
-                tooltipChildren[i].innerHTML = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">Searching...</div>`;
+                tooltipChildren[i].innerHTML = `<h4>${type === SCHOLAR ? SCHOLAR : 'Most Recent News Articles'}</h4><hr/><div class="info-edicratic">Searching...</div>`;
             }
 
         }
@@ -233,7 +234,7 @@ function modifyAllText(regex, entity, matches, childList, set) {
                 }
                 set.add(newElement);
                 createTooltip(data, uniqueId);
-                lookUpTermScholarly(entity, uniqueId);
+                //lookUpTermScholarly(entity, uniqueId);
                 //testEndpoint(entity,uniqueId);
             }
             if (length !== 0) {
@@ -300,6 +301,10 @@ function mouseOverHandle(e, id, text) {
         if (!idToData[id]['News'] && text) {
             idToData[id]['News'] = ' ';
             testEndpoint(text, id);
+        }
+        if(!idToData[id][SCHOLAR] && text) {
+            idToData[id][SCHOLAR] = ' ';
+            lookUpTermScholarly(text, id);
         }
 
     }
@@ -404,6 +409,9 @@ function handleArticleClick(e, id) {
 async function lookUpTermScholarly(term, id) {
     await sleep(10);
     let str;
+    let tooltipField = document.getElementById(`${id}-content`);
+    let infoField = tooltipField.getElementsByClassName('info-edicratic')[0]
+    let error = `<h4>Most Relevant Scholarly Articles</h4><hr/><div class="info-edicratic">No Results Found</div>`;
     try {
         let response = await fetchScholarlyData(term);
         let data = await response.text();
@@ -411,10 +419,18 @@ async function lookUpTermScholarly(term, id) {
         console.log(str);
     } catch(e) {
         console.log(e);
+        idToData[id][SCHOLAR] = error;
+        if (idToSelected[id] === SCHOLAR) infoField.innerHTML = error;
         return;
     }
     let items = str.querySelectorAll("entry");
-    let content = `<h4>Most Relevant Scholarly Articles</h4><hr/><div class="info-edicratic>"`
+    let content = `<h4>Most Relevant Scholarly Articles</h4><hr/><div class="info-edicratic">`
+    if(!items || items.length === 0) {
+        idToData[id][SCHOLAR] = error;
+        if (idToSelected[id] === SCHOLAR) infoField.innerHTML = error;
+        return;
+
+    }
     for(var i = 0; i < items.length; i++) {
         let children = items[i].children;
         let pubDate;
@@ -428,7 +444,7 @@ async function lookUpTermScholarly(term, id) {
             } else if (children[j].tagName === 'published') {
                 pubDate = children[j].innerText || children[j].textContent;
             } else if (children[j].tagName === 'author') {
-                let name = children[j].getElementsByTagName('author')[0];
+                let name = children[j].getElementsByTagName('name')[0];
                 authors.push(name.innerText || name.textContent);
             } else if (children[j].tagName === 'summary') {
                 summary = children[j].innerText || children[j].textContent;
@@ -438,9 +454,18 @@ async function lookUpTermScholarly(term, id) {
         }
         if (!title || !summary) return;
         let dateString = new Date(pubDate).toDateString();
-        let newElement = `<b>${title}</b><br/><i>${dateString}</i>`
- 
-
+        let authorString = '';
+        authors.forEach((author) => {
+            author += ', ';
+            authorString += author;
+        });
+        let newElement = `<b>${title}</b><br/><i>${dateString}</i><br/><i>${authorString}</i><br/><p>${summary}</p><br/>`
+        content += newElement;
+    }
+    content += `</div>`
+    idToData[id][SCHOLAR] = content;
+    if (idToSelected[id] === SCHOLAR) {
+        infoField.innerHTML = content;
     }
 }
 
@@ -488,6 +513,7 @@ async function testEndpoint(term, id) {
                 date = children[j].innerText || children[j].textContent;
             }
         }
+        if (url === window.location.href) {continue;}
         if(title && url && date) {
             let data;
             let res;
