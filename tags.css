@@ -39,7 +39,7 @@ html body {
     padding: 1rem;
     display: none;
     position: absolute !important;
-    z-index: 1000000 !important;
+    z-index: 1000000000000;
     left: 30px;
     top: 10px;
 
@@ -100,7 +100,7 @@ html body {
 /* Absolute Center Spinner */
 .loading-edicratic {
     position: fixed;
-    z-index: 999;
+    z-index: 1000000000000;
     height: 2em;
     width: 2em;
     overflow: visible;
@@ -270,7 +270,7 @@ html body {
   border-width: 12px;
   border-style: solid;
   display: block;
-  z-index: 100000;
+  z-index: 100000000000;
 }
 
 .edicratic-entity-header {
