@@ -13,6 +13,7 @@ html body {
     display: inline-block !important;
     cursor: pointer;
     text-indent: 0;
+
 }
 
 .edicratic-transparent-border {
@@ -270,7 +271,7 @@ html body {
   border-width: 12px;
   border-style: solid;
   display: block;
-  z-index: 100000000000;
+  z-index: 10000000;
 }
 
 .edicratic-entity-header {
