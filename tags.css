@@ -3,7 +3,7 @@ html body {
 }
 
 .edicratic-anchor-tag-style {
-    border-bottom: 5px solid #15c39a !important;
+    border-bottom: 5px solid #15c39a;
     margin-bottom: -5px !important;
     box-sizing:border-box;
     /* background-color: #15c39a; */

@@ -29,6 +29,7 @@ IMAGE_BELOW_TEXT = 'edicratic-image-below';
 GOOGLE_SEARCH_IMAGE_META = 'og:image';
 GOOGLE_SEARCH_DESCRIPTION_META = 'og:description';
 WIKI_CLASS_NAME = 'edicratic-image';
+ENTITY_PARENT_CLASSNAME = 'edicratic-entity-parent';
 
 window.addEventListener('scroll', adjustSpansBasedOnHeight);
 
@@ -40,7 +41,9 @@ document.body.onmousemove = e => handleMouseMove(e);
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
     if (request.message === "runWebCheck"){
-        makePostRequest();
+        makePostRequest(request.automatic);
+    } else if (request.message === 'removeAllHTML') {
+        removeAllEdicraticHTML();
     }
     return true;
   });
@@ -91,6 +94,7 @@ async function modifySingleNode(node, text) {
 
     var newElement = document.createElement('div');
     newElement.style.display = "inline";
+    newElement.className = ENTITY_PARENT_CLASSNAME;
     newElement.innerHTML = innerText;
     newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId, text);
     node.parentElement.replaceChild(newElement, node);
@@ -230,6 +234,7 @@ function modifyAllText(regex, entity, matches, childList, set) {
                 let data = proccessWikiData(matches, uniqueId);
                 idToData[uniqueId] = {'Information': data};
                 var newElement = document.createElement('div');
+                newElement.className = ENTITY_PARENT_CLASSNAME;
                 newElement.style.display = "inline";
                 newElement.innerHTML = text;
                 newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId, entity);
@@ -551,14 +556,15 @@ function getWebUrl(url) {
 
 function makePostRequest(isAutomatic) {
     PREVIOUS_TEXT = document.body.innerText;
+    window.addEventListener('scroll', checkForSizeChange);
+    var spinner;
     if(!isAutomatic) {
-        const spinner = document.createElement('div');
+        spinner = document.createElement('div');
         spinner.classList.add('loading-edicratic');
         document.body.appendChild(spinner);
     }
     invalidateInformation();
     let data = {"blob": document.body.innerText.substring(0, 50000), details: {sort: true, url: window.location.href}};
-    // console.log(JSON.stringify(data));
     fetchWebCheck(POST_URL,  {
                       method: "POST",
                       body: JSON.stringify({body: data}),
@@ -568,15 +574,12 @@ function makePostRequest(isAutomatic) {
         if (result.ok) {
             return result.json();
         } else {
-            // console.log(result);
             throw new Error(result.status);
         }
     }).then(data =>{
-        //make field below valid
         if(!isAutomatic && spinner) spinner.style.display = 'none';
         recordWebCheck(data.local_id || 'NO_ID');
         body = JSON.parse(data.body);
-        // console.log(body);
         processEntities(body);
         chrome.runtime.sendMessage({
             data: DATA_LOADED
@@ -625,7 +628,6 @@ function showHiddenText(e, tooltipId) {
 }
 
 function checkMatch(text, entity, regex) {
-    //replace with regex
     var first = text.toLowerCase();
     var second = entity.toLowerCase();
     if (first === second) {
@@ -700,12 +702,6 @@ function invalidPositionHelper(element) {
 
 function proccessWikiData(items, id) {
     let content = `<h4>Wiki Articles</h4><hr/><div class="info-edicratic">`;
-    // items.sort((a, b) => {
-    //     if(a.thumbnail && b.thumbnail) return 0;
-    //     if(!a.thumbnail && !b.thumbnail) return 0;
-    //     if(a.thumbnail && !b.thumbnail) return -1;
-    //     return 1;
-    // });
     for (var i = 0; i < items.length; i++) {
         let item = items[i];
         let wikilink = `https://en.wikipedia.org/?curid=${item.pageid}`
@@ -735,7 +731,7 @@ const sleep = ms => {
 function checkForSizeChange() {
     let allText = document.body.innerText;
     let prevTextLength = PREVIOUS_TEXT.length;
-    if(allText.length > prevTextLength + 50) {
+    if(allText.length > prevTextLength + 200) {
         let difference = getDifference(PREVIOUS_TEXT, allText);
         NEW_NODES = separateChildNodes(document.body.childNodes);
         PREVIOUS_TEXT = allText;
@@ -804,5 +800,14 @@ function handleStorageChange(changes, namespace) {
         document.body.addEventListener('mouseup', analyzeTextForSending);
     } else {
         document.body.removeEventListener('mouseup', analyzeTextForSending);
+    }
+}
+
+function removeAllEdicraticHTML() {
+    window.removeEventListener('scroll', checkForSizeChange);
+    let entities = document.getElementsByTagName('div');
+    for(var i = 0; i < entities.length; i++) {
+        if(entities[i].classList.contains(ENTITY_PARENT_CLASSNAME)) entities[i].onmouseover = undefined;
+        entities[i].classList.remove(ANCHOR_CLASS_NAME);
     }
 }

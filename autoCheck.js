@@ -9,8 +9,24 @@ window.onload = () => {
 }
 
 function runAutoCheck() {
-    chrome.storage.local.get(['edicratic-blacklist'], function (result) {
-        let val = result['edicratic-blacklist'];
-        makePostRequest(true);
+    chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
+        let val = result['whitelisted-edicratic'];
+        if(val === undefined) {
+            createDefaultBlackList();
+        } else {
+            let host = window.location.host.split('.')[1];
+            if (val.includes(host)) makePostRequest(true);
+        }
     });
+}
+
+chrome.storage.onChanged.addListener((changes, namespace) => {
+    if(!changes['auto-webcheck-enabled']) return;
+    let change = changes['auto-webcheck-enabled']['newValue'];
+    if(change) makePostRequest(true);
+});
+
+function createDefaultBlackList() {
+    //makePostRequest(true);
+
 }

@@ -8,7 +8,18 @@ let buttonIcon = document.getElementById('changeColor-icon');
 let loader = document.getElementById('loader');
 let header = document.getElementById('header');
 let checkBoxAutoCheck = document.getElementById('enable-auto-web-check');
+let clearButton = document.getElementById('unWebCheck');
+let whitelist = document.getElementById('whitelist');
 header.onclick = () => window.open('https://webcheck.edicratic.com/', '_blank')
+whitelist.onclick = handleWhiteListing;
+updateBox(checkBox, checkBoxAutoCheck);
+updateWhitelist(whitelist);
+checkBox.onclick = () => handleCheckBoxClick('highlight-enabled');
+checkBoxAutoCheck.onclick = () => handleCheckBoxClick('auto-webcheck-enabled');
+bugReport.onclick = handleBugReport;
+clearButton.onclick = () => removeAllHTML();
+
+
 if(localStorage['isLoadedEdicratic'] === 'true') changeColor.style.display = 'none';
 
 chrome.storage.local.get(['authStatus'], function(result) {
@@ -44,11 +55,6 @@ function setButtonNormal(changeColor, buttonIcon) {
 
 }
 
-updateBox(checkBox, checkBoxAutoCheck);
-checkBox.onclick = () => handleCheckBoxClick('highlight-enabled');
-checkBoxAutoCheck.onclick = () => handleCheckBoxClick('auto-webcheck-enabled');
-bugReport.onclick = handleBugReport;
-
 function handleCheckBoxClick(cacheKey) {
   chrome.storage.local.get([cacheKey], (result) => {
     let val = result[cacheKey];
@@ -66,7 +72,7 @@ function updateBox(checkBox, checkBoxAutoCheck) {
     chrome.storage.local.get(['auto-webcheck-enabled'], (result) => {
       let valWebCheck = result['auto-webcheck-enabled'];
       checkBoxAutoCheck.checked = valWebCheck === false ? false : true;
-    })
+    });
 }
 
 function performWebCheck(){
@@ -87,6 +93,47 @@ function handleBugReport() {
     chrome.tabs.insertCSS(specTab.id, {file: 'bugReport.css'});
     chrome.tabs.executeScript(specTab.id, {file: 'bugReport.js'}, () => {
       chrome.tabs.sendMessage(specTab.id, request);
+    });
+  });
+}
+
+function removeAllHTML() {
+  chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
+    var specTab = tabs[0];
+    chrome.tabs.sendMessage(specTab.id, {message: 'removeAllHTML'});
+  });
+}
+
+function handleWhiteListing(e) {
+  chrome.storage.local.get(['whitelisted-edicratic'], (result) => {
+    let websites = result['whitelisted-edicratic'] || [];
+    chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
+      let currentUrl = tabs[0].url;
+      let domain = currentUrl.split('.')[1];
+      if(e.target.checked) {
+        websites.push(domain);
+        chrome.tabs.sendMessage(tabs[0].id, {message: "runWebCheck", automatic: true});
+      } else {
+        websites = websites.filter(value => value !== domain);
+      }
+      console.log(websites);
+      chrome.storage.local.set({'whitelisted-edicratic': websites});
+    })
+    
+  });
+}
+
+function updateWhitelist(whitelist) {
+  chrome.storage.local.get(['whitelisted-edicratic'], (result) => {
+    let websites = result['whitelisted-edicratic'] || [];
+    chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
+      let currentUrl = tabs[0].url;
+      let domain = currentUrl.split('.')[1];
+      if(websites.includes(domain)) {
+        whitelist.checked = true;
+      } else {
+        whitelist.checked = false;
+      }
     });
   });
 }
