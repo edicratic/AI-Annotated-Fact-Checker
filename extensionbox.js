@@ -6,6 +6,9 @@ let checkBox = document.getElementById("enable-quick-look-up");
 let bugReport = document.getElementById('edicratic-bug-report');
 let buttonIcon = document.getElementById('changeColor-icon');
 let loader = document.getElementById('loader');
+let header = document.getElementById('header');
+let checkBoxAutoCheck = document.getElementById('enable-auto-web-check');
+header.onclick = () => window.open('https://webcheck.edicratic.com/', '_blank')
 if(localStorage['isLoadedEdicratic'] === 'true') changeColor.style.display = 'none';
 
 chrome.storage.local.get(['authStatus'], function(result) {
@@ -41,33 +44,29 @@ function setButtonNormal(changeColor, buttonIcon) {
 
 }
 
-updateBox(checkBox);
-checkBox.onclick = () => handleCheckBoxClick();
+updateBox(checkBox, checkBoxAutoCheck);
+checkBox.onclick = () => handleCheckBoxClick('highlight-enabled');
+checkBoxAutoCheck.onclick = () => handleCheckBoxClick('auto-webcheck-enabled');
 bugReport.onclick = handleBugReport;
-icon.addEventListener("mouseover", (e) => {
-    let popup = document.getElementById("myPopup");
-    popup.classList.toggle("show");
-});
 
-var isValid = localStorage['validEdicratic'];
-if (isValid === 'true') {
-    invalidMessage.style.display = 'none';
-} else {
-    changeColor.style.display = 'none';
-}
-
-function handleCheckBoxClick() {
-  chrome.storage.local.get(["highlight-enabled"], (result) => {
-    let val = result['highlight-enabled'];
-    chrome.storage.local.set({'highlight-enabled': val === false ? true : false});
+function handleCheckBoxClick(cacheKey) {
+  chrome.storage.local.get([cacheKey], (result) => {
+    let val = result[cacheKey];
+    let data = {};
+    data[cacheKey] = val === false ? true : false;
+    chrome.storage.local.set(data);
   });
 }
 
-function updateBox(checkBox) {
+function updateBox(checkBox, checkBoxAutoCheck) {
     chrome.storage.local.get(["highlight-enabled"], (result) => {
       let val = result['highlight-enabled'];
       checkBox.checked = val === false ? false : true;
     });
+    chrome.storage.local.get(['auto-webcheck-enabled'], (result) => {
+      let valWebCheck = result['auto-webcheck-enabled'];
+      checkBoxAutoCheck.checked = valWebCheck === false ? false : true;
+    })
 }
 
 function performWebCheck(){

@@ -37,7 +37,7 @@
     },
     "content_scripts": [
         {
-            "js": ["user.js", "tags.js", "expandLibrary.js"],
+            "js": ["autoCheck.js","user.js", "tags.js", "expandLibrary.js"],
             "css": ["tags.css", "expandLibrary.css"],
             "matches": ["http://*/*", "https://*/*"]
         }

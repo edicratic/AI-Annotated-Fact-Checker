@@ -40,9 +40,7 @@ document.body.onmousemove = e => handleMouseMove(e);
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
     if (request.message === "runWebCheck"){
-        // console.log('received');
-        //window.addEventListener('scroll', checkForSizeChange);
-        makePostRequest(request);
+        makePostRequest();
     }
     return true;
   });
@@ -109,6 +107,7 @@ async function modifySingleNode(node, text) {
     let pointer = document.createElement('div');
     pointer.className = 'edicratic-tooltip-bottom';
     pointer.id = `${uniqueId}-pointer`;
+    pointer.style.display = 'none';
     document.body.appendChild(pointer);
 
     let tabs = document.createElement('div');
@@ -131,8 +130,13 @@ async function modifySingleNode(node, text) {
     tooltip.onmouseleave = e => handleMouseLeave(e);
     testEndpoint(text, uniqueId);
 
-    //make text green
-    document.body.classList.add('edicratic-green');
+    //rehighlight text
+    let element = document.getElementById(`${uniqueId}-parent-parent`)
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    selection.removeAllRanges();
+    selection.addRange(range);
 }
 
 function addShowMoreListeners(id) {
@@ -545,11 +549,13 @@ function getWebUrl(url) {
     })
   }
 
-function makePostRequest() {
+function makePostRequest(isAutomatic) {
     PREVIOUS_TEXT = document.body.innerText;
-    const spinner = document.createElement('div');
-    spinner.classList.add('loading-edicratic');
-    document.body.appendChild(spinner);
+    if(!isAutomatic) {
+        const spinner = document.createElement('div');
+        spinner.classList.add('loading-edicratic');
+        document.body.appendChild(spinner);
+    }
     invalidateInformation();
     let data = {"blob": document.body.innerText.substring(0, 50000), details: {sort: true, url: window.location.href}};
     // console.log(JSON.stringify(data));
@@ -567,7 +573,7 @@ function makePostRequest() {
         }
     }).then(data =>{
         //make field below valid
-        if(spinner) spinner.style.display = 'none';
+        if(!isAutomatic && spinner) spinner.style.display = 'none';
         recordWebCheck(data.local_id || 'NO_ID');
         body = JSON.parse(data.body);
         // console.log(body);
@@ -577,7 +583,7 @@ function makePostRequest() {
         });
     }).catch(e => {
         console.log(e);
-        if(spinner) spinner.style.display = 'none';
+        if(!isAutomatic && spinner) spinner.style.display = 'none';
         alert("Oops. Something went wrong :(. Please try again." + "\nIf your issue is persistent, go to webcheck.edicratic.com/support.html for help.");
     });
 }

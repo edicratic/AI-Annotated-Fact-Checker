@@ -73,7 +73,7 @@ function checkCurrentPage() {
 
 function load(isValidPage) {
     localStorage['validEdicratic'] = isValidPage;
-    document.body.innerHTML = `<object type="text/html" data="${VALID_PAGE_HTML}"></object>`;
+    document.body.innerHTML = `<object style="height: 250px;" type="text/html" data="${VALID_PAGE_HTML}"></object>`;
 }
 
 function evaluatePageForChecked() {
