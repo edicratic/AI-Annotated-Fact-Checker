@@ -562,6 +562,8 @@ function makePostRequest(isAutomatic) {
         spinner = document.createElement('div');
         spinner.classList.add('loading-edicratic');
         document.body.appendChild(spinner);
+    } else {
+        currentWebCheckedUrl = window.location.href;
     }
     invalidateInformation();
     let data = {"blob": document.body.innerText.substring(0, 50000), details: {sort: true, url: window.location.href}};
@@ -581,9 +583,7 @@ function makePostRequest(isAutomatic) {
         recordWebCheck(data.local_id || 'NO_ID');
         body = JSON.parse(data.body);
         processEntities(body);
-        chrome.runtime.sendMessage({
-            data: DATA_LOADED
-        });
+        if(!isAutomatic) chrome.runtime.sendMessage({data: DATA_LOADED});
     }).catch(e => {
         console.log(e);
         if(!isAutomatic && spinner) spinner.style.display = 'none';

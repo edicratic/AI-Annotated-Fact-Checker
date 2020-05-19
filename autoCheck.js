@@ -22,6 +22,7 @@ DEFAULT_WHITELIST = [
     'moz',
     'mashable',
     'techcrunch',
+    'nerdwallet',
 ]
 
 
@@ -37,19 +38,17 @@ window.onload = () => {
 
 function runAutoCheck() {
     chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
-        let val = result['whitelisted-edicratic'];
+        let val = result['whitelisted-edicratic'] || DEFAULT_WHITELIST;
+        let copyOfVal = result['whitelisted-edicratic'];
         chrome.storage.local.get(['authStatus'], function(result) {
             if(chrome.runtime.lastError || result.authStatus === null || result.authStatus === undefined || result.authStatus === "Logged Out") return;
-            if(val === undefined) {
-                createDefaultBlackList();
-            } else {
+                if(!copyOfVal) chrome.storage.local.set({'whitelisted-edicratic': DEFAULT_WHITELIST})
                 let original = window.location.host;
                 let host = original.split('.')[1];
                 let hostTwo = original.split('.')[0];
                 if (val.includes(host) || val.includes(hostTwo)){
                     makePostRequest(true);
                 } 
-            }
         });
     });
 }

@@ -8,8 +8,9 @@ let buttonIcon = document.getElementById('changeColor-icon');
 let loader = document.getElementById('loader');
 let header = document.getElementById('header');
 let checkBoxAutoCheck = document.getElementById('enable-auto-web-check');
-let clearButton = document.getElementById('unWebCheck');
 let whitelist = document.getElementById('whitelist');
+let settings = document.getElementById('edicratic-settings');
+settings.onclick = () => window.open('settings.html', '_blank')
 header.onclick = () => window.open('https://webcheck.edicratic.com/', '_blank')
 whitelist.onclick = handleWhiteListing;
 updateBox(checkBox, checkBoxAutoCheck);
@@ -17,7 +18,6 @@ updateWhitelist(whitelist);
 checkBox.onclick = () => handleCheckBoxClick('highlight-enabled');
 checkBoxAutoCheck.onclick = () => handleCheckBoxClick('auto-webcheck-enabled');
 bugReport.onclick = handleBugReport;
-clearButton.onclick = () => removeAllHTML();
 
 
 if(localStorage['isLoadedEdicratic'] === 'true') changeColor.style.display = 'none';
