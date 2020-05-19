@@ -219,7 +219,7 @@ function modifyAllText(regex, entity, matches, childList, set) {
         if(!set.has(child) && child.className !== ANCHOR_CLASS_NAME && child.className !== TOOL_TIP_CLASS_NAME && child.tagName !== 'NAV') {
             set.add(child);
             if(child.nodeName === '#comment' || child.nodeName === 'NOSCRIPT' || child.nodeName === 'IMG'
-                || child.nodeName === 'SCRIPT') continue;
+                || child.nodeName === 'SCRIPT' ||  child.nodeName === 'STYLE') continue;
             const nextList = child.childNodes;
             const length = nextList.length;
             var text = child.textContent;
