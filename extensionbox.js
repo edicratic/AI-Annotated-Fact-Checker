@@ -108,8 +108,7 @@ function handleWhiteListing(e) {
   chrome.storage.local.get(['whitelisted-edicratic'], (result) => {
     let websites = result['whitelisted-edicratic'] || [];
     chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
-      let currentUrl = tabs[0].url;
-      let domain = currentUrl.split('.')[1];
+      let domain = getDomain(tabs[0].url);
       if(e.target.checked) {
         websites.push(domain);
         chrome.tabs.sendMessage(tabs[0].id, {message: "runWebCheck", automatic: true});
@@ -127,8 +126,7 @@ function updateWhitelist(whitelist) {
   chrome.storage.local.get(['whitelisted-edicratic'], (result) => {
     let websites = result['whitelisted-edicratic'] || [];
     chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
-      let currentUrl = tabs[0].url;
-      let domain = currentUrl.split('.')[1];
+      let domain = getDomain(tabs[0].url);
       if(websites.includes(domain)) {
         whitelist.checked = true;
       } else {
@@ -136,4 +134,17 @@ function updateWhitelist(whitelist) {
       }
     });
   });
+}
+
+function getDomain(url) {
+  if (url.includes('www')) {
+    return url.split('.')[1];
+  } else {
+    let temp = url.split(/[./:]/);
+    for(var i = 0; i < temp.length; i++) {
+      if (temp[i] !== "" && !temp[i].includes('http')) {
+        return temp[i];
+      }
+    }
+  }
 }
