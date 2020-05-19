@@ -3,9 +3,9 @@ html body {
 }
 
 .edicratic-anchor-tag-style {
-    border-bottom: 5px solid #15c39a;
+    border-bottom: 3px solid #15c39a;
     text-indent: 0 !important;
-    margin-bottom: -5px !important;
+    margin-bottom: -3px !important;
     box-sizing:border-box;
     /* background-color: #15c39a; */
     padding-bottom: 0px !important;

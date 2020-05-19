@@ -314,6 +314,8 @@ function mouseOverHandle(e, id, text) {
         }
 
     }
+    e.preventDefault();
+    e.stopPropagation();
 }
 
 function positionTooltips(id) {

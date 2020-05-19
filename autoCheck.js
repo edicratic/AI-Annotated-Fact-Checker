@@ -25,6 +25,19 @@ DEFAULT_WHITELIST = [
     'nerdwallet',
 ]
 
+setInterval(() => {
+    if (typeof currentWebCheckedUrl !== 'undefined') {
+        if (window.location.href !== currentWebCheckedUrl) {
+            makePostRequest(true);
+        }
+    }
+
+}, 1000)
+
+if (window.location.hostname.includes('yahoo')) {
+    //specific domain stuff
+    window.addEventListener('scroll', clearYahooTags);
+}
 
 window.onload = () => {
     chrome.storage.local.get(['auto-webcheck-enabled'], function(result) {
@@ -69,4 +82,11 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 function createDefaultBlackList() {
     //makePostRequest(true);
 
+}
+
+function clearYahooTags() {
+    let badTags = document.getElementsByClassName('StretchedBox');
+    for (var i = 0; i < badTags.length; i++) {
+        badTags[i].style.position = 'relative';
+    }
 }
