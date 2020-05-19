@@ -11,6 +11,7 @@ html body {
     position: relative !important;
     display: inline-block !important;
     cursor: pointer;
+    text-indent: 0;
 }
 
 .edicratic-transparent-border {
