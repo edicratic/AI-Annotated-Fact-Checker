@@ -1,120 +1,13 @@
-let current = [];
-var myNodelist = document.getElementsByTagName("LI");
-var i;
-for (i = 0; i < myNodelist.length; i++) {
-  var span = document.createElement("SPAN");
-  var txt = document.createTextNode("\u00D7");
-  span.className = "close";
-  span.appendChild(txt);
-  myNodelist[i].appendChild(span);
-}
-
-//add all websites
-chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
-    let websites = result['whitelisted-edicratic'];
-    current = websites;
-    for(var i = 0; i < websites.length; i++) {
-
-        newElement(websites[i].toLowerCase(), true);
-    }
-});
-
-// Click on a close button to hide the current list item
-var close = document.getElementsByClassName("close");
-var i;
-for (i = 0; i < close.length; i++) {
-  close[i].onclick = function() {
-    var div = this.parentElement;
-    let text = div ? div.dataset['content'] : null;
-    div.style.display = "none";
-    //console.log(text.replace('.com', ''));
-    if(!text) return;
-    chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
-      let websites = result['whitelisted-edicratic'];
-      websites = websites.filter(value => value !== text.replace('.com', ''));
-      chrome.storage.local.set({'whitelisted-edicratic': websites});
-  });
-  }
-}
-
-// Add a "checked" symbol when clicking on a list item
-var list = document.querySelector('ul');
-
-var button = document.getElementById('addBtn-edicratic');
-button.onclick = () => {
-  let link = document.getElementById("myInput").value;
-  if (isValidUrl(link)) {
-    link = getDomain(link);
-    newElement(link, false);
-  } else if (isValidUrl('https://' + link)) {
-    link = getDomain('https://' + link);
-    newElement(link, false);
-  } else {
-    alert("Sorry, didn't catch that url");
-  }
-  
-}
-
-
-
-// Create a new list item when clicking on the "Add" button
-function newElement(inputValue, initial) {
-  if (inputValue === '') return;
-  var li = document.createElement("li");
-  var t = document.createTextNode(inputValue);
-  li.setAttribute('data-content', inputValue);
-  li.appendChild(t);
-  document.getElementById("myUL").appendChild(li);
-
-  var span = document.createElement("SPAN");
-  var txt = document.createTextNode("\u00D7");
-  span.className = "close";
-  span.appendChild(txt);
-  li.appendChild(span);
-  if(!initial) {
-    chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
-        let websites = result['whitelisted-edicratic'];
-        if(!websites.includes(inputValue)) {
-          websites.push(inputValue);
-        } else {
-          alert('That seems to be saved already');
-          li.parentElement.removeChild(li);
-        }
-        chrome.storage.local.set({'whitelisted-edicratic': websites});
-    });
-}
-
-  for (i = 0; i < close.length; i++) {
-    close[i].onclick = function() {
-      var div = this.parentElement;
-      let text = div ? div.dataset['content'] : undefined;
-      div.style.display = "none";
-      //console.log(text);
-      if(!text) return;
-      chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
-        let websites = result['whitelisted-edicratic'];
-        websites = websites.filter(value => value !== text.replace('.com', ''));
-        chrome.storage.local.set({'whitelisted-edicratic': websites});
-    });
-      
-    }
-  }
-}
-
-function getDomain(url) {
-  let anchor = document.createElement('a');
-  anchor.href = url;
-  var re = new RegExp('.(com|co.uk|net|org|gov|de|edu)')
-  var secondLevelDomain = anchor.hostname.replace(re, '');
-  return secondLevelDomain;
-}
-
-function isValidUrl(string) {
-  try {
-    new URL(string);
-  } catch (_) {
-    return false;  
-  }
-
-  return true;
-}
+var $jscomp=$jscomp||{};$jscomp.scope={};$jscomp.ASSUME_ES5=!1;$jscomp.ASSUME_NO_NATIVE_MAP=!1;$jscomp.ASSUME_NO_NATIVE_SET=!1;$jscomp.SIMPLE_FROUND_POLYFILL=!1;$jscomp.ISOLATE_POLYFILLS=!1;$jscomp.defineProperty=$jscomp.ASSUME_ES5||"function"==typeof Object.defineProperties?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b]=c.value;return a};
+$jscomp.getGlobal=function(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var c=a[b];if(c&&c.Math==Math)return c}throw Error("Cannot find global object");};$jscomp.global=$jscomp.getGlobal(this);$jscomp.polyfills={};$jscomp.propertyToPolyfillSymbol={};$jscomp.POLYFILL_PREFIX="$jscp$";$jscomp.IS_SYMBOL_NATIVE="function"===typeof Symbol&&"symbol"===typeof Symbol("x");
+var $jscomp$lookupPolyfilledValue=function(a,b){var c=$jscomp.propertyToPolyfillSymbol[b];if(null==c)return a[b];c=a[c];return void 0!==c?c:a[b]};$jscomp.polyfill=function(a,b,c,d){b&&($jscomp.ISOLATE_POLYFILLS?$jscomp.polyfillIsolated(a,b,c,d):$jscomp.polyfillUnisolated(a,b,c,d))};
+$jscomp.polyfillUnisolated=function(a,b,c,d){c=$jscomp.global;a=a.split(".");for(d=0;d<a.length-1;d++){var e=a[d];e in c||(c[e]={});c=c[e]}a=a[a.length-1];d=c[a];b=b(d);b!=d&&null!=b&&$jscomp.defineProperty(c,a,{configurable:!0,writable:!0,value:b})};
+$jscomp.polyfillIsolated=function(a,b,c,d){var e=a.split(".");a=1===e.length;d=e[0];d=!a&&d in $jscomp.polyfills?$jscomp.polyfills:$jscomp.global;for(var f=0;f<e.length-1;f++){var g=e[f];g in d||(d[g]={});d=d[g]}e=e[e.length-1];c=$jscomp.IS_SYMBOL_NATIVE&&"es6"===c?d[e]:null;b=b(c);null!=b&&(a?$jscomp.defineProperty($jscomp.polyfills,e,{configurable:!0,writable:!0,value:b}):b!==c&&($jscomp.propertyToPolyfillSymbol[e]=$jscomp.IS_SYMBOL_NATIVE?$jscomp.global.Symbol(e):$jscomp.POLYFILL_PREFIX+e,e=$jscomp.propertyToPolyfillSymbol[e],
+$jscomp.defineProperty(d,e,{configurable:!0,writable:!0,value:b})))};$jscomp.polyfill("Object.is",function(a){return a?a:function(a,c){return a===c?0!==a||1/a===1/c:a!==a&&c!==c}},"es6","es3");$jscomp.polyfill("Array.prototype.includes",function(a){return a?a:function(a,c){var b=this;b instanceof String&&(b=String(b));var e=b.length;c=c||0;for(0>c&&(c=Math.max(c+e,0));c<e;c++){var f=b[c];if(f===a||Object.is(f,a))return!0}return!1}},"es7","es3");
+$jscomp.checkStringArgs=function(a,b,c){if(null==a)throw new TypeError("The 'this' value for String.prototype."+c+" must not be null or undefined");if(b instanceof RegExp)throw new TypeError("First argument to String.prototype."+c+" must not be a regular expression");return a+""};$jscomp.polyfill("String.prototype.includes",function(a){return a?a:function(a,c){return-1!==$jscomp.checkStringArgs(this,a,"includes").indexOf(a,c||0)}},"es6","es3");
+var current=[],myNodelist=document.getElementsByTagName("LI"),i;for(i=0;i<myNodelist.length;i++){var span=document.createElement("SPAN"),txt=document.createTextNode("\u00d7");span.className="close";span.appendChild(txt);myNodelist[i].appendChild(span)}chrome.storage.local.get(["whitelisted-edicratic"],function(a){current=a=a["whitelisted-edicratic"];for(var b=0;b<a.length;b++)newElement(a[b].toLowerCase(),!0)});var close=document.getElementsByClassName("close");
+for(i=0;i<close.length;i++)close[i].onclick=function(){var a=this.parentElement,b=a?a.dataset.content:null;a.style.display="none";b&&chrome.storage.local.get(["whitelisted-edicratic"],function(a){a=a["whitelisted-edicratic"];a=a.filter(function(a){return a!==b.replace(".com","")});chrome.storage.local.set({"whitelisted-edicratic":a})})};var list=document.querySelector("ul"),button=document.getElementById("addBtn-edicratic");
+button.onclick=function(){var a=document.getElementById("myInput").value;isValidUrl(a)?(a=getDomain(a),newElement(a,!1)):isValidUrl("https://"+a)?(a=getDomain("https://"+a),newElement(a,!1)):alert("Sorry, didn't catch that url")};
+function newElement(a,b){if(""!==a){var c=document.createElement("li"),d=document.createTextNode(a);c.setAttribute("data-content",a);c.appendChild(d);document.getElementById("myUL").appendChild(c);d=document.createElement("SPAN");var e=document.createTextNode("\u00d7");d.className="close";d.appendChild(e);c.appendChild(d);b||chrome.storage.local.get(["whitelisted-edicratic"],function(b){b=b["whitelisted-edicratic"];b.includes(a)?(alert("That seems to be saved already"),c.parentElement.removeChild(c)):
+b.push(a);chrome.storage.local.set({"whitelisted-edicratic":b})});for(i=0;i<close.length;i++)close[i].onclick=function(){var a=this.parentElement,b=a?a.dataset.content:void 0;a.style.display="none";b&&chrome.storage.local.get(["whitelisted-edicratic"],function(a){a=a["whitelisted-edicratic"];a=a.filter(function(a){return a!==b.replace(".com","")});chrome.storage.local.set({"whitelisted-edicratic":a})})}}}
+function getDomain(a){var b=document.createElement("a");b.href=a;return b.hostname.replace(/.(com|co.uk|net|org|gov|de|edu)/,"")}function isValidUrl(a){try{new URL(a)}catch(b){return!1}return!0};
