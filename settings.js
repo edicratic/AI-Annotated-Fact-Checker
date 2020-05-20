@@ -61,8 +61,8 @@ button.onclick = () => {
 function newElement(inputValue, initial) {
   if (inputValue === '') return;
   var li = document.createElement("li");
-  var t = document.createTextNode(inputValue + '.com');
-  li.setAttribute('data-content', inputValue + '.com');
+  var t = document.createTextNode(inputValue);
+  li.setAttribute('data-content', inputValue);
   li.appendChild(t);
   document.getElementById("myUL").appendChild(li);
 
