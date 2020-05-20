@@ -1,3 +1,4 @@
+let current = [];
 var myNodelist = document.getElementsByTagName("LI");
 var i;
 for (i = 0; i < myNodelist.length; i++) {
@@ -11,8 +12,9 @@ for (i = 0; i < myNodelist.length; i++) {
 //add all websites
 chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
     let websites = result['whitelisted-edicratic'];
-    console.log(websites);
+    current = websites;
     for(var i = 0; i < websites.length; i++) {
+
         newElement(websites[i].toLowerCase(), true);
     }
 });
@@ -38,19 +40,30 @@ for (i = 0; i < close.length; i++) {
 // Add a "checked" symbol when clicking on a list item
 var list = document.querySelector('ul');
 var button = document.getElementById('addBtn-edicratic');
-button.onclick = () => newElement(document.getElementById("myInput").value, false);
+button.onclick = () => {
+  let link = document.getElementById("myInput").value;
+  var re = new RegExp('.(com|co.uk|net|org|gov|de|edu)') 
+  if (isValidUrl(link)) {
+    link = getDomain(link);
+  } else {
+    link = link.replace(re, '');
+  }
+  newElement(link, false);
+}
 
 // Create a new list item when clicking on the "Add" button
 function newElement(inputValue, initial) {
+  inputValue = inputValue.replace('www.', '');
+  if (inputValue === '') return;
+  if (current.includes(inputValue) && !initial) {
+    alert('That seems to be saved already');
+    return;
+  }
   var li = document.createElement("li");
   var t = document.createTextNode(inputValue);
   li.setAttribute('data-content', inputValue);
   li.appendChild(t);
-  if (inputValue === '') {
-    alert("Please enter a domain name");
-  } else {
-    document.getElementById("myUL").appendChild(li);
-  }
+  document.getElementById("myUL").appendChild(li);
   document.getElementById("myInput").value = "";
 
   var span = document.createElement("SPAN");
@@ -61,7 +74,12 @@ function newElement(inputValue, initial) {
   if(!initial) {
     chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
         let websites = result['whitelisted-edicratic'];
-        websites.push(inputValue);
+        if(!websites.includes(inputValue)) {
+          websites.push(inputValue);
+        } else {
+          alert('That seems to be saved already');
+          li.parentElement.removeChild(li);
+        }
         chrome.storage.local.set({'whitelisted-edicratic': websites});
     });
 }
@@ -81,4 +99,22 @@ function newElement(inputValue, initial) {
       
     }
   }
+}
+
+function getDomain(url) {
+  let anchor = document.createElement('a');
+  anchor.href = url;
+  var re = new RegExp('.(com|co.uk|net|org|gov|de|edu)')
+  var secondLevelDomain = anchor.hostname.replace(re, '');
+  return secondLevelDomain;
+}
+
+function isValidUrl(string) {
+  try {
+    new URL(string);
+  } catch (_) {
+    return false;  
+  }
+
+  return true;
 }

@@ -1,28 +1,30 @@
 DEFAULT_WHITELIST = [
-    'fox',
-    'foxnews',
-    'cnn',
-    'npr', 
-    'msnbc',
+    'www.fox',
+    'www.foxnews',
+    'www.cnn',
+    'www.npr', 
+    'www.msnbc',
     'medium',
-    'inc',
-    'forbes',
-    'yahoo',
-    'huffpost',
-    'nytimes',
-    'nbcnews',
-    'dailymail',
-    'washingtonpost',
-    'theguardian',
-    'wsj',
-    'bbc',
-    'usatoday',
-    'latimes',
-    'engadget',
+    'www.inc',
+    'www.forbes',
+    'www.yahoo',
+    'www.huffpost',
+    'www.nytimes',
+    'www.nbcnews',
+    'www.dailymail',
+    'www.washingtonpost',
+    'www.theguardian',
+    'www.wsj',
+    'www.bbc',
+    'www.usatoday',
+    'www.latimes',
+    'www.engadget',
     'moz',
     'mashable',
     'techcrunch',
-    'nerdwallet',
+    'www.nerdwallet',
+    'news.yahoo',
+    
 ]
 
 setInterval(() => {
@@ -55,11 +57,9 @@ function runAutoCheck() {
         let copyOfVal = result['whitelisted-edicratic'];
         chrome.storage.local.get(['authStatus'], function(result) {
             if(chrome.runtime.lastError || result.authStatus === null || result.authStatus === undefined || result.authStatus === "Logged Out") return;
-                if(!copyOfVal) chrome.storage.local.set({'whitelisted-edicratic': DEFAULT_WHITELIST})
-                let original = window.location.host;
-                let host = original.split('.')[1];
-                let hostTwo = original.split('.')[0];
-                if (val.includes(host) || val.includes(hostTwo)){
+                if(!copyOfVal) chrome.storage.local.set({'whitelisted-edicratic': DEFAULT_WHITELIST});
+                let host = getDomain(window.location.href);
+                if (val.includes(host)){
                     makePostRequest(true);
                 } 
         });
@@ -89,4 +89,12 @@ function clearYahooTags() {
     for (var i = 0; i < badTags.length; i++) {
         badTags[i].style.position = 'relative';
     }
+}
+
+function getDomain(url) {
+    let anchor = document.createElement('a');
+    anchor.href = url;
+    var re = new RegExp('.(com|co.uk|net|org|gov|de|edu)')
+    var secondLevelDomain = anchor.hostname.replace(re, '');
+    return secondLevelDomain;
 }

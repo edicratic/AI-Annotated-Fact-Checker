@@ -137,14 +137,9 @@ function updateWhitelist(whitelist) {
 }
 
 function getDomain(url) {
-  if (url.includes('www')) {
-    return url.split('.')[1];
-  } else {
-    let temp = url.split(/[./:]/);
-    for(var i = 0; i < temp.length; i++) {
-      if (temp[i] !== "" && !temp[i].includes('http')) {
-        return temp[i];
-      }
-    }
-  }
+  let anchor = document.createElement('a');
+  anchor.href = url;
+  var re = new RegExp('.(com|co.uk|net|org|gov|de|edu)')
+  var secondLevelDomain = anchor.hostname.replace(re, '');
+  return secondLevelDomain;
 }

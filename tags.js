@@ -597,6 +597,7 @@ async function processEntities(entities) {
    for (var i = 0; i < entities.length; i++) {
        lookUpTerm(entities[i].entity);
        await sleep(10);
+       if (i === 199) await sleep(1000);
    }
 }
 
