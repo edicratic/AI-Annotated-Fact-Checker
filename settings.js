@@ -15,7 +15,7 @@ chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
     current = websites;
     for(var i = 0; i < websites.length; i++) {
 
-        newElement(websites[i].toLowerCase() + '.com', true);
+        newElement(websites[i].toLowerCase(), true);
     }
 });
 
@@ -39,16 +39,30 @@ for (i = 0; i < close.length; i++) {
 
 // Add a "checked" symbol when clicking on a list item
 var list = document.querySelector('ul');
+
+var button = document.getElementById('addBtn-edicratic');
+button.onclick = () => {
+  let link = document.getElementById("myInput").value;
+  if (isValidUrl(link)) {
+    link = getDomain(link);
+    newElement(link, false);
+  } else if (isValidUrl('https://' + link)) {
+    link = getDomain('https://' + link);
+    newElement(link, false);
+  } else {
+    alert("Sorry, didn't catch that url");
+  }
+  
+}
+
+
+
 // Create a new list item when clicking on the "Add" button
 function newElement(inputValue, initial) {
   if (inputValue === '') return;
-  if (current.includes(inputValue) && !initial) {
-    alert('That seems to be saved already');
-    return;
-  }
   var li = document.createElement("li");
-  var t = document.createTextNode(inputValue);
-  li.setAttribute('data-content', inputValue);
+  var t = document.createTextNode(inputValue + '.com');
+  li.setAttribute('data-content', inputValue + '.com');
   li.appendChild(t);
   document.getElementById("myUL").appendChild(li);
 
@@ -60,10 +74,8 @@ function newElement(inputValue, initial) {
   if(!initial) {
     chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
         let websites = result['whitelisted-edicratic'];
-        var re = new RegExp('.(com|co.uk|net|org|gov|de|edu)')
-        let modified = websites.replace(re, '');
-        if(!websites.includes(modified)) {
-          websites.push(modified);
+        if(!websites.includes(inputValue)) {
+          websites.push(inputValue);
         } else {
           alert('That seems to be saved already');
           li.parentElement.removeChild(li);
