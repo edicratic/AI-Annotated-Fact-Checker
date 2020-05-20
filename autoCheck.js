@@ -24,7 +24,6 @@ DEFAULT_WHITELIST = [
     'techcrunch',
     'www.nerdwallet',
     'news.yahoo',
-    'www.snopes',
     
 ]
 
