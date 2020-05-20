@@ -77,7 +77,6 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     } else if (changes['authStatus']) {
         let change = changes['authStatus']['newValue'];
         if (change === 'Authenticated') {
-            createDefaultBlackList();
 
         }
     } else if(changes['whitelisted-edicratic']) {
@@ -100,16 +99,6 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         autoWebCheckChange(oldPosition ? 'turnOff' : 'turnOn', newTime - oldTime);
     }
 });
-
-function createDefaultBlackList() {
-    chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
-        if(!result['whitelisted-edicratic']) {
-            chrome.storage.local.set({'whitelisted-edicratic': DEFAULT_WHITELIST});
-            chrome.storage.local.set({'button-change-edicratic': {'time': new Date().getTime(), 'on': true}});
-        }
-    })
-
-}
 
 function clearYahooTags() {
     let badTags = document.getElementsByClassName('StretchedBox');

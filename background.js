@@ -1,5 +1,33 @@
 //TODO Yukt add the caching
 BASE_URL = "https://webcheck-api.edicratic.com"
+DEFAULT_WHITELIST = [
+  'www.fox',
+  'www.foxnews',
+  'www.cnn',
+  'www.npr', 
+  'www.msnbc',
+  'medium',
+  'www.inc',
+  'www.forbes',
+  'www.yahoo',
+  'www.huffpost',
+  'www.nytimes',
+  'www.nbcnews',
+  'www.dailymail',
+  'www.washingtonpost',
+  'www.theguardian',
+  'www.wsj',
+  'www.bbc',
+  'www.usatoday',
+  'www.latimes',
+  'www.engadget',
+  'moz',
+  'mashable',
+  'techcrunch',
+  'www.nerdwallet',
+  'news.yahoo',
+  
+]
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.message === "callInternet"){
@@ -143,6 +171,7 @@ function oauthFlow(){
                           id_token = urlParams.get("id_token");
                           getToken(id_token).then(res => {
                             chrome.storage.local.set({'authStatus': "Authenticated"});
+                            createDefaultBlackList()
                           }).catch(err => {
                               chrome.storage.local.set({'authStatus': "Logged Out"});
                               console.log(err);
@@ -165,6 +194,7 @@ function oauthFlow(){
                           }else{
                               getToken(id_token).then(res => {
                                   chrome.storage.local.set({'authStatus': "Authenticated"});
+                                  createDefaultBlackList();
                                   // console.log(res);
                               }).catch(err => {
                                   chrome.storage.local.set({'authStatus': "Logged Out"});
@@ -180,3 +210,12 @@ function oauthFlow(){
       chrome.tabs.update(authenticationTab.id, {'url': url});
   });
 };
+
+function createDefaultBlackList() {
+  chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
+      if(!result['whitelisted-edicratic']) {
+          chrome.storage.local.set({'whitelisted-edicratic': DEFAULT_WHITELIST});
+          chrome.storage.local.set({'button-change-edicratic': {'time': new Date().getTime(), 'on': true}});
+      }
+  })
+}
