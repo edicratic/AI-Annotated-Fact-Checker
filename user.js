@@ -134,8 +134,11 @@ function whitelistChange(type, list) {
         method: "POST",
         body: JSON.stringify({
             body: {
-                type: "WhiteList" + type,
-                content: list,
+                type: "Whitelist_Update",
+                content: {
+                    changes: list,
+                    action: type
+                },
             } 
         }),
         headers: {
