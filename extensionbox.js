@@ -1,152 +1,18 @@
-let changeColor = document.getElementById('changeColor');
-let check = document.getElementById('edicratic-check');
-let invalidMessage = document.getElementById('edicratic-invalid');
-let icon = document.getElementById('info-icon-edicratic');
-let checkBox = document.getElementById("enable-quick-look-up");
-let bugReport = document.getElementById('edicratic-bug-report');
-let buttonIcon = document.getElementById('changeColor-icon');
-let loader = document.getElementById('loader');
-let header = document.getElementById('header');
-let checkBoxAutoCheck = document.getElementById('enable-auto-web-check');
-let whitelist = document.getElementById('whitelist');
-let settings = document.getElementById('edicratic-settings');
-settings.onclick = () => window.open('settings.html', '_blank')
-header.onclick = () => window.open('https://webcheck.edicratic.com/', '_blank')
-whitelist.onclick = handleWhiteListing;
-updateBox(checkBox, checkBoxAutoCheck);
-updateWhitelist(whitelist);
-checkBox.onclick = () => handleCheckBoxClick('highlight-enabled');
-checkBoxAutoCheck.onclick = () => handleCheckBoxClick('auto-webcheck-enabled');
-bugReport.onclick = handleBugReport;
-
-
-if(localStorage['isLoadedEdicratic'] === 'true') changeColor.style.display = 'none';
-
-chrome.storage.local.get(['authStatus'], function(result) {
-  if(chrome.runtime.lastError || result.authStatus === null || result.authStatus === undefined || result.authStatus === "Logged Out"){
-      chrome.runtime.sendMessage({input: "/auth-status",params: {method: "GET"}, message: "callWebCheckAPI"}, messageResponse => {
-          const [response, error] = messageResponse;
-          if (response === null) {
-              setButtonLogin(changeColor, buttonIcon)
-          } else {
-              setButtonNormal(changeColor, buttonIcon);
-          }
-        });
-      
-  } else if(result.authStatus === "Authenticated"){
-      setButtonNormal(changeColor, buttonIcon);
-  }
-});
-
-function setButtonLogin(changeColor, buttonIcon) {
-  changeColor.style.backgroundColor = '#3958ae';
-  buttonIcon.style.display = 'none';
-  let text = document.getElementById('webcheck-text');
-  text.innerText = 'Login To Webcheck';
-  changeColor.onclick = () => chrome.runtime.sendMessage({message: "runOAuthFlow"})
-}
-
-function setButtonNormal(changeColor, buttonIcon) {
-  changeColor.style.backgroundColor = '';
-  let text = document.getElementById('webcheck-text');
-  text.textContent = 'WebCheck This';
-  buttonIcon.style.display = 'inline';
-  changeColor.onclick = () => performWebCheck();
-
-}
-
-function handleCheckBoxClick(cacheKey) {
-  chrome.storage.local.get([cacheKey], (result) => {
-    let val = result[cacheKey];
-    let data = {};
-    data[cacheKey] = val === false ? true : false;
-    chrome.storage.local.set(data);
-    if (cacheKey === 'auto-webcheck-enabled') {
-      chrome.storage.local.set({'button-change-edicratic' : {'time': new Date().getTime(), 'on': data[cacheKey]}});
-    }
-  });
-}
-
-function updateBox(checkBox, checkBoxAutoCheck) {
-    chrome.storage.local.get(["highlight-enabled"], (result) => {
-      let val = result['highlight-enabled'];
-      checkBox.checked = val === false ? false : true;
-    });
-    chrome.storage.local.get(['auto-webcheck-enabled'], (result) => {
-      let valWebCheck = result['auto-webcheck-enabled'];
-      checkBoxAutoCheck.checked = valWebCheck === false ? false : true;
-    });
-}
-
-function performWebCheck(){
-  chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
-      let specTab = tabs[0]; 
-      chrome.tabs.executeScript(specTab.id, {
-        code: `chrome.runtime.sendMessage({data: 'webCheckLoadScript', loaded: typeof scriptAlreadyLoaded === "undefined" ? false : scriptAlreadyLoaded});`
-      });
-      changeColor.style.display = "none"
-      loader.style.display = "";
-  });
-}
-
-function handleBugReport() {
-  request = {message: "bugReport"}
-  chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
-    var specTab = tabs[0];
-    chrome.tabs.insertCSS(specTab.id, {file: 'bugReport.css'});
-    chrome.tabs.executeScript(specTab.id, {file: 'bugReport.js'}, () => {
-      chrome.tabs.sendMessage(specTab.id, request);
-    });
-  });
-}
-
-function removeAllHTML() {
-  chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
-    var specTab = tabs[0];
-    chrome.tabs.sendMessage(specTab.id, {message: 'removeAllHTML'});
-  });
-}
-
-function handleWhiteListing(e) {
-  chrome.storage.local.get(['whitelisted-edicratic'], (result) => {
-    let websites = result['whitelisted-edicratic'] || [];
-    chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
-      let domain = getDomain(tabs[0].url);
-      if(e.target.checked) {
-        websites.push(domain);
-        chrome.storage.local.get(['auto-webcheck-enabled'], res => {
-          if(res['auto-webcheck-enabled'] !== false) {
-            chrome.tabs.sendMessage(tabs[0].id, {message: "runWebCheck", automatic: true});
-          }
-        });
-      } else {
-        websites = websites.filter(value => value !== domain);
-      }
-      //console.log(websites);
-      chrome.storage.local.set({'whitelisted-edicratic': websites});
-    })
-    
-  });
-}
-
-function updateWhitelist(whitelist) {
-  chrome.storage.local.get(['whitelisted-edicratic'], (result) => {
-    let websites = result['whitelisted-edicratic'] || [];
-    chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
-      let domain = getDomain(tabs[0].url);
-      if(websites.includes(domain)) {
-        whitelist.checked = true;
-      } else {
-        whitelist.checked = false;
-      }
-    });
-  });
-}
-
-function getDomain(url) {
-  let anchor = document.createElement('a');
-  anchor.href = url;
-  var re = new RegExp('.(com|co.uk|net|org|gov|de|edu)')
-  var secondLevelDomain = anchor.hostname.replace(re, '');
-  return secondLevelDomain;
-}
+var $jscomp=$jscomp||{};$jscomp.scope={};$jscomp.createTemplateTagFirstArg=function(a){return a.raw=a};$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){a.raw=b;return a};$jscomp.arrayIteratorImpl=function(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}};$jscomp.arrayIterator=function(a){return{next:$jscomp.arrayIteratorImpl(a)}};$jscomp.makeIterator=function(a){var b="undefined"!=typeof Symbol&&Symbol.iterator&&a[Symbol.iterator];return b?b.call(a):$jscomp.arrayIterator(a)};
+$jscomp.ASSUME_ES5=!1;$jscomp.ASSUME_NO_NATIVE_MAP=!1;$jscomp.ASSUME_NO_NATIVE_SET=!1;$jscomp.SIMPLE_FROUND_POLYFILL=!1;$jscomp.ISOLATE_POLYFILLS=!1;$jscomp.defineProperty=$jscomp.ASSUME_ES5||"function"==typeof Object.defineProperties?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b]=c.value;return a};
+$jscomp.getGlobal=function(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var c=a[b];if(c&&c.Math==Math)return c}throw Error("Cannot find global object");};$jscomp.global=$jscomp.getGlobal(this);$jscomp.polyfills={};$jscomp.propertyToPolyfillSymbol={};$jscomp.POLYFILL_PREFIX="$jscp$";$jscomp.IS_SYMBOL_NATIVE="function"===typeof Symbol&&"symbol"===typeof Symbol("x");
+var $jscomp$lookupPolyfilledValue=function(a,b){var c=$jscomp.propertyToPolyfillSymbol[b];if(null==c)return a[b];c=a[c];return void 0!==c?c:a[b]};$jscomp.polyfill=function(a,b,c,e){b&&($jscomp.ISOLATE_POLYFILLS?$jscomp.polyfillIsolated(a,b,c,e):$jscomp.polyfillUnisolated(a,b,c,e))};
+$jscomp.polyfillUnisolated=function(a,b,c,e){c=$jscomp.global;a=a.split(".");for(e=0;e<a.length-1;e++){var d=a[e];d in c||(c[d]={});c=c[d]}a=a[a.length-1];e=c[a];b=b(e);b!=e&&null!=b&&$jscomp.defineProperty(c,a,{configurable:!0,writable:!0,value:b})};
+$jscomp.polyfillIsolated=function(a,b,c,e){var d=a.split(".");a=1===d.length;e=d[0];e=!a&&e in $jscomp.polyfills?$jscomp.polyfills:$jscomp.global;for(var f=0;f<d.length-1;f++){var g=d[f];g in e||(e[g]={});e=e[g]}d=d[d.length-1];c=$jscomp.IS_SYMBOL_NATIVE&&"es6"===c?e[d]:null;b=b(c);null!=b&&(a?$jscomp.defineProperty($jscomp.polyfills,d,{configurable:!0,writable:!0,value:b}):b!==c&&($jscomp.propertyToPolyfillSymbol[d]=$jscomp.IS_SYMBOL_NATIVE?$jscomp.global.Symbol(d):$jscomp.POLYFILL_PREFIX+d,d=$jscomp.propertyToPolyfillSymbol[d],
+$jscomp.defineProperty(e,d,{configurable:!0,writable:!0,value:b})))};$jscomp.polyfill("Object.is",function(a){return a?a:function(a,c){return a===c?0!==a||1/a===1/c:a!==a&&c!==c}},"es6","es3");$jscomp.polyfill("Array.prototype.includes",function(a){return a?a:function(a,c){var b=this;b instanceof String&&(b=String(b));var d=b.length;c=c||0;for(0>c&&(c=Math.max(c+d,0));c<d;c++){var f=b[c];if(f===a||Object.is(f,a))return!0}return!1}},"es7","es3");
+$jscomp.checkStringArgs=function(a,b,c){if(null==a)throw new TypeError("The 'this' value for String.prototype."+c+" must not be null or undefined");if(b instanceof RegExp)throw new TypeError("First argument to String.prototype."+c+" must not be a regular expression");return a+""};$jscomp.polyfill("String.prototype.includes",function(a){return a?a:function(a,c){return-1!==$jscomp.checkStringArgs(this,a,"includes").indexOf(a,c||0)}},"es6","es3");
+var changeColor=document.getElementById("changeColor"),check=document.getElementById("edicratic-check"),invalidMessage=document.getElementById("edicratic-invalid"),icon=document.getElementById("info-icon-edicratic"),checkBox=document.getElementById("enable-quick-look-up"),bugReport=document.getElementById("edicratic-bug-report"),buttonIcon=document.getElementById("changeColor-icon"),loader=document.getElementById("loader"),header=document.getElementById("header"),checkBoxAutoCheck=document.getElementById("enable-auto-web-check"),
+whitelist=document.getElementById("whitelist"),settings=document.getElementById("edicratic-settings");settings.onclick=function(){return window.open("settings.html","_blank")};header.onclick=function(){return window.open("https://webcheck.edicratic.com/","_blank")};whitelist.onclick=handleWhiteListing;updateBox(checkBox,checkBoxAutoCheck);updateWhitelist(whitelist);checkBox.onclick=function(){return handleCheckBoxClick("highlight-enabled")};checkBoxAutoCheck.onclick=function(){return handleCheckBoxClick("auto-webcheck-enabled")};
+bugReport.onclick=handleBugReport;"true"===localStorage.isLoadedEdicratic&&(changeColor.style.display="none");
+chrome.storage.local.get(["authStatus"],function(a){chrome.runtime.lastError||null===a.authStatus||void 0===a.authStatus||"Logged Out"===a.authStatus?chrome.runtime.sendMessage({input:"/auth-status",params:{method:"GET"},message:"callWebCheckAPI"},function(a){a=$jscomp.makeIterator(a);var c=a.next().value;a.next();null===c?setButtonLogin(changeColor,buttonIcon):setButtonNormal(changeColor,buttonIcon)}):"Authenticated"===a.authStatus&&setButtonNormal(changeColor,buttonIcon)});
+function setButtonLogin(a,b){a.style.backgroundColor="#3958ae";b.style.display="none";document.getElementById("webcheck-text").innerText="Login To Webcheck";a.onclick=function(){return chrome.runtime.sendMessage({message:"runOAuthFlow"})}}function setButtonNormal(a,b){a.style.backgroundColor="";document.getElementById("webcheck-text").textContent="WebCheck This";b.style.display="inline";a.onclick=function(){return performWebCheck()}}
+function handleCheckBoxClick(a){chrome.storage.local.get([a],function(b){var c={};c[a]=!1===b[a]?!0:!1;chrome.storage.local.set(c);"auto-webcheck-enabled"===a&&chrome.storage.local.set({"button-change-edicratic":{time:(new Date).getTime(),on:c[a]}})})}function updateBox(a,b){chrome.storage.local.get(["highlight-enabled"],function(c){a.checked=!1===c["highlight-enabled"]?!1:!0});chrome.storage.local.get(["auto-webcheck-enabled"],function(a){b.checked=!1===a["auto-webcheck-enabled"]?!1:!0})}
+function performWebCheck(){chrome.tabs.query({currentWindow:!0,active:!0},function(a){chrome.tabs.executeScript(a[0].id,{code:"chrome.runtime.sendMessage({data: 'webCheckLoadScript', loaded: typeof scriptAlreadyLoaded === \"undefined\" ? false : scriptAlreadyLoaded});"});changeColor.style.display="none";loader.style.display=""})}
+function handleBugReport(){request={message:"bugReport"};chrome.tabs.query({currentWindow:!0,active:!0},function(a){var b=a[0];chrome.tabs.insertCSS(b.id,{file:"bugReport.css"});chrome.tabs.executeScript(b.id,{file:"bugReport.js"},function(){chrome.tabs.sendMessage(b.id,request)})})}function removeAllHTML(){chrome.tabs.query({currentWindow:!0,active:!0},function(a){chrome.tabs.sendMessage(a[0].id,{message:"removeAllHTML"})})}
+function handleWhiteListing(a){chrome.storage.local.get(["whitelisted-edicratic"],function(b){var c=b["whitelisted-edicratic"]||[];chrome.tabs.query({currentWindow:!0,active:!0},function(b){var d=getDomain(b[0].url);a.target.checked?(c.push(d),chrome.storage.local.get(["auto-webcheck-enabled"],function(a){!1!==a["auto-webcheck-enabled"]&&chrome.tabs.sendMessage(b[0].id,{message:"runWebCheck",automatic:!0})})):c=c.filter(function(a){return a!==d});chrome.storage.local.set({"whitelisted-edicratic":c})})})}
+function updateWhitelist(a){chrome.storage.local.get(["whitelisted-edicratic"],function(b){var c=b["whitelisted-edicratic"]||[];chrome.tabs.query({currentWindow:!0,active:!0},function(b){b=getDomain(b[0].url);c.includes(b)?a.checked=!0:a.checked=!1})})}function getDomain(a){var b=document.createElement("a");b.href=a;return b.hostname.replace(/.(com|co.uk|net|org|gov|de|edu)/,"")};
