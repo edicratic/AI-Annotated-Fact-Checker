@@ -115,7 +115,9 @@ function handleWhiteListing(e) {
       if(e.target.checked) {
         websites.push(domain);
         chrome.storage.local.get(['auto-webcheck-enabled'], res => {
-          if(res['auto-webcheck-enabled']) chrome.tabs.sendMessage(tabs[0].id, {message: "runWebCheck", automatic: true});
+          if(res['auto-webcheck-enabled'] !== false) {
+            chrome.tabs.sendMessage(tabs[0].id, {message: "runWebCheck", automatic: true});
+          }
         });
       } else {
         websites = websites.filter(value => value !== domain);
