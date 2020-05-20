@@ -155,11 +155,11 @@ function oauthFlow(){
                           // console.log(response);
                       break;
                       case 'Error':
-                          console.log("ERRRORRROROOR");
+                          //console.log("ERRRORRROROOR");
                           // console.log(response);
                           id_token = urlParams.get("id_token");
                           if (id_token == null || id_token == undefined){
-                              console.log("an actual error")
+                              //console.log("an actual error")
                               //TODO Handle / log this somehow
                               chrome.storage.local.set({'authStatus': "Logged Out"});
                           }else{

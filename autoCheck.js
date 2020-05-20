@@ -71,7 +71,7 @@ function runAutoCheck() {
 }
 
 chrome.storage.onChanged.addListener((changes, namespace) => {
-    console.log(changes);
+    //console.log(changes);
     if(changes['auto-webcheck-enabled']) {
         let change = changes['auto-webcheck-enabled']['newValue'];
         if(change) runAutoCheck();

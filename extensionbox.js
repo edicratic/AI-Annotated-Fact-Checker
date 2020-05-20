@@ -122,7 +122,7 @@ function handleWhiteListing(e) {
       } else {
         websites = websites.filter(value => value !== domain);
       }
-      console.log(websites);
+      //console.log(websites);
       chrome.storage.local.set({'whitelisted-edicratic': websites});
     })
     

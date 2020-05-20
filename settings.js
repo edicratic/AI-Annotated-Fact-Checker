@@ -27,7 +27,7 @@ for (i = 0; i < close.length; i++) {
     var div = this.parentElement;
     let text = div ? div.dataset['content'] : null;
     div.style.display = "none";
-    console.log(text.replace('.com', ''));
+    //console.log(text.replace('.com', ''));
     if(!text) return;
     chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
       let websites = result['whitelisted-edicratic'];
@@ -89,7 +89,7 @@ function newElement(inputValue, initial) {
       var div = this.parentElement;
       let text = div ? div.dataset['content'] : undefined;
       div.style.display = "none";
-      console.log(text);
+      //console.log(text);
       if(!text) return;
       chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
         let websites = result['whitelisted-edicratic'];
