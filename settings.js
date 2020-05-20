@@ -15,7 +15,7 @@ chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
     current = websites;
     for(var i = 0; i < websites.length; i++) {
 
-        newElement(websites[i].toLowerCase(), true);
+        newElement(websites[i].toLowerCase() + '.com', true);
     }
 });
 
@@ -27,11 +27,11 @@ for (i = 0; i < close.length; i++) {
     var div = this.parentElement;
     let text = div ? div.dataset['content'] : null;
     div.style.display = "none";
-    console.log(text);
+    console.log(text.replace('.com', ''));
     if(!text) return;
     chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
       let websites = result['whitelisted-edicratic'];
-      websites = websites.filter(value => value !== text);
+      websites = websites.filter(value => value !== text.replace('.com', ''));
       chrome.storage.local.set({'whitelisted-edicratic': websites});
   });
   }
@@ -39,21 +39,8 @@ for (i = 0; i < close.length; i++) {
 
 // Add a "checked" symbol when clicking on a list item
 var list = document.querySelector('ul');
-var button = document.getElementById('addBtn-edicratic');
-button.onclick = () => {
-  let link = document.getElementById("myInput").value;
-  var re = new RegExp('.(com|co.uk|net|org|gov|de|edu)') 
-  if (isValidUrl(link)) {
-    link = getDomain(link);
-  } else {
-    link = link.replace(re, '');
-  }
-  newElement(link, false);
-}
-
 // Create a new list item when clicking on the "Add" button
 function newElement(inputValue, initial) {
-  inputValue = inputValue.replace('www.', '');
   if (inputValue === '') return;
   if (current.includes(inputValue) && !initial) {
     alert('That seems to be saved already');
@@ -64,7 +51,6 @@ function newElement(inputValue, initial) {
   li.setAttribute('data-content', inputValue);
   li.appendChild(t);
   document.getElementById("myUL").appendChild(li);
-  document.getElementById("myInput").value = "";
 
   var span = document.createElement("SPAN");
   var txt = document.createTextNode("\u00D7");
@@ -74,8 +60,10 @@ function newElement(inputValue, initial) {
   if(!initial) {
     chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
         let websites = result['whitelisted-edicratic'];
-        if(!websites.includes(inputValue)) {
-          websites.push(inputValue);
+        var re = new RegExp('.(com|co.uk|net|org|gov|de|edu)')
+        let modified = websites.replace(re, '');
+        if(!websites.includes(modified)) {
+          websites.push(modified);
         } else {
           alert('That seems to be saved already');
           li.parentElement.removeChild(li);
@@ -93,7 +81,7 @@ function newElement(inputValue, initial) {
       if(!text) return;
       chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
         let websites = result['whitelisted-edicratic'];
-        websites = websites.filter(value => value !== text);
+        websites = websites.filter(value => value !== text.replace('.com', ''));
         chrome.storage.local.set({'whitelisted-edicratic': websites});
     });
       

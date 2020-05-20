@@ -57,7 +57,10 @@ function runAutoCheck() {
         let copyOfVal = result['whitelisted-edicratic'];
         chrome.storage.local.get(['authStatus'], function(result) {
             if(chrome.runtime.lastError || result.authStatus === null || result.authStatus === undefined || result.authStatus === "Logged Out") return;
-                if(!copyOfVal) chrome.storage.local.set({'whitelisted-edicratic': DEFAULT_WHITELIST});
+                if(!copyOfVal) {
+                    chrome.storage.local.set({'whitelisted-edicratic': DEFAULT_WHITELIST});
+                    chrome.storage.local.set({'button-change-edicratic': {'time': new Date().getTime(), 'on': true}});
+                }
                 let host = getDomain(window.location.href);
                 if (val.includes(host)){
                     makePostRequest(true);
@@ -67,15 +70,34 @@ function runAutoCheck() {
 }
 
 chrome.storage.onChanged.addListener((changes, namespace) => {
+    console.log(changes);
     if(changes['auto-webcheck-enabled']) {
         let change = changes['auto-webcheck-enabled']['newValue'];
-        if(change) makePostRequest(true);
+        if(change) runAutoCheck();
     } else if (changes['authStatus']) {
         let change = changes['authStatus']['newValue'];
         if (change === 'Authenticated') {
             //gonna add menu
 
         }
+    } else if(changes['whitelisted-edicratic']) {
+        let changeList = changes['whitelisted-edicratic'];
+        let oldList = changeList['oldValue'];
+        let newList = changeList['newValue'];
+        let type = null;
+        if (oldList.length > newList.length) {
+            type = 'remove';
+        } else {
+            type = 'add';
+        }
+        whitelistChange(type, newList);
+    } else if (changes['button-change-edicratic']) {
+        let changeList = changes['button-change-edicratic'];
+        if (!changeList['oldValue']) return;
+        let oldTime = changeList['oldValue']['time'];
+        let newTime = changeList['newValue']['time'];
+        let oldPosition = changeList['oldValue']['on'];
+        autoWebCheckChange(oldPosition ? 'turnOff' : 'turnOn', newTime - oldTime);
     }
 });
 

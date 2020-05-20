@@ -7,12 +7,19 @@ LOG_URL = "/log"
 
 function startTimer(text, target) {
     let timeStamp = target.dataset['unique'];
+    let dataType = target.dataset['type'];
     startTime = new Date();
+    let sessionType = null;
+    if (!dataType) {
+        sessionType = 'highlight';
+    } else {
+        sessionType = dataType;
+    }
     tooltipData = {
                     "term": text, 
                     "start": startTime, 
                     "url": window.location.href,
-                    "session_type": timeStamp ? 'highlight' : 'webcheck',
+                    "session_type": sessionType,
                     "clicks": [],
                     "information_tab_time": 0,
                     "news_tab_time": 0,
@@ -120,4 +127,15 @@ function invalidateInformation() {
             });
         }
     })
+}
+
+function whitelistChange(type, list) {
+    console.log(type);
+    console.log(list);
+
+}
+
+function autoWebCheckChange(type, time) {
+    console.log(type);
+    console.log(time);
 }

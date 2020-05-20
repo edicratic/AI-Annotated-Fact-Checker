@@ -61,6 +61,9 @@ function handleCheckBoxClick(cacheKey) {
     let data = {};
     data[cacheKey] = val === false ? true : false;
     chrome.storage.local.set(data);
+    if (cacheKey === 'auto-webcheck-enabled') {
+      chrome.storage.local.set({'button-change-edicratic' : {'time': new Date().getTime(), 'on': data[cacheKey]}});
+    }
   });
 }
 
@@ -111,7 +114,9 @@ function handleWhiteListing(e) {
       let domain = getDomain(tabs[0].url);
       if(e.target.checked) {
         websites.push(domain);
-        chrome.tabs.sendMessage(tabs[0].id, {message: "runWebCheck", automatic: true});
+        chrome.storage.local.get(['auto-webcheck-enabled'], res => {
+          if(res['auto-webcheck-enabled']) chrome.tabs.sendMessage(tabs[0].id, {message: "runWebCheck", automatic: true});
+        });
       } else {
         websites = websites.filter(value => value !== domain);
       }

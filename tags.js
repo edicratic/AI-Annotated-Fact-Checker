@@ -48,7 +48,7 @@ chrome.runtime.onMessage.addListener(
     return true;
   });
 
-function init(data, entity) {
+function init(data, entity, automatic) {
     var pages = data.query.pages;
     var matches = getMatches(pages);
     var regex = undefined;
@@ -59,7 +59,7 @@ function init(data, entity) {
     }
     let childList = document.body.childNodes;
     const set = new Set();
-    if(regex) modifyAllText(regex, entity, matches, NEW_NODES || childList, set);
+    if(regex) modifyAllText(regex, entity, matches, NEW_NODES || childList, set, automatic);
 }
 
 async function modifySingleNode(node, text) {
@@ -213,7 +213,7 @@ function updatePointerColor(id) {
     }
 }
 
-function modifyAllText(regex, entity, matches, childList, set) {
+function modifyAllText(regex, entity, matches, childList, set, automatic) {
     for (var i = 0; i < childList.length; i++) {
         const child = childList[i];
         if(!set.has(child) && child.className !== ANCHOR_CLASS_NAME && child.className !== TOOL_TIP_CLASS_NAME && child.tagName !== 'NAV') {
@@ -230,7 +230,7 @@ function modifyAllText(regex, entity, matches, childList, set) {
                 child.innerText = "";
                 var uniqueId = "d" + i + Math.floor(Math.random() * 1000000);
                 idToTerm[uniqueId] = entity;
-                text = text.replace(regex, `<div id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text.match(regex)}</div>`);
+                text = text.replace(regex, `<div data-type="${automatic ? 'whitelist_check' : 'webcheck'}" id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text.match(regex)}</div>`);
                 let data = proccessWikiData(matches, uniqueId);
                 idToData[uniqueId] = {'Information': data};
                 var newElement = document.createElement('div');
@@ -248,7 +248,7 @@ function modifyAllText(regex, entity, matches, childList, set) {
                 //testEndpoint(entity,uniqueId);
             }
             if (length !== 0) {
-                modifyAllText(regex, entity, matches, nextList, set)
+                modifyAllText(regex, entity, matches, nextList, set, automatic)
             }
     }
     }
@@ -584,7 +584,7 @@ function makePostRequest(isAutomatic) {
         if(!isAutomatic && spinner) spinner.style.display = 'none';
         recordWebCheck(data.local_id || 'NO_ID');
         body = JSON.parse(data.body);
-        processEntities(body);
+        processEntities(body, isAutomatic);
         if(!isAutomatic) chrome.runtime.sendMessage({data: DATA_LOADED});
     }).catch(e => {
         console.log(e);
@@ -593,9 +593,9 @@ function makePostRequest(isAutomatic) {
     });
 }
 
-async function processEntities(entities) {
+async function processEntities(entities, isAutomatic) {
    for (var i = 0; i < entities.length; i++) {
-       lookUpTerm(entities[i].entity);
+       lookUpTerm(entities[i].entity, isAutomatic);
        await sleep(10);
        if (i === 199) await sleep(1000);
    }

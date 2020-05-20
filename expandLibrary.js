@@ -37,7 +37,7 @@ function sendBackData(paragraph, text) {
     sendData(LOG_URL, body);
 }
 
-async function lookUpTerm(term) {
+async function lookUpTerm(term, automatic) {
     var URL = getWikiUrl(term);
     var data;
     try {
@@ -48,7 +48,7 @@ async function lookUpTerm(term) {
       return;
     }
     if(!data || !data.query || !data.query.pages || data.query.pages.length === 0) return;
-    init(data, term);
+    init(data, term, automatic);
 }
 
 function fetchWiki(input) {
