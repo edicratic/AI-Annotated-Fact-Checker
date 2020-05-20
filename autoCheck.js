@@ -86,9 +86,9 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         let newList = changeList['newValue'];
         let type = null;
         if (oldList.length > newList.length) {
-            type = 'remove';
+            type = 'Remove';
         } else {
-            type = 'add';
+            type = 'Add';
         }
         whitelistChange(type, newList);
     } else if (changes['button-change-edicratic']) {

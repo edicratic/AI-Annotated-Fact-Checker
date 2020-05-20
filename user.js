@@ -130,12 +130,52 @@ function invalidateInformation() {
 }
 
 function whitelistChange(type, list) {
-    console.log(type);
-    console.log(list);
+    params = {
+        method: "POST",
+        body: JSON.stringify({
+            body: {
+                type: "WhiteList" + type,
+                content: list,
+            } 
+        }),
+        headers: {
+           'Content-Type': 'application/json',
+       }
+     }
+     chrome.runtime.sendMessage({input: LOG_URL,params, message:"callWebCheckAPI"}, messageResponse => {
+        const [response, error] = messageResponse;
+        if (response === null) {
+            console.log(error);
 
+        } else {
+            console.log('success');
+        }
+    });
 }
 
 function autoWebCheckChange(type, time) {
-    console.log(type);
-    console.log(time);
+    params = {
+        method: "POST",
+        body: JSON.stringify({
+            body: {
+                type: "AutoWebCheckChange",
+                content: JSON.stringify({
+                    'type': type,
+                    'time': time,
+                }),
+            } 
+        }),
+        headers: {
+           'Content-Type': 'application/json',
+       }
+     }
+     chrome.runtime.sendMessage({input: LOG_URL,params, message:"callWebCheckAPI"}, messageResponse => {
+        const [response, error] = messageResponse;
+        if (response === null) {
+            console.log(error);
+
+        } else {
+            console.log('success');
+        }
+});
 }
