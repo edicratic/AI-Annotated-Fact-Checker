@@ -49,6 +49,15 @@ button.onclick = () => {
   } else if (isValidUrl('https://' + link)) {
     link = getDomain('https://' + link);
     newElement(link, false);
+  } else if (isValidUrl('https://www.' + link)) {
+    link = getDomain('https://www.' + link);
+    newElement(link, false);
+  } else if (isValidUrl('https://www.' + link + '.com')) {
+    link = getDomain('https://www.' + link + '.com');
+    newElement(link, false);
+  } else if(isValidUrl('https://' + link + '.com')) {
+    link = getDomain('https://' + link + '.com');
+    newElement(link, false);
   } else {
     alert("Sorry, didn't catch that url");
   }
@@ -65,6 +74,7 @@ function newElement(inputValue, initial) {
   li.setAttribute('data-content', inputValue);
   li.appendChild(t);
   document.getElementById("myUL").appendChild(li);
+  document.getElementById("myInput").value = "";
 
   var span = document.createElement("SPAN");
   var txt = document.createTextNode("\u00D7");
@@ -111,10 +121,9 @@ function getDomain(url) {
 
 function isValidUrl(string) {
   try {
-    new URL(string);
+      var url = new URL(string);
+      return url.hostname && url.hostname.match(/^([a-z0-9])(([a-z0-9-]{1,61})?[a-z0-9]{1})?(\.[a-z0-9](([a-z0-9-]{1,61})?[a-z0-9]{1})?)?(\.[a-zA-Z]{2,4})+$/) ? true : false;
   } catch (_) {
-    return false;  
+      return false;
   }
-
-  return true;
 }
