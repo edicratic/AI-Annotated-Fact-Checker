@@ -136,7 +136,7 @@ function whitelistChange(type, list) {
             body: {
                 type: "Whitelist_Update",
                 content: {
-                    changes: list,
+                    whitelist: list,
                     action: type
                 },
             } 
