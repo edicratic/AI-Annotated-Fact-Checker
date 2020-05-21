@@ -38,6 +38,7 @@
     "content_scripts": [
         {
             "js": ["autoCheck.js","user.js", "tags.js", "expandLibrary.js"],
+            "run_at": "document_end",
             "css": ["tags.css", "expandLibrary.css"],
             "matches": ["http://*/*", "https://*/*"]
         }

@@ -40,8 +40,6 @@ if (window.location.hostname.includes('yahoo')) {
     //specific domain stuff
     window.addEventListener('scroll', clearYahooTags);
 }
-
-window.onload = () => {
     chrome.storage.local.get(['auto-webcheck-enabled'], function(result) {
         let enabled = result['auto-webcheck-enabled'];
         if (enabled !== false) {
@@ -49,7 +47,7 @@ window.onload = () => {
         }
 
     });
-}
+
 
 function runAutoCheck() {
     chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
