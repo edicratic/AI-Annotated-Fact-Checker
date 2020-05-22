@@ -3,14 +3,17 @@ html body {
 }
 
 .edicratic-anchor-tag-style {
-    border-bottom: 5px solid #15c39a !important;
-    margin-bottom: -5px !important;
+    border-bottom: 3px solid #15c39a;
+    text-indent: 0 !important;
+    margin-bottom: -3px !important;
     box-sizing:border-box;
     /* background-color: #15c39a; */
     padding-bottom: 0px !important;
     position: relative !important;
     display: inline-block !important;
     cursor: pointer;
+    text-indent: 0;
+
 }
 
 .edicratic-transparent-border {
@@ -37,11 +40,11 @@ html body {
     padding: 1rem;
     display: none;
     position: absolute !important;
-    z-index: 1000000 !important;
+    z-index: 1000000000000;
     left: 30px;
     top: 10px;
 
-    font-size: 1vw !important;
+    font-size: 14px !important;
     font-weight: normal !important;
     font-family: 'Times New Roman' !important;
     font-style: normal !important;
@@ -53,7 +56,7 @@ html body {
   overflow-y: auto;
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
-  font-size: 1vw !important;
+  font-size: 14px !important;
   font-weight: normal !important;
   font-family: 'Times New Roman' !important;
   font-style: normal !important;
@@ -76,10 +79,11 @@ html body {
     border-top: 5px solid black !important;
     margin: 1em 0 !important;
     padding: 0 !important;
+    width: 100%;
 }
 
 .edicratic-inner-link {
-    margin-top: 4rem;
+    margin-top: 5px;
     color: #0645ad;
     cursor: pointer;
     position: relative;
@@ -97,7 +101,7 @@ html body {
 /* Absolute Center Spinner */
 .loading-edicratic {
     position: fixed;
-    z-index: 999;
+    z-index: 1000000000000;
     height: 2em;
     width: 2em;
     overflow: visible;
@@ -249,6 +253,7 @@ html body {
   margin-inline-start: 0px !important;
   margin-inline-end: 0px !important;
   font-weight: bold !important;
+  font-size: 18px;
 }
 
 .edicratic-tooltip .edicratic-tab:hover {
@@ -266,7 +271,7 @@ html body {
   border-width: 12px;
   border-style: solid;
   display: block;
-  z-index: 100000000;
+  z-index: 10000000;
 }
 
 .edicratic-entity-header {
@@ -293,10 +298,11 @@ html body {
 }
 
 .edicratic-image {
-  width: auto;
-  height: 50px;
-  /* border-radius: 50%; */
-  display: inline !important;
+  object-fit: cover;
+  width: 50px;
+  height: auto;
+  float: left;
+  padding-right: 5px;
 }
 
 .edicratic-image-nyt {
@@ -305,6 +311,14 @@ html body {
   height: 100%;
   padding-right: 1rem;
   float: left;
+}
+
+.edicratic-image-below {
+  margin-top: 0;
+  width: 30%;
+  height: 30%;
+  text-align: center;
+  display: inline;
 }
 
 .edicratic-entity-link {

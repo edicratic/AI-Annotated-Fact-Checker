@@ -1,3 +1,4 @@
+var scriptAlreadyLoaded = true;
 ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
 TOOL_TIP_CLASS_NAME = 'edicratic-tooltip';
 POST_URL = '/process';
@@ -24,6 +25,11 @@ ENTITY_HEADER = 'edicratic-entity-header'
 ENTITY_LINK_CLASS_NAME = 'edicratic-entity-link';
 IMAGE_NYT_CLASSNAME = 'edicratic-image-nyt';
 GRAY_POINTER_CLASSNAME = 'edicratic-grey-pointer';
+IMAGE_BELOW_TEXT = 'edicratic-image-below';
+GOOGLE_SEARCH_IMAGE_META = 'og:image';
+GOOGLE_SEARCH_DESCRIPTION_META = 'og:description';
+WIKI_CLASS_NAME = 'edicratic-image';
+ENTITY_PARENT_CLASSNAME = 'edicratic-entity-parent';
 
 window.addEventListener('scroll', adjustSpansBasedOnHeight);
 
@@ -35,13 +41,14 @@ document.body.onmousemove = e => handleMouseMove(e);
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
     if (request.message === "runWebCheck"){
-        console.log('received');
-        //window.addEventListener('scroll', checkForSizeChange);
-        makePostRequest(request);
+        makePostRequest(request.automatic);
+    } else if (request.message === 'removeAllHTML') {
+        removeAllEdicraticHTML();
     }
+    return true;
   });
 
-function init(data, entity) {
+function init(data, entity, automatic) {
     var pages = data.query.pages;
     var matches = getMatches(pages);
     var regex = undefined;
@@ -52,13 +59,18 @@ function init(data, entity) {
     }
     let childList = document.body.childNodes;
     const set = new Set();
-    if(regex) modifyAllText(regex, entity, matches, NEW_NODES || childList, set);
+    if(regex) modifyAllText(regex, entity, matches, NEW_NODES || childList, set, automatic);
 }
 
 async function modifySingleNode(node, text) {
     var url = getWikiUrl(text);
-    var result = await fetchWiki(url);
-    var data = await result.json();
+    var data;
+    try {
+        var result = await fetchWiki(url);
+        data = await result.json();
+    } catch(e) {
+        console.log(e);
+    }
     var regex = undefined;
     try {
         var regex = new RegExp(text);
@@ -67,7 +79,8 @@ async function modifySingleNode(node, text) {
     }
 
     if(!node || !node.textContent || !data || !data.query || !data.query.pages || data.query.pages.length === 0 || !regex || !node.textContent.match(regex)) {
-        alert("Sorry, could not find a match for that :(. Try to highlight specific terms");
+        //alert("Sorry, could not find a match for that :(. Try to highlight specific terms");
+        document.body.classList.add('edicratic-red');
         return;
     }
 
@@ -76,13 +89,14 @@ async function modifySingleNode(node, text) {
     var innerText = node.textContent;
     var uniqueId = "d3" + Math.floor(Math.random() * 1000000);
     idToTerm[uniqueId] = text;
-    innerText = innerText.replace(text, `<div id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text}</div>`);
+    innerText = innerText.replace(text, `<div data-unique="${new Date().getTime()}" id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text}</div>`);
     let itemsArray = proccessWikiData(matches, uniqueId);
 
     var newElement = document.createElement('div');
     newElement.style.display = "inline";
+    newElement.className = ENTITY_PARENT_CLASSNAME;
     newElement.innerHTML = innerText;
-    newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId);
+    newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId, text);
     node.parentElement.replaceChild(newElement, node);
 
     var tooltip = document.createElement('span');
@@ -97,6 +111,7 @@ async function modifySingleNode(node, text) {
     let pointer = document.createElement('div');
     pointer.className = 'edicratic-tooltip-bottom';
     pointer.id = `${uniqueId}-pointer`;
+    pointer.style.display = 'none';
     document.body.appendChild(pointer);
 
     let tabs = document.createElement('div');
@@ -116,21 +131,42 @@ async function modifySingleNode(node, text) {
     document.body.prepend(tooltip)
     addShowMoreListeners(uniqueId);
     tooltip.onclick = e => e.preventDefault();
+    tooltip.onmouseleave = e => handleMouseLeave(e);
     testEndpoint(text, uniqueId);
+
+    //rehighlight text
+    let element = document.getElementById(`${uniqueId}-parent-parent`)
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    selection.removeAllRanges();
+    selection.addRange(range);
 }
 
 function addShowMoreListeners(id) {
     let tooltip = document.getElementById(`${id}-parent`);
     let showMoreLinks = tooltip.getElementsByClassName(SHOW_HIDDEN_TEXT);
     let images = tooltip.getElementsByClassName(IMAGE_NYT_CLASSNAME);
+    let imagesWiki = tooltip.getElementsByClassName(WIKI_CLASS_NAME);
+    let links = tooltip.getElementsByClassName(ENTITY_LINK_CLASS_NAME);
     for(var i = 0; i < images.length; i++) {
         images[i].onerror = (e) => {
             let br = document.createElement('br');
-            e.target.parentElement.replaceChild(br, e.target);
+            if(e.target.parentElement) e.target.parentElement.replaceChild(br, e.target);
         };
     }
+    for (var i = 0; i < imagesWiki.length; i++) {
+        imagesWiki[i].onerror = (e) => {
+            if(e.target.parentElement) {
+                e.target.parentElement.removeChild(e.target);
+            }
+        }
+    }
     for(var i = 0; i < showMoreLinks.length; i++) {
-        showMoreLinks[i].onclick = (e) => showHiddenText(e);
+        showMoreLinks[i].onclick = (e) => showHiddenText(e, id);
+    }
+    for(var i = 0; i < links.length; i++) {
+        links[i].onclick = (e) => handleArticleClick(e, id);
     }
 }
 
@@ -139,14 +175,16 @@ function handleTabClick(e, id) {
     let tabs = document.getElementById(`${id}-tabs`);
     let currentTab = e.toElement;
     let tabChildren = tabs.children;
+    var previousTabText = '';
     for(var i = 0; i < tabChildren.length; i++) {
         if (tabChildren[i].classList.contains('edicratic-selected')) {
             tabChildren[i].classList.remove('edicratic-selected');
+            previousTabText = tabChildren[i].textContent || tabChildren[i].innerText;
         }
     }
     currentTab.classList.add('edicratic-selected');
     idToSelected[id] = currentTab.innerText || currentTab.textContent;
-    //updatePointerColor(id);
+    handleTabSwitchProcesssing(previousTabText,idToSelected[id]);
     let tooltipChildren = tooltip.children;
     let index = 0;
     for(var i = 0; i < tooltipChildren.length; i++) {
@@ -175,11 +213,13 @@ function updatePointerColor(id) {
     }
 }
 
-function modifyAllText(regex, entity, matches, childList, set) {
+function modifyAllText(regex, entity, matches, childList, set, automatic) {
     for (var i = 0; i < childList.length; i++) {
         const child = childList[i];
         if(!set.has(child) && child.className !== ANCHOR_CLASS_NAME && child.className !== TOOL_TIP_CLASS_NAME && child.tagName !== 'NAV') {
             set.add(child);
+            if(child.nodeName === '#comment' || child.nodeName === 'NOSCRIPT' || child.nodeName === 'IMG'
+                || child.nodeName === 'SCRIPT' ||  child.nodeName === 'STYLE') continue;
             const nextList = child.childNodes;
             const length = nextList.length;
             var text = child.textContent;
@@ -190,14 +230,14 @@ function modifyAllText(regex, entity, matches, childList, set) {
                 child.innerText = "";
                 var uniqueId = "d" + i + Math.floor(Math.random() * 1000000);
                 idToTerm[uniqueId] = entity;
-                text = text.replace(regex, `<div id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text.match(regex)}</div>`);
+                text = text.replace(regex, `<div data-type="${automatic ? 'whitelist_check' : 'webcheck'}" id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text.match(regex)}</div>`);
                 let data = proccessWikiData(matches, uniqueId);
                 idToData[uniqueId] = {'Information': data};
                 var newElement = document.createElement('div');
+                newElement.className = ENTITY_PARENT_CLASSNAME;
                 newElement.style.display = "inline";
                 newElement.innerHTML = text;
                 newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId, entity);
-                if(child.nodeName === '#comment') continue;
                 if(child.nodeName !== "#text") {
                     child.appendChild(newElement);
                 } else {
@@ -208,7 +248,7 @@ function modifyAllText(regex, entity, matches, childList, set) {
                 //testEndpoint(entity,uniqueId);
             }
             if (length !== 0) {
-                modifyAllText(regex, entity, matches, nextList, set)
+                modifyAllText(regex, entity, matches, nextList, set, automatic)
             }
     }
     }
@@ -244,6 +284,13 @@ function createTooltip(data, id) {
     document.body.prepend(tooltip)
     addShowMoreListeners(id);
     tooltip.onclick = e => e.preventDefault();
+    tooltip.onmouseleave = e => handleMouseLeave(e);
+
+}
+
+function handleMouseLeave(e) {
+    let orginalId = e.target ? e.target.id || undefined : undefined;
+    if(orginalId) removeSpan(orginalId.substring(0, orginalId.indexOf('-')));
 
 }
 
@@ -251,17 +298,24 @@ function mouseOverHandle(e, id, text) {
     if (e.target && e.target.id) {
         id = e.target.id;
         id = id.substring(0, id.indexOf('-'));
+        // let span = document.getElementById(`${id}-parent-parent`);
+        // if (span && span.style.display === 'block') return;
+        let entityElement = document.getElementById(`${id}-parent-parent`);
+        if(entityElement) startTimer(entityElement.textContent || entityElement.innerText, e.target);
         if (OPEN_SPAN) {
             removeSpan(OPEN_SPAN);
         }
         OPEN_SPAN = id;
+        let isHighlightLookup = !!entityElement.dataset['unique'];
         positionTooltips(id);
-        if (!idToData[id]['News'] && text) {
+        if (!idToData[id]['News'] && text && !isHighlightLookup) {
             idToData[id]['News'] = ' ';
             testEndpoint(text, id);
         }
 
     }
+    e.preventDefault();
+    e.stopPropagation();
 }
 
 function positionTooltips(id) {
@@ -273,7 +327,7 @@ function positionTooltips(id) {
     span.style.display = 'block';
     let anchorRight = anchor.getBoundingClientRect().right;
     let anchorLeft = anchor.getBoundingClientRect().left;
-    let spanWidth = (Math.min(anchorRight + anchorLeft) / 2, 400);
+    let spanWidth = 400;
     span.style.width = `${spanWidth}px`
     let pointer = document.getElementById(`${id}-pointer`);
     pointer.style.display = 'block';
@@ -319,10 +373,13 @@ function positionTooltips(id) {
 
 function removeSpan(id) {
     const span = document.getElementById(`${id}-parent`);
+    if(OPEN_SPAN === id) OPEN_SPAN = undefined;
+    if(span.style.display === 'none') return;
     span.style.display = "none";
     span.style.visibility = 'hidden';
     const pointer = document.getElementById(`${id}-pointer`);
     pointer.style.display = 'none';
+    endTimer(idToSelected[id]);
 }
 
 function fetchWebCheck(input, params) {
@@ -348,17 +405,46 @@ function fetchWebCheck(input, params) {
 
   //TODO rename NYTimes method and endpoint method
 
-async function testEndpoint(term, id, tooltipField) {
-    await sleep(10);
-    console.log(term);
-    let content = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">`;
-    if (tooltipField) tooltipField.innerHTML = content + 'Searching...</div>';
-    let resultNYTimes = await fetchNewYorkTimes(term);
-    let dataNYTimes = await resultNYTimes.text();
-    let str = await new window.DOMParser().parseFromString(dataNYTimes, "text/xml");
+function handleArticleClick(e, id) {
+    let dataset = e.target.dataset;
+    let category = dataset['category'];
+    let url = dataset['url'];
+    handleReadArticleProcess(category, url);
+    removeSpan(id);
+    window.open(url, '_blank');
+}
 
-    const items = str.querySelectorAll("item");
-    for(var i = 0; i < items.length && i < 5; i++) {
+async function testEndpoint(term, id) {
+    await sleep(10);
+    // console.log(term);
+    let content = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">`;
+    var str;
+    try {
+        let resultNYTimes = await fetchNewYorkTimes(term);
+        let dataNYTimes = await resultNYTimes.text();
+        str = await new window.DOMParser().parseFromString(dataNYTimes, "text/xml");
+    } catch(e) {
+        console.log(e);
+        return;
+    }
+
+    let items = str.querySelectorAll("item");
+    if(!items || items.length === 0) {
+        idToData[id]['News'] =  `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">No Results Found</div>`;
+        let tooltipField = document.getElementById(`${id}-content`);
+        if(idToSelected[id] === 'News') tooltipField.innerHTML = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">No Results Found</div>`
+        return;
+    }
+    items = Array.prototype.slice.call(items, 0).slice(0, 6);
+    items.sort((a, b) => {
+        let element1 = a.getElementsByTagName('pubDate')[0];
+        let element2 = b.getElementsByTagName('pubDate')[0];
+        let date1 = element1 ? element1 .textContent : null;
+        let date2 = element2 ? element2.textContent : null;
+        return date1 && date2 ? new Date(date2) - new Date(date1) : 0;
+    });
+    let numArticles = 5;
+    for(var i = 0; i < items.length && i < numArticles; i++) {
         let item = items[i];
         let children = item.children;
         let title = null;
@@ -373,28 +459,34 @@ async function testEndpoint(term, id, tooltipField) {
                 date = children[j].innerText || children[j].textContent;
             }
         }
+        if(url === window.location.href) {
+            numArticles++;
+            continue;
+        }
         if(title && url && date) {
-            let res = await extractMetaData(url);
-            let data = await res.json();
+            let data;
+            let res;
+            try {
+                res = await extractMetaData(url);
+                data = await res.json();
+            } catch(e) {
+                console.log(e)
+                continue;
+            }
             let source = data.source;
             let updatedId = `${Math.floor(Math.random() * 1000000)}` + id;
             let empty = data.description === 'EMPTY';
             let dateString = new Date(date).toDateString();
-            let newElement = `<b class="${ENTITY_HEADER}">${title}:</b><br/><i>${dateString}</i><p class=${PARAGRAPH_CLASS_NAME}>
-            <span style="display: none" id="${updatedId}-hidden">` + 
-            (source ? `<img ${empty ? 'style="width:100%; height:100%;margin-bottom: 1rem;"' : ''}class='edicratic-image-nyt' src="${source}"/>` : ``)  +
-            `${!empty ? data.description : ''}`
-            + `${empty ? '' : '<br/><br/>'}<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${url}', '_blank')">Read Article</a></span></p>
-        <a id="${updatedId}"class="${INNER_LINK} ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
+            let newElement = `<b class="${stripHtml(ENTITY_HEADER)}">${title}</b><br/><i>${dateString}</i><p class=${PARAGRAPH_CLASS_NAME}>`
+            + (source ? `<img id="${updatedId}-image" onError="this.parentElement.removeChild(this);" src="${source}" class="${IMAGE_BELOW_TEXT}"/>` : ``) + `<span style="display: none" id="${updatedId}-hidden">` + 
+            (source ? `<img onError="this.parentElement.removeChild(this);" ${empty ? 'style="width:100%; height:100%;margin-bottom: 1rem;"' : ''}class='edicratic-image-nyt' src="${source}"/>` : ``)  +
+            `${!empty ? stripHtml(data.description) : ''}`
+            + `${empty ? '' : '<br/><br/>'}</span></p>` +
+            (empty ? `` : `<a data-url="${url}" id="${updatedId}"class="${INNER_LINK} ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`) +
+            `<a data-category="News" data-url="${url}"class="${ENTITY_LINK_CLASS_NAME}">Read Article</a><br/><br/>`
+       
             content += newElement;
-            if(tooltipField && idToSelected[id] === 'News') {
-                if(i === 0) {
-                    tooltipField.getElementsByClassName('info-edicratic')[0].innerHTML = newElement;
-                } else {
-                    tooltipField.getElementsByClassName('info-edicratic')[0].innerHTML += newElement;
-                }
-                addShowMoreListeners(id);
-            } else if(idToSelected[id] === 'News') {
+            if(idToSelected[id] === 'News') {
                 let tooltipField = document.getElementById(`${id}-content`);
                 if(i === 0) {
                     tooltipField.getElementsByClassName('info-edicratic')[0].innerHTML = newElement;
@@ -416,32 +508,28 @@ function extractMetaData(url) {
             if (res.status === 200){
                 return res.text();
             }else{
-                throw new Error(res.statusText);
+                // console.log(res.statusText);
+                reject(new Error(res.statusText));
             }
         }).then(data => {
             let el = document.createElement('div');
             el.innerHTML = data;
             let metaTags = el.getElementsByTagName('meta');
-            let images = el.getElementsByTagName('img');
-            var description = "";
-            var image;
+            var description = "EMPTY";
+            var image = '';
             for (var i = 0; i < metaTags.length; i++) {
-                let content = metaTags[i].content;
-                if(content && content.length >= description.length && !content.includes('http') 
-                && !content.includes('://') && content.split(",").length < 5 && !content.includes('{')) {
-                    description = metaTags[i].content;
+                let tag = metaTags[i];
+                let property = tag.getAttribute('property');
+                let name = tag.getAttribute('name');
+                if (property === GOOGLE_SEARCH_DESCRIPTION_META
+                || name === GOOGLE_SEARCH_DESCRIPTION_META) {
+                    description = tag.content;
+                } else if (property === GOOGLE_SEARCH_IMAGE_META
+                    || name === GOOGLE_SEARCH_IMAGE_META) {
+                    image = tag.content;
                 }
             }
-            for (var i = 0; i < images.length; i++) {
-                let currentImage = images[i];
-                if(!image || currentImage.clientWidth * currentImage.clientHeight > image.clientWidth * image.clientHeight) {
-                    image = currentImage;
-                }
-            }
-            if(!description || description.length < 100) {
-                description = 'EMPTY';
-            }
-            let source = image ? image.src : '';
+            let source = image && image.includes('https') ? image : '';
             body = JSON.stringify({description, source});
             resolve(new Response(body, {
                 status: 200,
@@ -468,13 +556,19 @@ function getWebUrl(url) {
     })
   }
 
-function makePostRequest() {
+function makePostRequest(isAutomatic) {
     PREVIOUS_TEXT = document.body.innerText;
-    const spinner = document.createElement('div');
-    spinner.classList.add('loading-edicratic');
-    document.body.appendChild(spinner);
+    window.addEventListener('scroll', checkForSizeChange);
+    var spinner;
+    if(!isAutomatic) {
+        spinner = document.createElement('div');
+        spinner.classList.add('loading-edicratic');
+        document.body.appendChild(spinner);
+    } else {
+        currentWebCheckedUrl = window.location.href;
+    }
+    invalidateInformation();
     let data = {"blob": document.body.innerText.substring(0, 50000), details: {sort: true, url: window.location.href}};
-    console.log(JSON.stringify(data));
     fetchWebCheck(POST_URL,  {
                       method: "POST",
                       body: JSON.stringify({body: data}),
@@ -484,29 +578,26 @@ function makePostRequest() {
         if (result.ok) {
             return result.json();
         } else {
-            console.log(result);
             throw new Error(result.status);
         }
     }).then(data =>{
-        //well so is this hacky
-        if(spinner) spinner.style.display = 'none';
+        if(!isAutomatic && spinner) spinner.style.display = 'none';
+        recordWebCheck(data.local_id || 'NO_ID');
         body = JSON.parse(data.body);
-        console.log(body);
-        processEntities(body);
-        chrome.runtime.sendMessage({
-            data: DATA_LOADED
-        });
+        processEntities(body, isAutomatic);
+        if(!isAutomatic) chrome.runtime.sendMessage({data: DATA_LOADED});
     }).catch(e => {
         console.log(e);
-        if(spinner) spinner.style.display = 'none';
+        if(!isAutomatic && spinner) spinner.style.display = 'none';
         alert("Oops. Something went wrong :(. Please try again." + "\nIf your issue is persistent, go to webcheck.edicratic.com/support.html for help.");
     });
 }
 
-async function processEntities(entities) {
+async function processEntities(entities, isAutomatic) {
    for (var i = 0; i < entities.length; i++) {
-       lookUpTerm(entities[i].entity);
+       lookUpTerm(entities[i].entity, isAutomatic);
        await sleep(10);
+       if (i === 199) await sleep(1000);
    }
 }
 
@@ -522,28 +613,24 @@ function adjustSpansBasedOnHeight() {
     }
 }
 
-function showHiddenText(e) {
+function showHiddenText(e, tooltipId) {
     let id = e.target.id;
     let hiddenText = document.getElementById(`${id}-hidden`);
-    let image = hiddenText.getElementsByClassName(IMAGE_NYT_CLASSNAME)[0];
-    let newLines = hiddenText.getElementsByClassName('image-newline');
-    if(image && image.naturalWidth * image.naturalHeight < 200) {
-        image.parentElement.removeChild(image);
-        for (var i = 0; i < newLines.length; i++) {
-            newLines[i].parentElement.removeChild(newLines[i]);
-        }
-    }
+    let hiddenImage = document.getElementById(`${id}-image`);
+    let type = e.target.textContent || e.target.innerText;
     if (hiddenText.style.display === 'none') {
         e.target.textContent = 'Show Less';
         hiddenText.style.display = 'inline';
+        if(hiddenImage) hiddenImage.style.display = 'none';
     } else {
         e.target.textContent = 'Show More';
         hiddenText.style.display = 'none';
+        if(hiddenImage) hiddenImage.style.display = 'inline';
     }
+    handleShowMore(idToSelected[tooltipId], e.target.dataset['url'], type);
 }
 
 function checkMatch(text, entity, regex) {
-    //replace with regex
     var first = text.toLowerCase();
     var second = entity.toLowerCase();
     if (first === second) {
@@ -624,14 +711,15 @@ function proccessWikiData(items, id) {
         let pageDescription = stripHtml(item.extract) || item.description;
         if (!pageDescription) continue;
         let words = pageDescription.split(' ');
-        let visibleArray = words.slice(0, 10);
-        let hiddenArray = words.slice(10);
+        let visibleArray = words.slice(0, 20);
+        let hiddenArray = words.slice(20);
         let modiifiedId = 't' + `${i}` + id + `${Math.floor(Math.random() * 1000000)}`;
-        content += `<b class="${ENTITY_HEADER}">${item.title}:</b><p class=${PARAGRAPH_CLASS_NAME}>
-        ${visibleArray.join(' ')}<span id="${modiifiedId}-show-more-hidden" style="display: none">
-        ${hiddenArray.join(' ')} <br/><br/>` + (item.thumbnail ? `<img class='edicratic-image' src="${item.thumbnail.source}"/><br/><br/>` : ``) 
-        + `<a class="${ENTITY_LINK_CLASS_NAME}" onclick="window.open('${wikilink}', '_blank')">Learn More</a></span></p>
-        <a id="${modiifiedId}-show-more" class="${INNER_LINK} ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
+        content += `<b class="${ENTITY_HEADER}">${item.title}:</b><p class=${PARAGRAPH_CLASS_NAME}>`
+        + (item.thumbnail ? `<img class='edicratic-image' src="${item.thumbnail.source}"/>` : ``) +
+        `${visibleArray.join(' ')}<span id="${modiifiedId}-show-more-hidden" style="display: none">
+        ${hiddenArray.join(' ')} <br/><br/>` + `<a class="${ENTITY_LINK_CLASS_NAME}" data-url="${wikilink}"
+        data-category="Information">Learn More</a></span></p>
+        <a data-url="${wikilink}" id="${modiifiedId}-show-more" class="${INNER_LINK} ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
     }
     return content + '</div>';
 
@@ -646,7 +734,7 @@ const sleep = ms => {
 function checkForSizeChange() {
     let allText = document.body.innerText;
     let prevTextLength = PREVIOUS_TEXT.length;
-    if(allText.length > prevTextLength + 50) {
+    if(allText.length > prevTextLength + 200) {
         let difference = getDifference(PREVIOUS_TEXT, allText);
         NEW_NODES = separateChildNodes(document.body.childNodes);
         PREVIOUS_TEXT = allText;
@@ -703,19 +791,26 @@ function separateChildNodes(newNodes) {
 }
 
 function handleHighlightEnabling(result) {
-    if(result['highlight-enabled']) {
+    if(result['highlight-enabled'] !== false) {
         document.body.addEventListener('mouseup', analyzeTextForSending);
-        document.body.addEventListener("mousedown", checkAndRemoveSpans);
     }
 }
 
 function handleStorageChange(changes, namespace) {
+    if(!changes['highlight-enabled']) return;
     let change = changes['highlight-enabled']['newValue'];
     if (change) {
         document.body.addEventListener('mouseup', analyzeTextForSending);
-        document.body.addEventListener("mousedown", checkAndRemoveSpans);
     } else {
         document.body.removeEventListener('mouseup', analyzeTextForSending);
-        document.body.removeEventListener("mousedown", checkAndRemoveSpans);
+    }
+}
+
+function removeAllEdicraticHTML() {
+    window.removeEventListener('scroll', checkForSizeChange);
+    let entities = document.getElementsByTagName('div');
+    for(var i = 0; i < entities.length; i++) {
+        if(entities[i].classList.contains(ENTITY_PARENT_CLASSNAME)) entities[i].onmouseover = undefined;
+        entities[i].classList.remove(ANCHOR_CLASS_NAME);
     }
 }

@@ -40,7 +40,22 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         load(true);
     } else if(message.data === MODAL_OPENED) {
         window.close();
+    } else if (message.data === 'webCheckLoadScript') {
+        let id = sender.tab.id;
+        if (message.loaded) {
+            chrome.tabs.sendMessage(id, {message: "runWebCheck", automatic: false});
+        } else {
+            chrome.tabs.insertCSS(id, {file: 'expandLibrary.css'});
+            chrome.tabs.executeScript(id, {file: 'expandLibrary.js'});
+            chrome.tabs.executeScript(id, {file: 'user.js'});
+            chrome.tabs.insertCSS(id, {file: 'tags.css'});
+            chrome.tabs.executeScript(id, {file: 'tags.js'}, () => {
+                 chrome.tabs.sendMessage(id, {message: "runWebCheck", automatic: false});
+             });
+
+        }
     }
+    return true;
 });
 
 
@@ -58,7 +73,7 @@ function checkCurrentPage() {
 
 function load(isValidPage) {
     localStorage['validEdicratic'] = isValidPage;
-    document.body.innerHTML = `<object type="text/html" data="${VALID_PAGE_HTML}"></object>`;
+    document.body.innerHTML = `<object style="height: 225px;" type="text/html" data="${VALID_PAGE_HTML}"></object>`;
 }
 
 function evaluatePageForChecked() {

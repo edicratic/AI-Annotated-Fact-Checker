@@ -1,11 +1,4 @@
-EDICRATIC_HIGHLIGHTED_TEXT_CLASS = 'edicratic-highlighted-text-class'
-TOOL_TIP_CLASSNAME = 'edicratic-add-library-tooltip'
-TOOL_TIP_TEXT_CLASSNAME_TOP = 'tooltiptext-top';
-TOOL_TIP_TEXT_CLASSNAME_BOTTOM = 'tooltiptext-bottom'
-YES_CLASS_NAME = 'edicratic-yes';
-NO_CLASS_NAME = 'edicratic-no';
 LOG_URL = "/log"
-//Chris, modify this as you please
 NUMBER_OF_CHARCATERS_IN_PARAGRAPH = 500;
 INVALID_DESCRIPTION = "Disambiguation page providing links to topics that could be referred to by the same search term";
 
@@ -13,76 +6,17 @@ INVALID_DESCRIPTION = "Disambiguation page providing links to topics that could 
 function analyzeTextForSending() {
     if(!window.getSelection) return;
     if(window.getSelection().toString() === '') return;
-    closeAllTooltips();
     let node = window.getSelection().anchorNode;
     const range = window.getSelection().getRangeAt(0);
     let text = window.getSelection().toString();
-    const rect = range.getBoundingClientRect()
     if (range.startOffset === range.endOffset) return;
-    //if (text.length > 100) return;
+    if (text.length > 50) return;
 
-    let tooltip = document.createElement('span');
-    tooltip.className = TOOL_TIP_CLASSNAME;
-    tooltip.innerHTML = `<p class="${TOOL_TIP_TEXT_CLASSNAME_TOP}">Do you want us to look up this highlighted text for you?<br/><br/><div class="${NO_CLASS_NAME}">No</div><div class="${YES_CLASS_NAME}">Yes</div></p>`
-    tooltip.setAttribute('data-content', text);
-    document.body.prepend(tooltip);
-    let paragraph = tooltip.children[0];
-    var onBottom = rect.top >= tooltip.clientHeight ;
-    let halfWidth = (rect.right - rect.left) / 2;
-    //tooltip.style.width = `${rect.right - rect.left}px`
-    tooltip.style.top = onBottom ? `${window.pageYOffset + rect.top - tooltip.clientHeight - 20}px` : `${window.pageYOffset + rect.bottom + 30}px`;
-    tooltip.style.left = `${rect.left + halfWidth}px`
-    if(onBottom) paragraph.classList.replace(TOOL_TIP_TEXT_CLASSNAME_TOP, TOOL_TIP_TEXT_CLASSNAME_BOTTOM);
-    let x = document.getElementsByClassName(NO_CLASS_NAME)[0];
-    let check = document.getElementsByClassName(YES_CLASS_NAME)[0];
-    x.onclick = (e) => {
-        
-        e.preventDefault();
-        clearSelection();
-        removeHighlightedSpans();
-    };
-    check.onclick = (e) => {
-        e.preventDefault();
-        sendBackData(node, text);
-        modifySingleNode(node, text.trim());
-        clearSelection();
-        removeHighlightedSpans();
-    }
-}
-
-function removeHighlightedSpans() {
-    window.getSelection().removeAllRanges();
-    remove(document.getElementsByClassName(TOOL_TIP_CLASSNAME));
-}
-
-function checkAndRemoveSpans(e) {
-    let element = e.toElement;
-    if (element.className !== TOOL_TIP_CLASSNAME && element.parentElement.className !== TOOL_TIP_CLASSNAME) {
-        window.getSelection().removeAllRanges();
-        closeAllTooltips();
-    }
-}
-
-function closeAllTooltips() {
-    let tooltips = document.getElementsByClassName(TOOL_TIP_CLASSNAME);
-    for (var i = 0; i < tooltips.length; i++) {
-        tooltips[i].parentElement.removeChild(tooltips[i]);
-    }
-}
-
-function remove(collection) {
-    for (var i = 0; i < collection.length; i++) {
-        collection[i].parentNode.removeChild(collection[i]);
-    }
-}
-
-function clearSelection() {
-    console.log("removing");
-    window.getSelection().removeAllRanges();
+    sendBackData(node, text);
+    modifySingleNode(node, text.trim());
 }
 
 function sendBackData(paragraph, text) {
-    //we dont want an infinite loop, now do we
     let i = 0;
     while(paragraph.textContent.length < NUMBER_OF_CHARCATERS_IN_PARAGRAPH && i < 5) {
         paragraph = paragraph.parentElement;
@@ -91,7 +25,6 @@ function sendBackData(paragraph, text) {
     if(paragraph.textContent.length <= 100){
       return
     }
-    //TODO add processing
     let raw = paragraph.innerHTML;
 
     let body = {
@@ -104,24 +37,28 @@ function sendBackData(paragraph, text) {
     sendData(LOG_URL, body);
 }
 
-async function lookUpTerm(term) {
+async function lookUpTerm(term, automatic) {
     var URL = getWikiUrl(term);
-    var result = await fetchWiki(URL);
-    var data = await result.json();
+    var data;
+    try {
+      var result = await fetchWiki(URL);
+      data = await result.json();
+    } catch (e) {
+      console.log(e);
+      return;
+    }
     if(!data || !data.query || !data.query.pages || data.query.pages.length === 0) return;
-    init(data, term);
+    init(data, term, automatic);
 }
 
 function fetchWiki(input) {
     return new Promise((resolve, reject) => {
       let params = {method: "GET"}
       chrome.runtime.sendMessage({input,params,init,message: "callInternet"}, messageResponse => {
-        //   console.log(messageResponse);
         const [response, error] = messageResponse;
         if (response === null) {
           reject(error);
         } else {
-          // Use undefined on a 204 - No Content
           const body = response.body ? new Blob([response.body]) : undefined;
           resolve(new Response(body, {
             status: response.status,
@@ -142,8 +79,7 @@ function fetchWiki(input) {
         const [response, error] = messageResponse;
         if (response === null) {
           reject(error);
-        } else {
-          // Use undefined on a 204 - No Content
+        } else { 
           const body = response.body ? new Blob([response.body]) : undefined;
           resolve(new Response(body, {
             status: response.status,
@@ -164,7 +100,6 @@ function fetchWiki(input) {
                  }
                }
         chrome.runtime.sendMessage({input: url,params,message: "callWebCheckAPI",needsAuthHeaders: true}, messageResponse => {
-          //   console.log(messageResponse);
           const [response, error] = messageResponse;
           if (response === null) {
             reject(error);

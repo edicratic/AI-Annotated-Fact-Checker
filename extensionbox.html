@@ -2,60 +2,74 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/components/icon.min.css">
     <link rel="stylesheet" href="checkbox/checkbox.css">
     <link rel="script" href="checkbox/checkbox.min.js">
+    <link rel="stylesheet" href="popup_components/popup.min.css">
 </head>
 
 <body class="top">
 <div class="ui raised very padded text container segment parent">
-    <div class="edicratic-header-block">
+    <div id ="header" class="edicratic-header-block">
         <img class="ui left floated circular image" src="/images/logo48.png">
         <h2 class="right floated ui header edicratic-header">WebCheck AI</h2>
       </div>
       <div class="ui segments">
-        <div class="ui segment edicratic-segment">
-          <div class="ui segment edicratic-segment last-segment">
-            <p><i class="bug icon"></i><a id="edicratic-bug-report" class="edicratic-option">Anything Wrong?</a></p>
+        <div data-tooltip="Automatically WebCheck Certain Sites" class="ui segment edicratic-segment">
+            <p style="float: left;" class="edicratic-option"><i class="check circle icon edicratic-icon"></i>Automatic WebCheck</p>
+            <div style="margin-top: 5px;" class="slider-edicratic ui toggle checkbox">
+              <input checked="checked" id="enable-auto-web-check" type="checkbox" name="example">
+              <label></label>
+            </div>
+        </div>
+      <div class="ui segment edicratic-segment">
+        <div style="display:inline">
+          <p style="float: left; margin-left: -148px; margin-top: 10px;" class="edicratic-option"><i class="question circle icon edicratic-icon"></i>Highlight Lookup</p>
+          <div style="margin-top: 5px;" class="slider-edicratic ui toggle checkbox">
+            <input checked="checked" id="enable-quick-look-up" type="checkbox" name="example">
+            <label></label>
           </div>
-      </div>
-      <div class="ui segment edicratic-segment">
-        <div class="ui segment edicratic-segment">
-      <div style="display:inline">
-        <div style="float:left; display:inline">
-          <i style="float:left" id ="info-icon-edicratic" class="question circle icon popup">
-            <span class="popuptext" id="myPopup">Quickly look up words by highlighting them!</span>
-          </i>
-          <p style="float:right; margin-top: -0.08rem;" class="edicratic-option">Highlight Lookup</p>
-        </div>
-      <div class="slider-edicratic ui toggle checkbox">
-          <input checked="checked" id="enable-quick-look-up" type="checkbox" name="example">
-          <label></label>
         </div>
     </div>
-    </div>
-    </div>
-    <div class="ui segment edicratic-segment last-segment-edicratic">
-      <div class="ui segment edicratic-segment">
-        <p><i class="info icon"></i><a href="https://webcheck.edicratic.com/" target="_blank" id="edicratic-bug-report" class="edicratic-option">Learn More</a></p>
+    <div class="ui segment edicratic-segment">
+      <p style="float: left; margin-top: 10px;" class="edicratic-option"><i class="power off icon edicratic-icon"></i>Always WebCheck This Website</p>
+      <div style="margin-left: 10px;margin-top: 7px;" class="ui checkbox">
+        <input id='whitelist' type="checkbox" name="example">
+        <label></label>
       </div>
     </div>
+      <div class="ui segment edicratic-segment last-segment">
+        <p><i class="bug icon"></i><a id="edicratic-bug-report" class="edicratic-option">Anything Wrong?</a></p>
+      </div>
+      <br/>
+      <br/>
+      <div style="margin-right:100px;" class="ui segment edicratic-segment last-segment">
+        <p><i class="settings icon"></i><a id="edicratic-settings" class="edicratic-option">Your Websites</a></p>
+      </div>
 </div>
 </div>
-<div id="changeColor" class="button">
-  <i id="changeColor-icon" class="edit icon"></i><div id="webcheck-text">WebCheck This</div>
-</div>
-  <h2 class="edicratic-invalid" id="edicratic-invalid">
-    Sorry, can't WebCheck this page. <a href='https://www.edicratic.com/home' target="_blank" class="inner-link">Here</a> are some good pages to WebCheck.
-  </h2>
+  <br/>
+  <br/>
+  <div style="display: inline;">
+    <div style="margin-top: -30px; float: right" data-tooltip='Manually WebCheck this Page' id="changeColor" class="button">
+      <i id="changeColor-icon" class="edit icon"></i><div id="webcheck-text">WebCheck This</div>
+    </div>
+  </div>
 
 </body>
 <style>
+
+  .clear-button:hover {
+    background-color: #B22222 !important;
+
+  }
+  .edicratic-icon {
+    color: black;
+    margin-top: 1.3px !important;
+  }  
   #webcheck-text {
     display: inline;
   }
   
-  .last-segment-edicratic{
-    margin-top: -0.3rem;
-    margin-left: -7.5rem;
-
+  .last-segment{
+    margin-top: -10px;
     float:left;
   }
   .slider-edicratic {
@@ -70,6 +84,7 @@
   }
     .edicratic-header-block {
         display: flex;
+        cursor: pointer;
     }
     .edicratic-header {
         float: right;
@@ -87,7 +102,8 @@
 
     }
     .button {
-        margin-top: 0.2rem;
+        cursor: pointer;
+        margin-top: 3px;
         border: none;
         float: right;
         display: inline-block;
