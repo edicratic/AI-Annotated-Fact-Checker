@@ -292,7 +292,7 @@ function handleMouseLeave(e) {
 
 }
 
-function mouseOverHandle(e, id, text) {
+async function mouseOverHandle(e, id, text) {
     if (e.target && e.target.id) {
         id = e.target.id;
         id = id.substring(0, id.indexOf('-'));
@@ -305,8 +305,9 @@ function mouseOverHandle(e, id, text) {
         }
         OPEN_SPAN = id;
         let isHighlightLookup = !!entityElement.dataset['unique'];
-        let type = idToSelected[id];
-        createTooltip(idToData[id][type || 'Information'], id, type || 'Information');
+        let type = idToSelected[id] || 'Information';
+        createTooltip(idToData[id][type], id, type);
+        //await sleep(10);
         positionTooltips(id);
         if (!idToData[id]['News'] && text && !isHighlightLookup) {
             idToData[id]['News'] = ' ';
@@ -415,7 +416,6 @@ function handleArticleClick(e, id) {
 }
 
 async function testEndpoint(term, id) {
-    await sleep(10);
     // console.log(term);
     let content = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">`;
     var str;
@@ -497,7 +497,6 @@ async function testEndpoint(term, id) {
             }
             idToData[id]['News'] = content;
         }
-        await sleep(10);
     }
     idToData[id]['News'] = content;
 }
