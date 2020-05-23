@@ -244,8 +244,6 @@ function modifyAllText(regex, entity, matches, childList, set, automatic) {
                     child.parentElement.replaceChild(newElement, child);
                 }
                 set.add(newElement);
-                createTooltip(data, uniqueId);
-                //testEndpoint(entity,uniqueId);
             }
             if (length !== 0) {
                 modifyAllText(regex, entity, matches, nextList, set, automatic)
@@ -254,7 +252,7 @@ function modifyAllText(regex, entity, matches, childList, set, automatic) {
     }
 }
 
-function createTooltip(data, id) {
+function createTooltip(data, id, infoType) {
     var tooltip = document.createElement('span');
     tooltip.id = `${id}-parent`;
     tooltip.className = TOOL_TIP_CLASS_NAME;
@@ -270,11 +268,11 @@ function createTooltip(data, id) {
     tabs.className = 'edicratic-tabContainer';
     tabs.id =`${id}-tabs`;
     tabs.innerHTML = `
-        <a class="edicratic-tab edicratic-selected">Information</a>
-        <a class="edicratic-tab">News</a>
+        <a class="edicratic-tab ${infoType === 'Information' ? 'edicratic-selected' : ''}">Information</a>
+        <a class="edicratic-tab ${infoType === 'News' ? 'edicratic-selected' : ''}">News</a>
     `
     tooltip.appendChild(tabs);
-    idToSelected[id] = 'Information';
+    idToSelected[id] = infoType;
 
     let tabChildren = tabs.children;
     for (var i = 0; i < tabChildren.length; i++) {
@@ -307,6 +305,8 @@ function mouseOverHandle(e, id, text) {
         }
         OPEN_SPAN = id;
         let isHighlightLookup = !!entityElement.dataset['unique'];
+        let type = idToSelected[id];
+        createTooltip(idToData[id][type || 'Information'], id, type || 'Information');
         positionTooltips(id);
         if (!idToData[id]['News'] && text && !isHighlightLookup) {
             idToData[id]['News'] = ' ';
@@ -375,10 +375,10 @@ function removeSpan(id) {
     const span = document.getElementById(`${id}-parent`);
     if(OPEN_SPAN === id) OPEN_SPAN = undefined;
     if(span.style.display === 'none') return;
-    span.style.display = "none";
-    span.style.visibility = 'hidden';
+    if (!span) return;
     const pointer = document.getElementById(`${id}-pointer`);
-    pointer.style.display = 'none';
+    span.parentElement.removeChild(span);
+    pointer.parentElement.removeChild(pointer);
     endTimer(idToSelected[id]);
 }
 
