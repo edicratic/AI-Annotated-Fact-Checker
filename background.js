@@ -29,6 +29,26 @@ DEFAULT_WHITELIST = [
   
 ]
 
+chrome.storage.local.get(['authStatus'], function(result) {
+  createBadge(result['authStatus']);
+});
+
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (!changes['authStatus']) return;
+  createBadge(changes['authStatus']['newValue']);
+
+});
+
+function createBadge(authStatus) {
+  if(chrome.runtime.lastError || authStatus === null || authStatus === undefined || authStatus === "Logged Out") {
+    chrome.browserAction.setBadgeText({text: 'Off'});
+    chrome.browserAction.setBadgeBackgroundColor({color: 'red'});
+  } else {
+    chrome.browserAction.setBadgeText({text: 'On'});
+    chrome.browserAction.setBadgeBackgroundColor({color: '#4688F1'});
+  }
+}
+
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.message === "callInternet"){
       // console.log("calling the internet");
