@@ -1,3 +1,4 @@
+ALREADY_UPDATED = false;
 DEFAULT_WHITELIST = [
     'www.fox',
     'www.foxnews',
@@ -111,4 +112,12 @@ function getDomain(url) {
     var re = new RegExp('.(com|co.uk|net|org|gov|de|edu)')
     var secondLevelDomain = anchor.hostname.replace(re, '');
     return secondLevelDomain;
+}
+
+function handleUpdate(message) {
+    if (ALREADY_UPDATED) return;
+    if (message === 'Extension context invalidated.') {
+        ALREADY_UPDATED = true;
+        alert('Looks like the extension was just updated. Please reload your page :)');
+    }
 }

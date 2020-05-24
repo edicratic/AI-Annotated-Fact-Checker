@@ -44,6 +44,7 @@ async function lookUpTerm(term, automatic) {
       var result = await fetchWiki(URL);
       data = await result.json();
     } catch (e) {
+      handleUpdate(e.message);
       console.log(e);
       return;
     }

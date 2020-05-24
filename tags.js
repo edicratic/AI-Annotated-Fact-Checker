@@ -424,7 +424,7 @@ async function testEndpoint(term, id) {
         let dataNYTimes = await resultNYTimes.text();
         str = await new window.DOMParser().parseFromString(dataNYTimes, "text/xml");
     } catch(e) {
-        console.log(e);
+        handleUpdate(e.message);
         return;
     }
 
@@ -470,7 +470,7 @@ async function testEndpoint(term, id) {
                 res = await extractMetaData(url);
                 data = await res.json();
             } catch(e) {
-                console.log(e)
+                console.log(e.message)
                 continue;
             }
             let source = data.source;
@@ -587,6 +587,7 @@ function makePostRequest(isAutomatic) {
         processEntities(body, isAutomatic);
         if(!isAutomatic) chrome.runtime.sendMessage({data: DATA_LOADED});
     }).catch(e => {
+        handleUpdate(e.message);
         console.log(e);
         if(!isAutomatic && spinner) spinner.style.display = 'none';
         alert("Oops. Something went wrong :(. Please try again." + "\nIf your issue is persistent, go to webcheck.edicratic.com/support.html for help.");

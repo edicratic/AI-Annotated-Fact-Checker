@@ -71,26 +71,31 @@ function endTimer(tab) {
     determineTimeChange(tab);
     let currentTime = new Date();
     let timeChange = currentTime - (tooltipData["start"] || 0);
-    chrome.storage.local.get(['edicratic-information'], function(result) {
-       let arr = result['edicratic-information'] || [];
-       let newData = {
-           'clicks': tooltipData['clicks'], /* Click data type {source, destination, type, url}*/
-           'session_type': tooltipData['session_type'], /*highlight or webcheck*/
-           'start': tooltipData['start'].getTime(), /*time of hover */
-           'term': tooltipData['term'], /* entity*/
-           'time_spent': timeChange, /*time spent on tooltip */
-           'time_stamp': tooltipData['time_stamp'].getTime(), /*time of webcheck or highlight */
-           'url': tooltipData['url'], /*webpage url */
-           'webcheck_id': tooltipData['webcheck_id'],/*id of webcheck */
-           "information_tab_time": tooltipData['information_tab_time'], /*time spent on wiki tab */
-           "news_tab_time": tooltipData['news_tab_time'],/*time spent on news tab */
-       };
-       arr.push(newData);
-       //uncomment to debug
-       //console.log(arr);
-       chrome.storage.local.set({'edicratic-information': arr}); /*array of hovers */
+    try {
+        chrome.storage.local.get(['edicratic-information'], function(result) {
+        let arr = result['edicratic-information'] || [];
+        let newData = {
+            'clicks': tooltipData['clicks'], /* Click data type {source, destination, type, url}*/
+            'session_type': tooltipData['session_type'], /*highlight or webcheck*/
+            'start': tooltipData['start'].getTime(), /*time of hover */
+            'term': tooltipData['term'], /* entity*/
+            'time_spent': timeChange, /*time spent on tooltip */
+            'time_stamp': tooltipData['time_stamp'].getTime(), /*time of webcheck or highlight */
+            'url': tooltipData['url'], /*webpage url */
+            'webcheck_id': tooltipData['webcheck_id'],/*id of webcheck */
+            "information_tab_time": tooltipData['information_tab_time'], /*time spent on wiki tab */
+            "news_tab_time": tooltipData['news_tab_time'],/*time spent on news tab */
+        };
+        arr.push(newData);
+        //uncomment to debug
+        //console.log(arr);
+        chrome.storage.local.set({'edicratic-information': arr}); /*array of hovers */
 
-    });
+        });
+    } catch(e) {
+        handleUpdate(e.message);
+
+    }
 }
 
 
