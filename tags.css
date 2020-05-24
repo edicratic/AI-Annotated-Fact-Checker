@@ -4,6 +4,7 @@ html body {
 
 .edicratic-anchor-tag-style {
     border-bottom: 3px solid #15c39a;
+    pointer-events: auto !important; 
     text-indent: 0 !important;
     margin-bottom: -3px !important;
     box-sizing:border-box;
