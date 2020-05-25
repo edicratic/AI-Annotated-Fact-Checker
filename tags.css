@@ -13,7 +13,7 @@ html body {
     display: inline-block !important;
     cursor: pointer;
     text-indent: 0;
-
+    pointer-events: auto !important;
 }
 
 .edicratic-transparent-border {
@@ -50,6 +50,7 @@ html body {
     font-style: normal !important;
     line-height: normal !important;
     overflow-y:auto;
+    /* transition: opacity 1s ease-out; */
 }
 .edicratic-tooltip .edicratic-paragraph-classname {
   height: auto;

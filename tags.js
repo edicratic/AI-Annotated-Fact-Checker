@@ -10,6 +10,8 @@ idToTerm = {};
 idToSelected = {};
 onLeft = {};
 onTop = {};
+tooltips = {};
+pointers = {};
 OPEN_SPAN = undefined;
 DATA_LOADED = 'DATA_LOADED'
 BUTTON_PRESSED = 'BUTTON_PRESSED';
@@ -244,6 +246,7 @@ function modifyAllText(regex, entity, matches, childList, set, automatic) {
                     child.parentElement.replaceChild(newElement, child);
                 }
                 set.add(newElement);
+                createTooltip(data, uniqueId, 'Information');
             }
             if (length !== 0) {
                 modifyAllText(regex, entity, matches, nextList, set, automatic)
@@ -262,7 +265,8 @@ function createTooltip(data, id, infoType) {
     pointer.className = 'edicratic-tooltip-bottom';
     pointer.style.display = 'none';
     pointer.id = `${id}-pointer`;
-    document.body.appendChild(pointer);
+    // document.body.appendChild(pointer);
+    pointers[id] = pointer;
 
     let tabs = document.createElement('div');
     tabs.className = 'edicratic-tabContainer';
@@ -279,10 +283,11 @@ function createTooltip(data, id, infoType) {
         tabChildren[i].onclick = (e) => handleTabClick(e, id);
     }
 
-    document.body.prepend(tooltip)
-    addShowMoreListeners(id);
+    // document.body.prepend(tooltip)
+    // addShowMoreListeners(id);
     tooltip.onclick = e => e.preventDefault();
     tooltip.onmouseleave = e => handleMouseLeave(e);
+    tooltips[id] = tooltip;
 
 }
 
@@ -306,8 +311,11 @@ async function mouseOverHandle(e, id, text) {
         OPEN_SPAN = id;
         let isHighlightLookup = !!entityElement.dataset['unique'];
         let type = idToSelected[id] || 'Information';
-        createTooltip(idToData[id][type], id, type);
-        //await sleep(10);
+        let tooltip = tooltips[id];
+        let pointer = pointers[id];
+        document.body.prepend(tooltip);
+        document.body.appendChild(pointer);
+        addShowMoreListeners(id);
         positionTooltips(id);
         if (!idToData[id]['News'] && text && !isHighlightLookup) {
             idToData[id]['News'] = ' ';
