@@ -5,15 +5,15 @@ html body {
 .edicratic-anchor-tag-style {
     border-bottom: 3px solid #15c39a;
     text-indent: 0 !important;
-    margin-bottom: -3px !important;
     box-sizing:border-box;
     /* background-color: #15c39a; */
+    margin-bottom: -3px;
     padding-bottom: 0px !important;
     position: relative !important;
     display: inline-block !important;
     cursor: pointer;
     text-indent: 0;
-
+    pointer-events: auto !important;
 }
 
 .edicratic-transparent-border {
@@ -50,6 +50,7 @@ html body {
     font-style: normal !important;
     line-height: normal !important;
     overflow-y:auto;
+    /* transition: opacity 1s ease-out; */
 }
 .edicratic-tooltip .edicratic-paragraph-classname {
   height: auto;
