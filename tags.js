@@ -114,7 +114,7 @@ async function modifySingleNode(node, text) {
     pointer.className = 'edicratic-tooltip-bottom';
     pointer.id = `${uniqueId}-pointer`;
     pointer.style.display = 'none';
-    document.body.appendChild(pointer);
+    pointers[uniqueId] = pointer;
 
     let tabs = document.createElement('div');
     tabs.className = 'edicratic-tabContainer';
@@ -130,8 +130,8 @@ async function modifySingleNode(node, text) {
         tabChildren[i].onclick = (e) => handleTabClick(e, uniqueId);
     }
     idToSelected[uniqueId] = 'Information';
-    document.body.prepend(tooltip)
-    addShowMoreListeners(uniqueId);
+    tooltips[uniqueId] = tooltip;
+    // addShowMoreListeners(uniqueId);
     tooltip.onclick = e => e.preventDefault();
     tooltip.onmouseleave = e => handleMouseLeave(e);
     testEndpoint(text, uniqueId);
@@ -147,6 +147,7 @@ async function modifySingleNode(node, text) {
 
 function addShowMoreListeners(id) {
     let tooltip = document.getElementById(`${id}-parent`);
+    if (!tooltip) return;
     let showMoreLinks = tooltip.getElementsByClassName(SHOW_HIDDEN_TEXT);
     let images = tooltip.getElementsByClassName(IMAGE_NYT_CLASSNAME);
     let imagesWiki = tooltip.getElementsByClassName(WIKI_CLASS_NAME);
@@ -304,7 +305,10 @@ async function mouseOverHandle(e, id, text) {
         // let span = document.getElementById(`${id}-parent-parent`);
         // if (span && span.style.display === 'block') return;
         let entityElement = document.getElementById(`${id}-parent-parent`);
-        if(entityElement) startTimer(entityElement.textContent || entityElement.innerText, e.target);
+        if(entityElement) {
+            startTimer(entityElement.textContent || entityElement.innerText, e.target);
+            if(entityElement.dataset['unique']) entityElement.style.marginBottom = '0px';
+        }
         if (OPEN_SPAN) {
             removeSpan(OPEN_SPAN);
         }
@@ -383,8 +387,7 @@ function positionTooltips(id) {
 function removeSpan(id) {
     const span = document.getElementById(`${id}-parent`);
     if(OPEN_SPAN === id) OPEN_SPAN = undefined;
-    if(span.style.display === 'none') return;
-    if (!span) return;
+    if(!span) return;
     const pointer = document.getElementById(`${id}-pointer`);
     span.parentElement.removeChild(span);
     pointer.parentElement.removeChild(pointer);
@@ -497,9 +500,9 @@ async function testEndpoint(term, id) {
             if(idToSelected[id] === 'News') {
                 let tooltipField = document.getElementById(`${id}-content`);
                 if(i === 0) {
-                    tooltipField.getElementsByClassName('info-edicratic')[0].innerHTML = newElement;
+                    if(tooltipField) tooltipField.getElementsByClassName('info-edicratic')[0].innerHTML = newElement;
                 } else {
-                    tooltipField.getElementsByClassName('info-edicratic')[0].innerHTML += newElement;
+                    if(tooltipField) tooltipField.getElementsByClassName('info-edicratic')[0].innerHTML += newElement;
                 }
                 addShowMoreListeners(id);
             }
