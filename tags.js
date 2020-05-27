@@ -1,5 +1,7 @@
 var scriptAlreadyLoaded = true;
+var cleared = false;
 ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
+ANCHOR_OVERRIDE_CLASS_NAME = 'edicratic-anchor-tag-override';
 TOOL_TIP_CLASS_NAME = 'edicratic-tooltip';
 POST_URL = '/process';
 INNER_LINK = 'edicratic-inner-link';
@@ -299,6 +301,7 @@ function handleMouseLeave(e) {
 }
 
 async function mouseOverHandle(e, id, text) {
+    if (cleared) return;
     if (e.target && e.target.id) {
         id = e.target.id;
         id = id.substring(0, id.indexOf('-'));
@@ -567,6 +570,10 @@ function getWebUrl(url) {
   }
 
 function makePostRequest(isAutomatic) {
+    if (cleared) {
+        cleared = false;
+        handleClearedEvent();
+    }
     PREVIOUS_TEXT = document.body.innerText;
     window.addEventListener('scroll', checkForSizeChange);
     var spinner;
@@ -591,6 +598,7 @@ function makePostRequest(isAutomatic) {
             throw new Error(result.status);
         }
     }).then(data =>{
+        chrome.runtime.sendMessage({data: 'hasHTML'});
         if(!isAutomatic && spinner) spinner.style.display = 'none';
         recordWebCheck(data.local_id || 'NO_ID');
         body = JSON.parse(data.body);
@@ -818,10 +826,17 @@ function handleStorageChange(changes, namespace) {
 }
 
 function removeAllEdicraticHTML() {
+    cleared = true;
     window.removeEventListener('scroll', checkForSizeChange);
-    let entities = document.getElementsByTagName('div');
+    let entities = document.getElementsByClassName(ANCHOR_CLASS_NAME);
     for(var i = 0; i < entities.length; i++) {
-        if(entities[i].classList.contains(ENTITY_PARENT_CLASSNAME)) entities[i].onmouseover = undefined;
-        entities[i].classList.remove(ANCHOR_CLASS_NAME);
+        entities[i].classList.add(ANCHOR_OVERRIDE_CLASS_NAME);
+    }
+}
+
+function handleClearedEvent() {
+    let entities = document.getElementsByClassName(ANCHOR_CLASS_NAME);
+    for (var i = 0; i < entities.length; i++) {
+        entities[i].classList.remove(ANCHOR_OVERRIDE_CLASS_NAME);
     }
 }

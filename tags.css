@@ -23,7 +23,16 @@ html body {
 }
 
 .edicratic-anchor-tag-style:hover {
-  background-color:#d3d3d3 !important;
+  background-color:#d3d3d3;
+}
+
+.edicratic-anchor-tag-override {
+  border-bottom: 3px solid transparent;
+  cursor: auto;
+}
+
+.edicratic-anchor-tag-override:hover {
+  background-color: transparent !important;
 }
 
 .edicratic-tooltip {

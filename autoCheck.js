@@ -28,10 +28,12 @@ DEFAULT_WHITELIST = [
     
 ]
 
+checkAndRun();
 setInterval(() => {
     if (typeof currentWebCheckedUrl !== 'undefined') {
         if (window.location.href !== currentWebCheckedUrl) {
-            makePostRequest(true);
+            currentWebCheckedUrl = window.location.href;
+            checkAndRun();
         }
     }
 
@@ -41,13 +43,16 @@ if (window.location.hostname.includes('yahoo')) {
     //specific domain stuff
     window.addEventListener('scroll', clearYahooTags);
 }
+
+function checkAndRun() {
     chrome.storage.local.get(['auto-webcheck-enabled'], function(result) {
         let enabled = result['auto-webcheck-enabled'];
         if (enabled !== false) {
-            runAutoCheck();
+           runAutoCheck();
         }
 
     });
+}
 
 
 function runAutoCheck() {
@@ -63,13 +68,14 @@ function runAutoCheck() {
                 let host = getDomain(window.location.href);
                 if (val.includes(host)){
                     makePostRequest(true);
-                } 
+                } else {
+                    window.removeEventListener('scroll', checkForSizeChange);
+                }
         });
     });
 }
 
 chrome.storage.onChanged.addListener((changes, namespace) => {
-    //console.log(changes);
     if(changes['auto-webcheck-enabled']) {
         let change = changes['auto-webcheck-enabled']['newValue'];
         if(change) runAutoCheck();

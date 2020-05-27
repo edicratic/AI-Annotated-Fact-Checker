@@ -9,6 +9,7 @@ const BUTTON_PRESSED = 'BUTTON_PRESSED';
 const ALREADY_CHECKED = 'ALREADY_CHECKED';
 const MODAL_OPENED = 'MODAL_OPENED';
 localStorage['isLoadedEdicratic'] = false;
+localStorage['hasHTML'] = false;
 
 const INVALID_SEARCH_URLS = [
     // 'www.facebook.com/',
@@ -54,6 +55,9 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
              });
 
         }
+    } else if (message.data === 'hasHTML') {
+        localStorage['hasHTML'] = true;
+        load(true);
     }
     return true;
 });
@@ -73,7 +77,7 @@ function checkCurrentPage() {
 
 function load(isValidPage) {
     localStorage['validEdicratic'] = isValidPage;
-    document.body.innerHTML = `<object style="height: 225px;" type="text/html" data="${VALID_PAGE_HTML}"></object>`;
+    document.body.innerHTML = `<object style="height: 255px;" type="text/html" data="${VALID_PAGE_HTML}"></object>`;
 }
 
 function evaluatePageForChecked() {

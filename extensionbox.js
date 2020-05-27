@@ -10,6 +10,7 @@ let header = document.getElementById('header');
 let checkBoxAutoCheck = document.getElementById('enable-auto-web-check');
 let whitelist = document.getElementById('whitelist');
 let settings = document.getElementById('edicratic-settings');
+let clearButton = document.getElementById('clear-html');
 settings.onclick = () => window.open('settings.html', '_blank')
 header.onclick = () => window.open('https://webcheck.edicratic.com/', '_blank')
 whitelist.onclick = handleWhiteListing;
@@ -18,6 +19,12 @@ updateWhitelist(whitelist);
 checkBox.onclick = () => handleCheckBoxClick('highlight-enabled');
 checkBoxAutoCheck.onclick = () => handleCheckBoxClick('auto-webcheck-enabled');
 bugReport.onclick = handleBugReport;
+if (localStorage['hasHTML'] === 'false')  {
+  clearButton.style.display = 'none';
+} else {
+  clearButton.style.display  = '';
+}
+clearButton.onclick = () => removeAllHTML();
 
 
 if(localStorage['isLoadedEdicratic'] === 'true') changeColor.style.display = 'none';
