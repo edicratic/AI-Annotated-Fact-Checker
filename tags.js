@@ -301,13 +301,13 @@ function handleMouseLeave(e) {
 }
 
 async function mouseOverHandle(e, id, text) {
-    if (cleared) return;
     if (e.target && e.target.id) {
         id = e.target.id;
         id = id.substring(0, id.indexOf('-'));
         // let span = document.getElementById(`${id}-parent-parent`);
         // if (span && span.style.display === 'block') return;
         let entityElement = document.getElementById(`${id}-parent-parent`);
+        if(cleared && !entityElement.dataset['unique']) return;
         if(entityElement) {
             startTimer(entityElement.textContent || entityElement.innerText, e.target);
             if(entityElement.dataset['unique']) entityElement.style.marginBottom = '0px';
