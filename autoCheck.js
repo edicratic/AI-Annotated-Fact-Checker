@@ -1,33 +1,14 @@
 ALREADY_UPDATED = false;
-DEFAULT_WHITELIST = [
-    'www.fox',
-    'www.foxnews',
-    'www.cnn',
-    'www.npr', 
-    'www.msnbc',
-    'medium',
-    'www.inc',
-    'www.forbes',
-    'www.yahoo',
-    'www.huffpost',
-    'www.nytimes',
-    'www.nbcnews',
-    'www.dailymail',
-    'www.washingtonpost',
-    'www.theguardian',
-    'www.wsj',
-    'www.bbc',
-    'www.usatoday',
-    'www.latimes',
-    'www.engadget',
-    'moz',
-    'mashable',
-    'techcrunch',
-    'www.nerdwallet',
-    'news.yahoo',
-    
+DEFAULT_BLACKLIST = [
+    'twitter',
+    'www.linkedin',
+    'www.amazon',
+    'www.facebook',
+    'www.linkedin',
 ]
+LIST_TYPE = 'blacklisted-edicratic';
 
+chrome.storage.local.set({'highlight-enabled': false});
 checkAndRun();
 setInterval(() => {
     if (typeof currentWebCheckedUrl !== 'undefined') {
@@ -56,20 +37,22 @@ function checkAndRun() {
 
 
 function runAutoCheck() {
-    chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
-        let val = result['whitelisted-edicratic'] || DEFAULT_WHITELIST;
-        let copyOfVal = result['whitelisted-edicratic'];
+    chrome.storage.local.get([LIST_TYPE], function (result) {
+        let val = result[LIST_TYPE] || DEFAULT_BLACKLIST;
+        let copyOfVal = result[LIST_TYPE];
         chrome.storage.local.get(['authStatus'], function(result) {
             if(chrome.runtime.lastError || result.authStatus === null || result.authStatus === undefined || result.authStatus === "Logged Out") return;
                 if(!copyOfVal) {
-                    chrome.storage.local.set({'whitelisted-edicratic': DEFAULT_WHITELIST});
+                    let storage = {};
+                    storage[LIST_TYPE] = DEFAULT_BLACKLIST;
+                    chrome.storage.local.set(storage);
                     chrome.storage.local.set({'button-change-edicratic': {'time': new Date().getTime(), 'on': true}});
                 }
                 let host = getDomain(window.location.href);
                 if (val.includes(host)){
-                    makePostRequest(true);
-                } else {
                     window.removeEventListener('scroll', checkForSizeChange);
+                } else {
+                    makePostRequest(true);
                 }
         });
     });
@@ -84,8 +67,8 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         if (change === 'Authenticated') {
 
         }
-    } else if(changes['whitelisted-edicratic']) {
-        let changeList = changes['whitelisted-edicratic'];
+    } else if(changes[LIST_TYPE]) {
+        let changeList = changes[LIST_TYPE];
         let oldList = changeList['oldValue'];
         let newList = changeList['newValue'];
         let type = null;

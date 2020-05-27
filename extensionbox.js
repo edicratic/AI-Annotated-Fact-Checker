@@ -1,3 +1,4 @@
+LIST_TYPE = 'blacklisted-edicratic';
 let changeColor = document.getElementById('changeColor');
 let check = document.getElementById('edicratic-check');
 let invalidMessage = document.getElementById('edicratic-invalid');
@@ -25,9 +26,6 @@ if (localStorage['hasHTML'] === 'false')  {
   clearButton.style.display  = '';
 }
 clearButton.onclick = () => removeAllHTML();
-
-
-if(localStorage['isLoadedEdicratic'] === 'true') changeColor.style.display = 'none';
 
 chrome.storage.local.get(['authStatus'], function(result) {
   if(chrome.runtime.lastError || result.authStatus === null || result.authStatus === undefined || result.authStatus === "Logged Out"){
@@ -115,30 +113,33 @@ function removeAllHTML() {
 }
 
 function handleWhiteListing(e) {
-  chrome.storage.local.get(['whitelisted-edicratic'], (result) => {
-    let websites = result['whitelisted-edicratic'] || [];
+  chrome.storage.local.get([LIST_TYPE], (result) => {
+    let websites = result[LIST_TYPE] || [];
+    console.log(websites);
     chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
       let domain = getDomain(tabs[0].url);
       if(e.target.checked) {
         websites.push(domain);
+      } else {
+        websites = websites.filter(value => value !== domain);
         chrome.storage.local.get(['auto-webcheck-enabled'], res => {
           if(res['auto-webcheck-enabled'] !== false) {
             chrome.tabs.sendMessage(tabs[0].id, {message: "runWebCheck", automatic: true});
           }
         });
-      } else {
-        websites = websites.filter(value => value !== domain);
       }
       //console.log(websites);
-      chrome.storage.local.set({'whitelisted-edicratic': websites});
+      let storage = {};
+      storage[LIST_TYPE] = websites;
+      chrome.storage.local.set(storage);
     })
     
   });
 }
 
 function updateWhitelist(whitelist) {
-  chrome.storage.local.get(['whitelisted-edicratic'], (result) => {
-    let websites = result['whitelisted-edicratic'] || [];
+  chrome.storage.local.get([LIST_TYPE], (result) => {
+    let websites = result[LIST_TYPE] || [];
     chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
       let domain = getDomain(tabs[0].url);
       if(websites.includes(domain)) {

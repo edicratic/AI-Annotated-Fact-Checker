@@ -34,10 +34,8 @@ chrome.storage.local.get(['authStatus'], function(result) {
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     if(message.data === DATA_LOADED) {
-        localStorage['isLoadedEdicratic'] = true;
         window.close();
     } else if (message.data === ALREADY_CHECKED) {
-        localStorage['isLoadedEdicratic'] = true;
         load(true);
     } else if(message.data === MODAL_OPENED) {
         window.close();
