@@ -239,3 +239,5 @@ function createDefaultBlackList() {
       }
   })
 }
+
+chrome.runtime.setUninstallURL("https://webcheck.edicratic.com/uninstall.html")
