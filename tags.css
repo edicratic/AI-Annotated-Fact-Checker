@@ -28,7 +28,7 @@ html body {
 
 .edicratic-anchor-tag-override {
   border-bottom: 3px solid transparent;
-  cursor: auto;
+  cursor: inherit !important;
 }
 
 .edicratic-anchor-tag-override:hover {
