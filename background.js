@@ -9,6 +9,15 @@ DEFAULT_BLACKLIST = [
 ]
 LIST_TYPE = 'blacklisted-edicratic';
 
+chrome.contextMenus.create({
+  title: "Webcheck This Term", 
+  contexts:["selection"], 
+  id: 'CONTEXT_MENU_ID',
+});
+chrome.contextMenus.onClicked.addListener(() => {
+  chrome.storage.local.set({'dummy-highlight': new Date().getTime()});
+});
+
 chrome.storage.local.get(['authStatus'], function(result) {
   createBadge(result['authStatus']);
 });

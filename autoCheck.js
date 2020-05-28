@@ -85,6 +85,8 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         let newTime = changeList['newValue']['time'];
         let oldPosition = changeList['oldValue']['on'];
         autoWebCheckChange(oldPosition ? 'turnOff' : 'turnOn', newTime - oldTime);
+    } else if (changes['dummy-highlight']) {
+        analyzeTextForSending();
     }
 });
 

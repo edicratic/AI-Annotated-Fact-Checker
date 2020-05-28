@@ -23,7 +23,8 @@
 		"http://*/*",
         "https://*/*",
         "storage",
-		"identity"
+        "identity",
+        "contextMenus"
     ],
     "browser_action": {
         "default_popup": "popup.html",
