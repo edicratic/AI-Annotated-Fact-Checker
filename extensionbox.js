@@ -3,7 +3,6 @@ let changeColor = document.getElementById('changeColor');
 let check = document.getElementById('edicratic-check');
 let invalidMessage = document.getElementById('edicratic-invalid');
 let icon = document.getElementById('info-icon-edicratic');
-let checkBox = document.getElementById("enable-quick-look-up");
 let bugReport = document.getElementById('edicratic-bug-report');
 let buttonIcon = document.getElementById('changeColor-icon');
 let loader = document.getElementById('loader');
@@ -15,9 +14,8 @@ let clearButton = document.getElementById('clear-html');
 settings.onclick = () => window.open('settings.html', '_blank')
 header.onclick = () => window.open('https://webcheck.edicratic.com/', '_blank')
 whitelist.onclick = handleWhiteListing;
-updateBox(checkBox, checkBoxAutoCheck);
+updateBox(checkBoxAutoCheck);
 updateWhitelist(whitelist);
-checkBox.onclick = () => handleCheckBoxClick('highlight-enabled');
 checkBoxAutoCheck.onclick = () => handleCheckBoxClick('auto-webcheck-enabled');
 bugReport.onclick = handleBugReport;
 if (localStorage['hasHTML'] === 'false')  {
@@ -72,11 +70,7 @@ function handleCheckBoxClick(cacheKey) {
   });
 }
 
-function updateBox(checkBox, checkBoxAutoCheck) {
-    chrome.storage.local.get(["highlight-enabled"], (result) => {
-      let val = result['highlight-enabled'];
-      checkBox.checked = val === false ? false : true;
-    });
+function updateBox(checkBoxAutoCheck) {
     chrome.storage.local.get(['auto-webcheck-enabled'], (result) => {
       let valWebCheck = result['auto-webcheck-enabled'];
       checkBoxAutoCheck.checked = valWebCheck === false ? false : true;

@@ -37,10 +37,6 @@ ENTITY_PARENT_CLASSNAME = 'edicratic-entity-parent';
 
 window.addEventListener('scroll', adjustSpansBasedOnHeight);
 
-chrome.storage.local.get(["highlight-enabled"], result => handleHighlightEnabling(result));
-chrome.storage.onChanged.addListener((changes, namespace) => handleStorageChange(changes, namespace));
-
-
 document.body.onmousemove = e => handleMouseMove(e);
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
@@ -807,22 +803,6 @@ function separateChildNodes(newNodes) {
         if(node.className !== TOOL_TIP_CLASS_NAME) updatedNodes.push(node);
     });
     return updatedNodes;
-}
-
-function handleHighlightEnabling(result) {
-    if(result['highlight-enabled'] !== false) {
-        document.body.addEventListener('mouseup', analyzeTextForSending);
-    }
-}
-
-function handleStorageChange(changes, namespace) {
-    if(!changes['highlight-enabled']) return;
-    let change = changes['highlight-enabled']['newValue'];
-    if (change) {
-        document.body.addEventListener('mouseup', analyzeTextForSending);
-    } else {
-        document.body.removeEventListener('mouseup', analyzeTextForSending);
-    }
 }
 
 function removeAllEdicraticHTML() {

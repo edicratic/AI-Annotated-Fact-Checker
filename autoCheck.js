@@ -8,7 +8,6 @@ DEFAULT_BLACKLIST = [
 ]
 LIST_TYPE = 'blacklisted-edicratic';
 
-chrome.storage.local.set({'highlight-enabled': false});
 checkAndRun();
 setInterval(() => {
     if (typeof currentWebCheckedUrl !== 'undefined') {
