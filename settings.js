@@ -1,3 +1,4 @@
+LIST_TYPE = 'blacklisted-edicratic';
 let current = [];
 var myNodelist = document.getElementsByTagName("LI");
 var i;
@@ -10,8 +11,8 @@ for (i = 0; i < myNodelist.length; i++) {
 }
 
 //add all websites
-chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
-    let websites = result['whitelisted-edicratic'];
+chrome.storage.local.get([LIST_TYPE], function (result) {
+    let websites = result[LIST_TYPE];
     current = websites;
     for(var i = 0; i < websites.length; i++) {
 
@@ -29,10 +30,10 @@ for (i = 0; i < close.length; i++) {
     div.style.display = "none";
     //console.log(text.replace('.com', ''));
     if(!text) return;
-    chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
-      let websites = result['whitelisted-edicratic'];
+    chrome.storage.local.get([LIST_TYPE], function (result) {
+      let websites = result[LIST_TYPE];
       websites = websites.filter(value => value !== text.replace('.com', ''));
-      chrome.storage.local.set({'whitelisted-edicratic': websites});
+      chrome.storage.local.set(getStorageData(LIST_TYPE, websites));
   });
   }
 }
@@ -82,15 +83,15 @@ function newElement(inputValue, initial) {
   span.appendChild(txt);
   li.appendChild(span);
   if(!initial) {
-    chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
-        let websites = result['whitelisted-edicratic'];
+    chrome.storage.local.get([LIST_TYPE], function (result) {
+        let websites = result[LIST_TYPE];
         if(!websites.includes(inputValue)) {
           websites.push(inputValue);
         } else {
           alert('That seems to be saved already');
           li.parentElement.removeChild(li);
         }
-        chrome.storage.local.set({'whitelisted-edicratic': websites});
+        chrome.storage.local.set(getStorageData(LIST_TYPE, websites));
     });
 }
 
@@ -101,10 +102,10 @@ function newElement(inputValue, initial) {
       div.style.display = "none";
       //console.log(text);
       if(!text) return;
-      chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
-        let websites = result['whitelisted-edicratic'];
+      chrome.storage.local.get([LIST_TYPE], function (result) {
+        let websites = result[LIST_TYPE];
         websites = websites.filter(value => value !== text.replace('.com', ''));
-        chrome.storage.local.set({'whitelisted-edicratic': websites});
+        chrome.storage.local.set(getStorageData(LIST_TYPE, websites));
     });
       
     }
@@ -126,4 +127,10 @@ function isValidUrl(string) {
   } catch (_) {
       return false;
   }
+}
+
+function getStorageData(key, value) {
+  let storage = {};
+  storage[key] = value;
+  return storage;
 }

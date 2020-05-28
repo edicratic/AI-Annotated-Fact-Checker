@@ -1,8 +1,8 @@
+LIST_TYPE = 'blacklisted-edicratic';
 let changeColor = document.getElementById('changeColor');
 let check = document.getElementById('edicratic-check');
 let invalidMessage = document.getElementById('edicratic-invalid');
 let icon = document.getElementById('info-icon-edicratic');
-let checkBox = document.getElementById("enable-quick-look-up");
 let bugReport = document.getElementById('edicratic-bug-report');
 let buttonIcon = document.getElementById('changeColor-icon');
 let loader = document.getElementById('loader');
@@ -10,17 +10,20 @@ let header = document.getElementById('header');
 let checkBoxAutoCheck = document.getElementById('enable-auto-web-check');
 let whitelist = document.getElementById('whitelist');
 let settings = document.getElementById('edicratic-settings');
+let clearButton = document.getElementById('clear-html');
 settings.onclick = () => window.open('settings.html', '_blank')
 header.onclick = () => window.open('https://webcheck.edicratic.com/', '_blank')
 whitelist.onclick = handleWhiteListing;
-updateBox(checkBox, checkBoxAutoCheck);
+updateBox(checkBoxAutoCheck);
 updateWhitelist(whitelist);
-checkBox.onclick = () => handleCheckBoxClick('highlight-enabled');
 checkBoxAutoCheck.onclick = () => handleCheckBoxClick('auto-webcheck-enabled');
 bugReport.onclick = handleBugReport;
-
-
-if(localStorage['isLoadedEdicratic'] === 'true') changeColor.style.display = 'none';
+if (localStorage['hasHTML'] === 'false')  {
+  clearButton.style.display = 'none';
+} else {
+  clearButton.style.display  = '';
+}
+clearButton.onclick = () => removeAllHTML();
 
 chrome.storage.local.get(['authStatus'], function(result) {
   if(chrome.runtime.lastError || result.authStatus === null || result.authStatus === undefined || result.authStatus === "Logged Out"){
@@ -67,11 +70,7 @@ function handleCheckBoxClick(cacheKey) {
   });
 }
 
-function updateBox(checkBox, checkBoxAutoCheck) {
-    chrome.storage.local.get(["highlight-enabled"], (result) => {
-      let val = result['highlight-enabled'];
-      checkBox.checked = val === false ? false : true;
-    });
+function updateBox(checkBoxAutoCheck) {
     chrome.storage.local.get(['auto-webcheck-enabled'], (result) => {
       let valWebCheck = result['auto-webcheck-enabled'];
       checkBoxAutoCheck.checked = valWebCheck === false ? false : true;
@@ -108,30 +107,33 @@ function removeAllHTML() {
 }
 
 function handleWhiteListing(e) {
-  chrome.storage.local.get(['whitelisted-edicratic'], (result) => {
-    let websites = result['whitelisted-edicratic'] || [];
+  chrome.storage.local.get([LIST_TYPE], (result) => {
+    let websites = result[LIST_TYPE] || [];
+    console.log(websites);
     chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
       let domain = getDomain(tabs[0].url);
       if(e.target.checked) {
         websites.push(domain);
+      } else {
+        websites = websites.filter(value => value !== domain);
         chrome.storage.local.get(['auto-webcheck-enabled'], res => {
           if(res['auto-webcheck-enabled'] !== false) {
             chrome.tabs.sendMessage(tabs[0].id, {message: "runWebCheck", automatic: true});
           }
         });
-      } else {
-        websites = websites.filter(value => value !== domain);
       }
       //console.log(websites);
-      chrome.storage.local.set({'whitelisted-edicratic': websites});
+      let storage = {};
+      storage[LIST_TYPE] = websites;
+      chrome.storage.local.set(storage);
     })
     
   });
 }
 
 function updateWhitelist(whitelist) {
-  chrome.storage.local.get(['whitelisted-edicratic'], (result) => {
-    let websites = result['whitelisted-edicratic'] || [];
+  chrome.storage.local.get([LIST_TYPE], (result) => {
+    let websites = result[LIST_TYPE] || [];
     chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
       let domain = getDomain(tabs[0].url);
       if(websites.includes(domain)) {

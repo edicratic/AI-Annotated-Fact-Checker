@@ -1,5 +1,7 @@
 var scriptAlreadyLoaded = true;
+var cleared = false;
 ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
+ANCHOR_OVERRIDE_CLASS_NAME = 'edicratic-anchor-tag-override';
 TOOL_TIP_CLASS_NAME = 'edicratic-tooltip';
 POST_URL = '/process';
 INNER_LINK = 'edicratic-inner-link';
@@ -34,10 +36,6 @@ WIKI_CLASS_NAME = 'edicratic-image';
 ENTITY_PARENT_CLASSNAME = 'edicratic-entity-parent';
 
 window.addEventListener('scroll', adjustSpansBasedOnHeight);
-
-chrome.storage.local.get(["highlight-enabled"], result => handleHighlightEnabling(result));
-chrome.storage.onChanged.addListener((changes, namespace) => handleStorageChange(changes, namespace));
-
 
 document.body.onmousemove = e => handleMouseMove(e);
 chrome.runtime.onMessage.addListener(
@@ -299,6 +297,7 @@ function handleMouseLeave(e) {
 }
 
 async function mouseOverHandle(e, id, text) {
+    if (cleared) return;
     if (e.target && e.target.id) {
         id = e.target.id;
         id = id.substring(0, id.indexOf('-'));
@@ -567,6 +566,10 @@ function getWebUrl(url) {
   }
 
 function makePostRequest(isAutomatic) {
+    if (cleared) {
+        cleared = false;
+        handleClearedEvent();
+    }
     PREVIOUS_TEXT = document.body.innerText;
     window.addEventListener('scroll', checkForSizeChange);
     var spinner;
@@ -591,6 +594,7 @@ function makePostRequest(isAutomatic) {
             throw new Error(result.status);
         }
     }).then(data =>{
+        chrome.runtime.sendMessage({data: 'hasHTML'});
         if(!isAutomatic && spinner) spinner.style.display = 'none';
         recordWebCheck(data.local_id || 'NO_ID');
         body = JSON.parse(data.body);
@@ -801,27 +805,18 @@ function separateChildNodes(newNodes) {
     return updatedNodes;
 }
 
-function handleHighlightEnabling(result) {
-    if(result['highlight-enabled'] !== false) {
-        document.body.addEventListener('mouseup', analyzeTextForSending);
-    }
-}
-
-function handleStorageChange(changes, namespace) {
-    if(!changes['highlight-enabled']) return;
-    let change = changes['highlight-enabled']['newValue'];
-    if (change) {
-        document.body.addEventListener('mouseup', analyzeTextForSending);
-    } else {
-        document.body.removeEventListener('mouseup', analyzeTextForSending);
-    }
-}
-
 function removeAllEdicraticHTML() {
+    cleared = true;
     window.removeEventListener('scroll', checkForSizeChange);
-    let entities = document.getElementsByTagName('div');
+    let entities = document.getElementsByClassName(ANCHOR_CLASS_NAME);
     for(var i = 0; i < entities.length; i++) {
-        if(entities[i].classList.contains(ENTITY_PARENT_CLASSNAME)) entities[i].onmouseover = undefined;
-        entities[i].classList.remove(ANCHOR_CLASS_NAME);
+        entities[i].classList.add(ANCHOR_OVERRIDE_CLASS_NAME);
+    }
+}
+
+function handleClearedEvent() {
+    let entities = document.getElementsByClassName(ANCHOR_CLASS_NAME);
+    for (var i = 0; i < entities.length; i++) {
+        entities[i].classList.remove(ANCHOR_OVERRIDE_CLASS_NAME);
     }
 }

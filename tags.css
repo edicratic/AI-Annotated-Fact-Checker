@@ -3,11 +3,12 @@ html body {
 }
 
 .edicratic-anchor-tag-style {
-    border-bottom: 3px solid #15c39a;
+    border-bottom: 2px dotted #15c39a;
+    pointer-events: auto !important; 
     text-indent: 0 !important;
     box-sizing:border-box;
     /* background-color: #15c39a; */
-    margin-bottom: -3px;
+    margin-bottom: -2px;
     padding-bottom: 0px !important;
     position: relative !important;
     display: inline-block !important;
@@ -22,7 +23,16 @@ html body {
 }
 
 .edicratic-anchor-tag-style:hover {
-  background-color:#d3d3d3 !important;
+  background-color:#d3d3d3;
+}
+
+.edicratic-anchor-tag-override {
+  border-bottom: 2px solid transparent;
+  cursor: inherit;
+}
+
+.edicratic-anchor-tag-override:hover {
+  background-color: transparent !important;
 }
 
 .edicratic-tooltip {

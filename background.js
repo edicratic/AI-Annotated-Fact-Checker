@@ -1,33 +1,56 @@
 //TODO Yukt add the caching
 BASE_URL = "https://webcheck-api.edicratic.com"
-DEFAULT_WHITELIST = [
-  'www.fox',
-  'www.foxnews',
-  'www.cnn',
-  'www.npr', 
-  'www.msnbc',
-  'medium',
-  'www.inc',
-  'www.forbes',
-  'www.yahoo',
-  'www.huffpost',
-  'www.nytimes',
-  'www.nbcnews',
-  'www.dailymail',
-  'www.washingtonpost',
-  'www.theguardian',
-  'www.wsj',
-  'www.bbc',
-  'www.usatoday',
-  'www.latimes',
-  'www.engadget',
-  'moz',
-  'mashable',
-  'techcrunch',
-  'www.nerdwallet',
-  'news.yahoo',
-  
+DEFAULT_BLACKLIST = [
+  'twitter',
+  'www.linkedin',
+  'www.amazon',
+  'www.facebook',
+  'www.linkedin',
+  'mail.google',
+  'outlook.office',
+  'mail.aol',
+  'www.google',
+  'www.zoho',
+  'mail.com',
+  'mail.yahoo',
+  'www.tiktok',
+  'www.facebook',
+  'www.whatsapp',
+  'www.messenger',
+  'www.instagram',
+  'www.tiktok',
+  'www.ebay',
+  'www.walmart',
+  'www.target',
+  'www.alibaba',
+  'www.wayfair',
+  'www.wish',
+  'www.shopify',
+  'www.youtube',
+  'www.netflix',
+  'docs.google',
+  'support.google',
+  'vimeo',
+  'accounts.google',
+  'drive.google',
+  'github',
+  'www.dropbox',
+  'www.paypal',
+  'www.dailymotion',
+  'news.google',
+  'bitly',
+  'bit.ly'
 ]
+LIST_TYPE = 'blacklisted-edicratic';
+
+chrome.contextMenus.create({
+  title: "WebCheck This Term", 
+  contexts:["selection"], 
+  id: 'CONTEXT_MENU_ID',
+});
+chrome.contextMenus.onClicked.addListener(() => {
+  chrome.storage.local.set({'dummy-highlight': new Date().getTime()});
+});
 
 chrome.storage.local.get(['authStatus'], function(result) {
   createBadge(result['authStatus']);
@@ -232,9 +255,11 @@ function oauthFlow(){
 };
 
 function createDefaultBlackList() {
-  chrome.storage.local.get(['whitelisted-edicratic'], function (result) {
-      if(!result['whitelisted-edicratic']) {
-          chrome.storage.local.set({'whitelisted-edicratic': DEFAULT_WHITELIST});
+  chrome.storage.local.get([LIST_TYPE], function (result) {
+      if(!result[LIST_TYPE]) {
+          let storage = {};
+          storage[LIST_TYPE] = DEFAULT_BLACKLIST;
+          chrome.storage.local.set(storage);
           chrome.storage.local.set({'button-change-edicratic': {'time': new Date().getTime(), 'on': true}});
       }
   })

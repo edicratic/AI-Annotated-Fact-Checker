@@ -9,6 +9,7 @@ const BUTTON_PRESSED = 'BUTTON_PRESSED';
 const ALREADY_CHECKED = 'ALREADY_CHECKED';
 const MODAL_OPENED = 'MODAL_OPENED';
 localStorage['isLoadedEdicratic'] = false;
+localStorage['hasHTML'] = false;
 
 const INVALID_SEARCH_URLS = [
     // 'www.facebook.com/',
@@ -33,10 +34,8 @@ chrome.storage.local.get(['authStatus'], function(result) {
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     if(message.data === DATA_LOADED) {
-        localStorage['isLoadedEdicratic'] = true;
         window.close();
     } else if (message.data === ALREADY_CHECKED) {
-        localStorage['isLoadedEdicratic'] = true;
         load(true);
     } else if(message.data === MODAL_OPENED) {
         window.close();
@@ -54,6 +53,9 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
              });
 
         }
+    } else if (message.data === 'hasHTML') {
+        localStorage['hasHTML'] = true;
+        load(true);
     }
     return true;
 });
