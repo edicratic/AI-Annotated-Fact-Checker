@@ -10,7 +10,7 @@ DEFAULT_BLACKLIST = [
 LIST_TYPE = 'blacklisted-edicratic';
 
 chrome.contextMenus.create({
-  title: "Webcheck This Term", 
+  title: "WebCheck This Term", 
   contexts:["selection"], 
   id: 'CONTEXT_MENU_ID',
 });
