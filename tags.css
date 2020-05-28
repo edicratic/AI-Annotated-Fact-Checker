@@ -3,12 +3,12 @@ html body {
 }
 
 .edicratic-anchor-tag-style {
-    border-bottom: 1px dotted #15c39a;
+    border-bottom: 2px dotted #15c39a;
     pointer-events: auto !important; 
     text-indent: 0 !important;
     box-sizing:border-box;
     /* background-color: #15c39a; */
-    margin-bottom: -1px;
+    margin-bottom: -2px;
     padding-bottom: 0px !important;
     position: relative !important;
     display: inline-block !important;
@@ -27,7 +27,7 @@ html body {
 }
 
 .edicratic-anchor-tag-override {
-  border-bottom: 1px solid transparent;
+  border-bottom: 2px solid transparent;
   cursor: auto;
 }
 
