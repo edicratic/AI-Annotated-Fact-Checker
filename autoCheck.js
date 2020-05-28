@@ -39,6 +39,17 @@ DEFAULT_BLACKLIST = [
     'news.google',
     'bitly',
     'bit.ly',
+    'www.hbo',
+    'www.hbomax',
+    'www.hulu',
+    'www.chase',
+    'www.bankofamerica',
+    'www.suntrust',
+    'www.wellsfargo',
+    'www.citigroup',
+    'www.americanexpress',
+    'www.capitalone',
+    'www.pnc'
   ]
 LIST_TYPE = 'blacklisted-edicratic';
 
