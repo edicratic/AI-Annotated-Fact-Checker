@@ -120,6 +120,7 @@ async function modifySingleNode(node, text) {
     tabs.innerHTML = `
         <a class="edicratic-tab edicratic-selected">Information</a>
         <a class="edicratic-tab">News</a>
+        <a style="width: 107px;" class="edicratic-tab">Remove</a>
     `
     tooltip.appendChild(tabs);
     //TODO write onclick method
@@ -127,6 +128,7 @@ async function modifySingleNode(node, text) {
     for (var i = 0; i < tabChildren.length; i++) {
         tabChildren[i].onclick = (e) => handleTabClick(e, uniqueId);
     }
+    idToData[uniqueId]['Remove'] = getTooltipSurvey(uniqueId);
     idToSelected[uniqueId] = 'Information';
     tooltips[uniqueId] = tooltip;
     // addShowMoreListeners(uniqueId);
@@ -169,6 +171,33 @@ function addShowMoreListeners(id) {
     for(var i = 0; i < links.length; i++) {
         links[i].onclick = (e) => handleArticleClick(e, id);
     }
+    let submitWithFeedbackButton = document.getElementById(`${id}-feedback-submit-with-feedback`);
+    let submitWithoutFeedBackButton = document.getElementById(`${id}-feedback-submit-without-feedback`)
+    let elements = document.getElementsByClassName('edicratic-label');
+    for (var i = 0; i < elements.length; i++) elements[i].onclick = (e) => {
+        let element = document.getElementById(`${e.target.id}-check`);
+        element.checked = !element.checked;
+    }
+    if(!submitWithFeedbackButton || !submitWithoutFeedBackButton) return;
+    submitWithFeedbackButton.onclick = () => handleFeedbackSubmit(id, true);
+    submitWithoutFeedBackButton.onclick = () => handleFeedbackSubmit(id, false);
+}
+
+function handleFeedbackSubmit(id, sendFeedback) {
+    let isUseful = document.getElementById(`${id}-useful-check`);
+    let shouldHaveBeenCaught = document.getElementById(`${id}-entity-caught-check`);
+    let textarea = document.getElementById(`${id}-feedback-text`);
+    let parent = document.getElementById(`${id}-parent-parent`);
+    parent.classList.add(ANCHOR_OVERRIDE_CLASS_NAME);
+    tooltips[id] = undefined;
+    removeSpan(id);
+    if(!sendFeedback) return;
+    console.log({
+        'is_useful': !!isUseful.checked,
+        'should_have_been_caught': !!shouldHaveBeenCaught.checked,
+        'feedback': textarea.value
+    })
+
 }
 
 function handleTabClick(e, id) {
@@ -233,7 +262,7 @@ function modifyAllText(regex, entity, matches, childList, set, automatic) {
                 idToTerm[uniqueId] = entity;
                 text = text.replace(regex, `<div data-type="${automatic ? 'whitelist_check' : 'webcheck'}" id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text.match(regex)}</div>`);
                 let data = proccessWikiData(matches, uniqueId);
-                idToData[uniqueId] = {'Information': data};
+                idToData[uniqueId] = {'Information': data, 'Remove': getTooltipSurvey(uniqueId)};
                 var newElement = document.createElement('div');
                 newElement.className = ENTITY_PARENT_CLASSNAME;
                 newElement.style.display = "inline";
@@ -273,6 +302,7 @@ function createTooltip(data, id, infoType) {
     tabs.innerHTML = `
         <a class="edicratic-tab ${infoType === 'Information' ? 'edicratic-selected' : ''}">Information</a>
         <a class="edicratic-tab ${infoType === 'News' ? 'edicratic-selected' : ''}">News</a>
+        <a style="width: 107px;" class="edicratic-tab">Remove</a>
     `
     tooltip.appendChild(tabs);
     idToSelected[id] = infoType;
@@ -313,9 +343,9 @@ async function mouseOverHandle(e, id, text) {
         }
         OPEN_SPAN = id;
         let isHighlightLookup = !!entityElement.dataset['unique'];
-        let type = idToSelected[id] || 'Information';
         let tooltip = tooltips[id];
         let pointer = pointers[id];
+        if(!tooltip || !pointer) return;
         document.body.prepend(tooltip);
         document.body.appendChild(pointer);
         addShowMoreListeners(id);
@@ -819,4 +849,26 @@ function handleClearedEvent() {
     for (var i = 0; i < entities.length; i++) {
         entities[i].classList.remove(ANCHOR_OVERRIDE_CLASS_NAME);
     }
+}
+
+function getTooltipSurvey(uniqueId) {
+    return `<h4>Removing Tooltip</h4><hr/>
+    <div class="info-edicratic">
+        <label class="container edicratic-label" style="font-size: 12px; margin-left: 10px; float:left">Was this tooltip useful?<input class="edicratic-checkbox" id="${uniqueId}-useful-check" type="checkbox" checked="checked">
+            <span id="${uniqueId}-useful" class="checkmark"></span>
+        </label>
+        <br>
+        <br>
+        <br>
+        <label class="container edicratic-label" style="font-size: 12px; margin-left: 10px; float:left;">Should this word have been caught?<input id="${uniqueId}-entity-caught-check" class="edicratic-checkbox" type="checkbox">
+            <span id="${uniqueId}-entity-caught" class="checkmark"></span>
+        </label>    
+        <br>
+        <br>  
+        <textarea id="${uniqueId}-feedback-text" class="edicratic-text-area" type="text" placeholder="Why?"></textarea><br>
+        <br>
+        <button id="${uniqueId}-feedback-submit-with-feedback" class="edicratic-button" style="margin-right: 25px;">Submit and Delete</button>
+        <button id="${uniqueId}-feedback-submit-without-feedback" class="edicratic-button">Just Delete</button>
+    </div>`
+
 }
