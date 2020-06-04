@@ -328,7 +328,7 @@ async function mouseOverHandle(e, id, text) {
             document.body.appendChild(pointer);
             addShowMoreListeners(id);
             positionTooltips(id);
-        }, 1000); 
+        }, 600); 
     }
     e.preventDefault();
     e.stopPropagation();
