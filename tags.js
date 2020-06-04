@@ -322,12 +322,9 @@ async function mouseOverHandle(e, id, text) {
                 idToData[id]['News'] = ' ';
                 testEndpoint(text, id);
         }
-        timer = setTimeout(function() {
+        timer = setTimeout(async function() {
             OPEN_SPAN = id;
             document.body.prepend(tooltip);
-            tooltip.classList.remove('invisible');
-            tooltip.style.display = 'block';
-            tooltip.classList.add('visible');
             document.body.appendChild(pointer);
             addShowMoreListeners(id);
             positionTooltips(id);
@@ -392,9 +389,6 @@ function positionTooltips(id) {
 
 function removeSpan(id) {
     const span = document.getElementById(`${id}-parent`);
-    span.classList.remove('visible');
-    span.style.display = '';
-    span.classList.add('invisible');
     if(OPEN_SPAN === id) OPEN_SPAN = undefined;
     if(!span) return;
     const pointer = document.getElementById(`${id}-pointer`);

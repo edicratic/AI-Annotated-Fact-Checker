@@ -35,28 +35,6 @@ html body {
   background-color: transparent !important;
 }
 
-.edicratic-tooltip .visible {
-  height: auto;
-  -webkit-transition: height 0.5s linear;
-     -moz-transition: height 0.5s linear;
-      -ms-transition: height 0.5s linear;
-       -o-transition: height 0.5s linear;
-          transition: height 0.5s linear;
-}
-
-.edicratic-tooltip .invisible {
-  height: 0px;
-}
-
-@keyframes fadeInOpacity {
-	0% {
-		opacity: 0;
-	}
-	100% {
-		opacity: 1;
-	}
-}
-
 .edicratic-tooltip {
     float: left !important;
     text-align: center;
@@ -81,12 +59,6 @@ html body {
     font-style: normal !important;
     line-height: normal !important;
     overflow-y:auto;
-
-    opacity: 1;
-    animation-name: fadeInOpacity;
-    animation-iteration-count: 1;
-    animation-timing-function: ease-in;
-    animation-duration: 0.3s;
 }
 .edicratic-tooltip .edicratic-paragraph-classname {
   height: auto;
@@ -309,12 +281,6 @@ html body {
   border-style: solid;
   display: block;
   z-index: 10000000;
-
-  opacity: 1;
-  animation-name: fadeInOpacity;
-  animation-iteration-count: 1;
-  animation-timing-function: ease-in;
-  animation-duration: 0.3s;
 }
 
 .edicratic-entity-header {
@@ -336,8 +302,8 @@ html body {
 
 
 .info-edicratic{
-   height: 270px;
-   overflow-y: scroll;
+  height: 270px;
+  overflow-y: scroll;
 }
 
 .edicratic-image {
