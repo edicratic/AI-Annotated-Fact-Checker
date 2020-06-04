@@ -1,5 +1,6 @@
 var scriptAlreadyLoaded = true;
 var cleared = false;
+var timer;
 ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
 ANCHOR_OVERRIDE_CLASS_NAME = 'edicratic-anchor-tag-override';
 TOOL_TIP_CLASS_NAME = 'edicratic-tooltip';
@@ -239,6 +240,7 @@ function modifyAllText(regex, entity, matches, childList, set, automatic) {
                 newElement.style.display = "inline";
                 newElement.innerHTML = text;
                 newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId, entity);
+                newElement.onmouseleave = () => clearTimeout(timer);
                 if(child.nodeName !== "#text") {
                     child.appendChild(newElement);
                 } else {
@@ -291,18 +293,17 @@ function createTooltip(data, id, infoType) {
 }
 
 function handleMouseLeave(e) {
+    clearTimeout(timer);
     let orginalId = e.target ? e.target.id || undefined : undefined;
     if(orginalId) removeSpan(orginalId.substring(0, orginalId.indexOf('-')));
 
 }
 
 async function mouseOverHandle(e, id, text) {
-    if (cleared) return;
+    if (cleared && !e.target.dataset['unique']) return;
     if (e.target && e.target.id) {
         id = e.target.id;
         id = id.substring(0, id.indexOf('-'));
-        // let span = document.getElementById(`${id}-parent-parent`);
-        // if (span && span.style.display === 'block') return;
         let entityElement = document.getElementById(`${id}-parent-parent`);
         if(entityElement) {
             startTimer(entityElement.textContent || entityElement.innerText, e.target);
@@ -311,20 +312,26 @@ async function mouseOverHandle(e, id, text) {
         if (OPEN_SPAN) {
             removeSpan(OPEN_SPAN);
         }
-        OPEN_SPAN = id;
         let isHighlightLookup = !!entityElement.dataset['unique'];
         let type = idToSelected[id] || 'Information';
         let tooltip = tooltips[id];
         let pointer = pointers[id];
-        document.body.prepend(tooltip);
-        document.body.appendChild(pointer);
-        addShowMoreListeners(id);
-        positionTooltips(id);
+        if(!tooltip || !pointer) return;
+        clearTimeout(timer);
         if (!idToData[id]['News'] && text && !isHighlightLookup) {
-            idToData[id]['News'] = ' ';
-            testEndpoint(text, id);
+                idToData[id]['News'] = ' ';
+                testEndpoint(text, id);
         }
-
+        timer = setTimeout(function() {
+            OPEN_SPAN = id;
+            document.body.prepend(tooltip);
+            tooltip.classList.remove('invisible');
+            tooltip.style.display = 'block';
+            tooltip.classList.add('visible');
+            document.body.appendChild(pointer);
+            addShowMoreListeners(id);
+            positionTooltips(id);
+        }, 1000); 
     }
     e.preventDefault();
     e.stopPropagation();
@@ -385,6 +392,9 @@ function positionTooltips(id) {
 
 function removeSpan(id) {
     const span = document.getElementById(`${id}-parent`);
+    span.classList.remove('visible');
+    span.style.display = '';
+    span.classList.add('invisible');
     if(OPEN_SPAN === id) OPEN_SPAN = undefined;
     if(!span) return;
     const pointer = document.getElementById(`${id}-pointer`);
@@ -598,6 +608,8 @@ function makePostRequest(isAutomatic) {
         if(!isAutomatic && spinner) spinner.style.display = 'none';
         recordWebCheck(data.local_id || 'NO_ID');
         body = JSON.parse(data.body);
+        console.log(body);
+        //30
         processEntities(body, isAutomatic);
         if(!isAutomatic) chrome.runtime.sendMessage({data: DATA_LOADED});
     }).catch(e => {
@@ -691,6 +703,7 @@ function handleMouseMove(e) {
             id = id.substring(0, id.indexOf('-'));
             removeSpan(id);
         }
+        clearTimeout(timer);
         OPEN_SPAN = undefined;
     }
 }
