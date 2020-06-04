@@ -98,6 +98,7 @@ async function modifySingleNode(node, text) {
     newElement.className = ENTITY_PARENT_CLASSNAME;
     newElement.innerHTML = innerText;
     newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId, text);
+    newElement.onmouseleave = () => clearTimeout(timer);
     node.parentElement.replaceChild(newElement, node);
 
     var tooltip = document.createElement('span');
