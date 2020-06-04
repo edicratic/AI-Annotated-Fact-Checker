@@ -1,5 +1,6 @@
 var scriptAlreadyLoaded = true;
 var cleared = false;
+var timer;
 ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
 ANCHOR_OVERRIDE_CLASS_NAME = 'edicratic-anchor-tag-override';
 TOOL_TIP_CLASS_NAME = 'edicratic-tooltip';
@@ -97,6 +98,7 @@ async function modifySingleNode(node, text) {
     newElement.className = ENTITY_PARENT_CLASSNAME;
     newElement.innerHTML = innerText;
     newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId, text);
+    newElement.onmouseleave = () => clearTimeout(timer);
     node.parentElement.replaceChild(newElement, node);
 
     var tooltip = document.createElement('span');
@@ -239,6 +241,7 @@ function modifyAllText(regex, entity, matches, childList, set, automatic) {
                 newElement.style.display = "inline";
                 newElement.innerHTML = text;
                 newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId, entity);
+                newElement.onmouseleave = () => clearTimeout(timer);
                 if(child.nodeName !== "#text") {
                     child.appendChild(newElement);
                 } else {
@@ -291,18 +294,17 @@ function createTooltip(data, id, infoType) {
 }
 
 function handleMouseLeave(e) {
+    clearTimeout(timer);
     let orginalId = e.target ? e.target.id || undefined : undefined;
     if(orginalId) removeSpan(orginalId.substring(0, orginalId.indexOf('-')));
 
 }
 
 async function mouseOverHandle(e, id, text) {
-    if (cleared) return;
+    if (cleared && !e.target.dataset['unique']) return;
     if (e.target && e.target.id) {
         id = e.target.id;
         id = id.substring(0, id.indexOf('-'));
-        // let span = document.getElementById(`${id}-parent-parent`);
-        // if (span && span.style.display === 'block') return;
         let entityElement = document.getElementById(`${id}-parent-parent`);
         if(entityElement) {
             startTimer(entityElement.textContent || entityElement.innerText, e.target);
@@ -311,20 +313,23 @@ async function mouseOverHandle(e, id, text) {
         if (OPEN_SPAN) {
             removeSpan(OPEN_SPAN);
         }
-        OPEN_SPAN = id;
         let isHighlightLookup = !!entityElement.dataset['unique'];
         let type = idToSelected[id] || 'Information';
         let tooltip = tooltips[id];
         let pointer = pointers[id];
-        document.body.prepend(tooltip);
-        document.body.appendChild(pointer);
-        addShowMoreListeners(id);
-        positionTooltips(id);
+        if(!tooltip || !pointer) return;
+        clearTimeout(timer);
         if (!idToData[id]['News'] && text && !isHighlightLookup) {
-            idToData[id]['News'] = ' ';
-            testEndpoint(text, id);
+                idToData[id]['News'] = ' ';
+                testEndpoint(text, id);
         }
-
+        timer = setTimeout(async function() {
+            OPEN_SPAN = id;
+            document.body.prepend(tooltip);
+            document.body.appendChild(pointer);
+            addShowMoreListeners(id);
+            positionTooltips(id);
+        }, 500); 
     }
     e.preventDefault();
     e.stopPropagation();
@@ -691,6 +696,7 @@ function handleMouseMove(e) {
             id = id.substring(0, id.indexOf('-'));
             removeSpan(id);
         }
+        clearTimeout(timer);
         OPEN_SPAN = undefined;
     }
 }
