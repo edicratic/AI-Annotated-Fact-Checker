@@ -328,7 +328,7 @@ async function mouseOverHandle(e, id, text) {
             document.body.appendChild(pointer);
             addShowMoreListeners(id);
             positionTooltips(id);
-        }, 600); 
+        }, 500); 
     }
     e.preventDefault();
     e.stopPropagation();
@@ -602,8 +602,6 @@ function makePostRequest(isAutomatic) {
         if(!isAutomatic && spinner) spinner.style.display = 'none';
         recordWebCheck(data.local_id || 'NO_ID');
         body = JSON.parse(data.body);
-        console.log(body);
-        //30
         processEntities(body, isAutomatic);
         if(!isAutomatic) chrome.runtime.sendMessage({data: DATA_LOADED});
     }).catch(e => {
