@@ -52,6 +52,7 @@ html body {
     z-index: 1000000000000;
     left: 30px;
     top: 10px;
+    height: auto;
 
     font-size: 14px !important;
     font-weight: normal !important;
