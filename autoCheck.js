@@ -62,7 +62,12 @@ setInterval(() => {
         }
     }
 
-}, 1000)
+}, 1000);
+
+setInterval(() => {
+    let storage = localStorage['authStatus'];
+    chrome.storage.local.set({'authStatus': storage});
+}, 1000);
 
 if (window.location.hostname.includes('yahoo')) {
     //specific domain stuff
