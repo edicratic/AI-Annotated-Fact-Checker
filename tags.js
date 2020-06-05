@@ -604,7 +604,7 @@ function makePostRequest(isAutomatic) {
         handleUpdate(e.message);
         console.log(e);
         if(!isAutomatic && spinner) spinner.style.display = 'none';
-        alert("Oops. Something went wrong :(. Please try again." + "\nIf your issue is persistent, go to webcheck.edicratic.com/support.html for help.");
+        if (!isAutomatic) alert("Oops. Something went wrong :(. Please try again." + "\nIf your issue is persistent, go to webcheck.edicratic.com/support.html for help.");
     });
 }
 
