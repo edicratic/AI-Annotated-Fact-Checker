@@ -158,6 +158,11 @@ return true;
 
 chrome.runtime.onInstalled.addListener(function(details){
   oauthFlow();
+  let params =  { method:"POST", 
+                  body: JSON.stringify({body:{type: "installed"}}),
+                  'Content-Type': 'application/json'
+                };
+  fetch(BASE_URL + "/subscription-event", params);
 });
 
 function getToken(id_token){
@@ -193,4 +198,4 @@ function createDefaultBlackList() {
   })
 }
 
-chrome.runtime.setUninstallURL("https://webcheck.edicratic.com/uninstall.html")
+chrome.runtime.setUninstallURL("https://webcheck.edicratic.com/uninstall.html?origin=extension")
