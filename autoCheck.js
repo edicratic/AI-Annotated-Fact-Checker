@@ -113,8 +113,9 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         if(change) runAutoCheck();
     } else if (changes['authStatus']) {
         let change = changes['authStatus']['newValue'];
-        if (change === 'Authenticated') {
-
+        let old = changes['authStatus']['oldValue']
+        if (old !== change) {
+            checkAndRun();
         }
     } else if(changes[LIST_TYPE]) {
         let changeList = changes[LIST_TYPE];
