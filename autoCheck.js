@@ -62,7 +62,13 @@ setInterval(() => {
         }
     }
 
-}, 1000)
+}, 1000);
+if (window.location.href === 'https://webcheck.edicratic.com/login.html') {
+    setInterval(() => {
+        let storage = localStorage['authStatus'];
+        chrome.storage.local.set({'authStatus': storage});
+    }, 1000);
+}
 
 if (window.location.hostname.includes('yahoo')) {
     //specific domain stuff
@@ -108,8 +114,9 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         if(change) runAutoCheck();
     } else if (changes['authStatus']) {
         let change = changes['authStatus']['newValue'];
-        if (change === 'Authenticated') {
-
+        let old = changes['authStatus']['oldValue']
+        if (old !== change) {
+            checkAndRun();
         }
     } else if(changes[LIST_TYPE]) {
         let changeList = changes[LIST_TYPE];
