@@ -50,8 +50,6 @@ chrome.runtime.onMessage.addListener(
   });
 
 function init(data, entity, automatic) {
-    var pages = data.query.pages;
-    var matches = getMatches(pages);
     var regex = undefined;
     try {
         var regex = new RegExp(entity, "i");
@@ -60,7 +58,7 @@ function init(data, entity, automatic) {
     }
     let childList = document.body.childNodes;
     const set = new Set();
-    if(regex) modifyAllText(regex, entity, matches, NEW_NODES || childList, set, automatic);
+    if(regex) modifyAllText(regex, entity, data, NEW_NODES || childList, set, automatic);
 }
 
 async function modifySingleNode(node, text) {
@@ -728,7 +726,7 @@ function proccessWikiData(items, id) {
     let content = `<h4>Wiki Articles</h4><hr/><div class="info-edicratic">`;
     for (var i = 0; i < items.length; i++) {
         let item = items[i];
-        let wikilink = `https://en.wikipedia.org/?curid=${item.pageid}`
+        let wikilink = !item.type ? `https://en.wikipedia.org/?curid=${item.pageid}` : `https://www.newworldencyclopedia.org/entry/${item.title}`;
         let pageDescription = stripHtml(item.extract) || item.description;
         if (!pageDescription) continue;
         let words = pageDescription.split(' ');
@@ -739,7 +737,7 @@ function proccessWikiData(items, id) {
         + (item.thumbnail ? `<img class='edicratic-image' src="${item.thumbnail.source}"/>` : ``) +
         `${visibleArray.join(' ')}<span id="${modiifiedId}-show-more-hidden" style="display: none">
         ${hiddenArray.join(' ')} <br/><br/>` + `<a class="${ENTITY_LINK_CLASS_NAME}" data-url="${wikilink}"
-        data-category="Information">Learn More</a></span></p>
+        data-category="Information">${!item.type ? 'Learn More' : 'The New World Encyclopedia'}</a></span></p>
         <a data-url="${wikilink}" id="${modiifiedId}-show-more" class="${INNER_LINK} ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
     }
     return content + '</div>';

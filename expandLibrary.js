@@ -39,7 +39,27 @@ function sendBackData(paragraph, text) {
 
 async function lookUpTerm(term, automatic) {
     var URL = getWikiUrl(term);
+    var encyclopediaUrl = getNewEnclopediaUrl(term);
     var data;
+    var newData;
+    let isValidNewWorld = false;
+    try {
+      var newEnclopedia = await fetchWiki(encyclopediaUrl);
+      newData = await newEnclopedia.json();
+      if(newData && newData.query && newData.query.pages) {
+        isValidNewWorld = true;
+        let pages = newData.query.pages;
+        Object.keys(pages).forEach(key => {
+          pages[key].type = 'NEW_WORLD'
+          pages[key].rank = 1;
+        });
+        newData.query.pages = pages;
+      }
+    } catch (e) {
+      handleUpdate(e.message);
+      console.log(e);
+      return;
+    }
     try {
       var result = await fetchWiki(URL);
       data = await result.json();
@@ -49,6 +69,11 @@ async function lookUpTerm(term, automatic) {
       return;
     }
     if(!data || !data.query || !data.query.pages || data.query.pages.length === 0) return;
+    if (isValidNewWorld) {
+      data = mergeEntries(data, newData);
+    } else {
+      data = getMatches(data.query.pages);
+    }
     init(data, term, automatic);
 }
 
@@ -133,6 +158,24 @@ function getWikiUrl(term) {
     return `https://en.wikipedia.org/w/api.php?${params.toString()}`;
 }
 
+function getNewEnclopediaUrl(term) {
+  const params =  new URLSearchParams({
+    "action": "query",
+    "format": "json",
+    "list": "",
+    "generator": "search",
+    "exsentences": "2",
+    "exlimit": "5",
+    "prop": "extracts",
+    "exintro": 1,
+    "gsrsearch": term,
+    "gsrlimit": 5,
+    "gsrinfo": "totalhits",
+    "gsrsort": "relevance",
+});
+  return `https://www.newworldencyclopedia.org/api.php?${params.toString()}`  
+}
+
 function getMatches(pages) {
   var matches = [];
   Object.keys(pages).forEach(key => {
@@ -140,5 +183,29 @@ function getMatches(pages) {
   })
   matches.sort((a,b) => a.index - b.index);
   return matches;
-
 }
+
+function mergeEntries(wikiData, newWorldData) {
+  let newWordMap = newWorldData.query.pages;
+  let newWikiMap = wikiData.query.pages;
+  let newMap = {};
+  let data = [];
+  Object.keys(newWikiMap).forEach(key => newMap[newWikiMap[key].title] = newWikiMap[key]);
+  Object.keys(newWordMap).forEach(key => {
+    let alreadyOccupied = !!newMap[newWordMap[key].title];
+    let index = alreadyOccupied ? newMap[newWordMap[key].title].index : undefined;
+    newMap[newWordMap[key].title] = newWordMap[key]
+    if (alreadyOccupied) {
+      newMap[newWordMap[key].title].rank = 0;
+      newMap[newWordMap[key].title].index = index;
+    }
+  });
+  Object.keys(newMap).forEach(key => {if (newMap[key].description !== INVALID_DESCRIPTION) data.push(newMap[key])});
+  data.sort((a,b) => {
+    let difference = a.rank || 0 - b.rank || 0;
+    return difference === 0 ? a.index - b.index : difference
+  });
+  console.log(data);
+  return data;
+}
+
