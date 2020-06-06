@@ -205,7 +205,7 @@ function mergeEntries(wikiData, newWorldData) {
     let difference = a.rank || 0 - b.rank || 0;
     return difference === 0 ? a.index - b.index : difference
   });
-  console.log(data);
+  //console.log(data);
   return data;
 }
 
