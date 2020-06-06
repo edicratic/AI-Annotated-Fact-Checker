@@ -193,9 +193,11 @@ function mergeEntries(wikiData, newWorldData) {
   Object.keys(newWikiMap).forEach(key => newMap[newWikiMap[key].title] = newWikiMap[key]);
   Object.keys(newWordMap).forEach(key => {
     let alreadyOccupied = !!newMap[newWordMap[key].title];
+    let index = alreadyOccupied ? newMap[newWordMap[key].title].index : undefined;
     newMap[newWordMap[key].title] = newWordMap[key]
     if (alreadyOccupied) {
       newMap[newWordMap[key].title].rank = 0;
+      newMap[newWordMap[key].title].index = index;
     }
   });
   Object.keys(newMap).forEach(key => {if (newMap[key].description !== INVALID_DESCRIPTION) data.push(newMap[key])});
