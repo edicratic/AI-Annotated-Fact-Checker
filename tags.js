@@ -326,14 +326,14 @@ async function mouseOverHandle(e, id, text) {
             document.body.prepend(tooltip);
             document.body.appendChild(pointer);
             addShowMoreListeners(id);
-            positionTooltips(id);
+            positionTooltips(id, true);
         }, 500); 
     }
     e.preventDefault();
     e.stopPropagation();
 }
 
-function positionTooltips(id) {
+function positionTooltips(id, initial) {
     const span = document.getElementById(`${id}-parent`);
     const anchor = document.getElementById(`${id}-parent-parent`);
     let x = anchor.getBoundingClientRect().left + window.pageXOffset;
@@ -370,6 +370,7 @@ function positionTooltips(id) {
 
     let top = anchor.getBoundingClientRect().top;
     let bottom = window.innerHeight - top;
+    if (initial) span.getElementsByClassName('info-edicratic')[0].style.height = `${Math.min(270, Math.max(top, bottom) - 160)}px`
     if (top <= bottom) {
         span.style.top = `${y + anchor.clientHeight + TOOL_TIP_POINTER_HEIGHT}px`;
         onTop[id] = false;
@@ -574,7 +575,6 @@ function makePostRequest(isAutomatic) {
         handleClearedEvent();
     }
     PREVIOUS_TEXT = document.body.innerText;
-    window.addEventListener('scroll', checkForSizeChange);
     var spinner;
     if(!isAutomatic) {
         spinner = document.createElement('div');
@@ -597,10 +597,13 @@ function makePostRequest(isAutomatic) {
             throw new Error(result.status);
         }
     }).then(data =>{
-        chrome.runtime.sendMessage({data: 'hasHTML'});
-        if(!isAutomatic && spinner) spinner.style.display = 'none';
-        recordWebCheck(data.local_id || 'NO_ID');
         body = JSON.parse(data.body);
+        if(!isAutomatic && spinner) spinner.style.display = 'none';
+        if(isAutomatic && body.length < 20) return;
+        chrome.runtime.sendMessage({data: 'hasHTML'});
+        recordWebCheck(data.local_id || 'NO_ID');
+        console.log(body);
+        window.addEventListener('scroll', checkForSizeChange);
         processEntities(body, isAutomatic);
         if(!isAutomatic) chrome.runtime.sendMessage({data: DATA_LOADED});
     }).catch(e => {
@@ -627,7 +630,7 @@ function stripHtml(html) {
 
 function adjustSpansBasedOnHeight() {
     if(OPEN_SPAN) {
-        positionTooltips(OPEN_SPAN);
+        positionTooltips(OPEN_SPAN, false);
     }
 }
 
