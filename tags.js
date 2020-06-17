@@ -609,7 +609,7 @@ function makePostRequest(isAutomatic) {
     }).then(data =>{
         body = JSON.parse(data.body);
         if(!isAutomatic && spinner) spinner.style.display = 'none';
-        if(isAutomatic && body.length < 20) return;
+        if(isAutomatic && body.length < 30) return;
         chrome.runtime.sendMessage({data: 'hasHTML'});
         recordWebCheck(data.local_id || 'NO_ID');
         console.log(body);
