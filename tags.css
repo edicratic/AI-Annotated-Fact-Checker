@@ -374,3 +374,70 @@ html body {
     font-size: 3vw !important;
   }
 }
+
+
+.edicratic-button {
+  cursor: pointer;
+  border: none;
+  margin-top: 20px;
+  padding: 6px 13px;
+  width: 100px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  background-color: inherit;
+  text-align: center;
+  cursor: pointer;
+  color: white;
+  background-color: #15c39a;
+  opacity: 0.8;
+}
+
+/*Social Media Icons*/
+.fa {
+  padding: 5px !important;
+  font-size: 15px !important;
+  width: 30px !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  border-radius: 50% !important;
+  cursor: pointer !important;
+}
+
+.fa:hover {
+    opacity: 0.5;
+}
+
+.fa-facebook {
+  background: #3B5998;
+  color: white;
+}
+
+.fa-twitter {
+  background: #55ACEE;
+  color: white;
+}
+
+.fa-linkedin {
+  background: #007bb5;
+  color: white;
+}
+
+.fa-pinterest {
+  background: #cb2027;
+  color: white;
+}
+
+.fa-envelope {
+  background-color: #007bb5;
+  color: white;
+}
+
+.edicratic-text-style {
+  color: #6f7287 !important;
+  line-height: 1.2rem !important;
+  font-size: 15px!important;
+  margin-top: 4% !important;
+  padding-right: 0.5rem !important;
+  margin-bottom: 4% !important;
+}

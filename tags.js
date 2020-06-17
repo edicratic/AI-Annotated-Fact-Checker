@@ -36,9 +36,13 @@ GOOGLE_SEARCH_DESCRIPTION_META = 'og:description';
 WIKI_CLASS_NAME = 'edicratic-image';
 ENTITY_PARENT_CLASSNAME = 'edicratic-entity-parent';
 
+//urls
+WEBSTORE_URL = 'https://chrome.google.com/webstore/detail/webcheck-ai/faiaendcmomnolaeadadkanohcmcnaip'
+WEBSTORE_SUMMARY = 'Check%20out%20this%20new%20Chrome%20Extension!';
+
 window.addEventListener('scroll', adjustSpansBasedOnHeight);
 
-document.body.onmousemove = e => handleMouseMove(e);
+// document.body.onmousemove = e => handleMouseMove(e);
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
     if (request.message === "runWebCheck"){
@@ -106,6 +110,7 @@ async function modifySingleNode(node, text) {
 
     //add data
     idToData[uniqueId] = {'Information': itemsArray};
+    idToData[uniqueId]['Share'] = getShareHTML();
 
     //create pointer
     let pointer = document.createElement('div');
@@ -120,6 +125,7 @@ async function modifySingleNode(node, text) {
     tabs.innerHTML = `
         <a class="edicratic-tab edicratic-selected">Information</a>
         <a class="edicratic-tab">News</a>
+        <a class="edicratic-tab">Share</a>
     `
     tooltip.appendChild(tabs);
     //TODO write onclick method
@@ -188,6 +194,7 @@ function handleTabClick(e, id) {
     handleTabSwitchProcesssing(previousTabText,idToSelected[id]);
     let tooltipChildren = tooltip.children;
     let index = 0;
+    let height = tooltip.getElementsByClassName('info-edicratic')[0].clientHeight;
     for(var i = 0; i < tooltipChildren.length; i++) {
         if(tooltipChildren[i].id === `${id}-content`) {
             index = i;
@@ -197,6 +204,7 @@ function handleTabClick(e, id) {
             } else {
                 tooltipChildren[i].innerHTML = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">Searching...</div>`;
             }
+            tooltip.getElementsByClassName('info-edicratic')[0].style.height = `${height}px`
 
         }
     }
@@ -234,6 +242,7 @@ function modifyAllText(regex, entity, matches, childList, set, automatic) {
                 text = text.replace(regex, `<div data-type="${automatic ? 'whitelist_check' : 'webcheck'}" id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text.match(regex)}</div>`);
                 let data = proccessWikiData(matches, uniqueId);
                 idToData[uniqueId] = {'Information': data};
+                idToData[uniqueId]['Share'] = getShareHTML();
                 var newElement = document.createElement('div');
                 newElement.className = ENTITY_PARENT_CLASSNAME;
                 newElement.style.display = "inline";
@@ -274,6 +283,7 @@ function createTooltip(data, id, infoType) {
     tabs.innerHTML = `
         <a class="edicratic-tab ${infoType === 'Information' ? 'edicratic-selected' : ''}">Information</a>
         <a class="edicratic-tab ${infoType === 'News' ? 'edicratic-selected' : ''}">News</a>
+        <a class="edicratic-tab">Share</a>
     `
     tooltip.appendChild(tabs);
     idToSelected[id] = infoType;
@@ -825,5 +835,34 @@ function handleClearedEvent() {
     let entities = document.getElementsByClassName(ANCHOR_CLASS_NAME);
     for (var i = 0; i < entities.length; i++) {
         entities[i].classList.remove(ANCHOR_OVERRIDE_CLASS_NAME);
+    }
+}
+
+function getShareHTML() {
+    return `
+    <h4>Share</h4><hr/>
+    <div class="info-edicratic">
+    <h3 class="edicratic-text-style">Share With Friends!</h3>
+    <a onclick="window.open('${getShareUrl("FACEBOOK")}')"class="fa fa-facebook"></a>
+    <a onclick="window.open('${getShareUrl("TWITTER")}')" class="fa fa-twitter"></a>
+    <a onclick="window.open('${getShareUrl("LINKEDIN")}')" class="fa fa-linkedin"></a>
+    <a onclick="window.open('${getShareUrl("PINTEREST")}')" class="fa fa-pinterest"></a>
+    <a onclick="window.open('${getShareUrl("EMAIL")}')" class="fa fa-envelope"></a>
+    </div>
+    `
+}
+
+function getShareUrl(socialNetwork) {
+    switch (socialNetwork) {
+        case "FACEBOOK":
+            return  `https://www.facebook.com/sharer/sharer.php?u=${WEBSTORE_URL}`;
+        case "TWITTER":
+            return `https://twitter.com/intent/tweet?text=${WEBSTORE_SUMMARY}&url=${WEBSTORE_URL}`;
+        case "LINKEDIN":
+            return `https://www.linkedin.com/shareArticle?mini=true&url=${WEBSTORE_URL}&title=&summary=${WEBSTORE_SUMMARY}`;
+        case "PINTEREST":
+            return `https://pinterest.com/pin/create/button/?url=${WEBSTORE_URL}&media=https://webcheck.edicratic.com/img/logo128.png&description=${WEBSTORE_SUMMARY}`;
+        case "EMAIL":
+            return `mailto:info@example.com?&subject=&body=${WEBSTORE_URL}%20${WEBSTORE_SUMMARY}`;
     }
 }

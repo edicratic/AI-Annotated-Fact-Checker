@@ -62,6 +62,11 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 
 });
 
+// chrome.runtime.onUpdateAvailable.addListener(function(details) {
+//   console.log("updating to version " + details.version);
+//   chrome.runtime.reload();
+// });
+
 function createBadge(authStatus) {
   if(chrome.runtime.lastError || authStatus === null || authStatus === undefined || authStatus === "Logged Out") {
     chrome.browserAction.setBadgeText({text: 'Off'});
