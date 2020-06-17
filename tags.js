@@ -42,7 +42,7 @@ WEBSTORE_SUMMARY = 'Check%20out%20this%20new%20Chrome%20Extension!';
 
 window.addEventListener('scroll', adjustSpansBasedOnHeight);
 
-// document.body.onmousemove = e => handleMouseMove(e);
+document.body.onmousemove = e => handleMouseMove(e);
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
     if (request.message === "runWebCheck"){
