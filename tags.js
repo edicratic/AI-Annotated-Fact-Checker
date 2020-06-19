@@ -855,7 +855,7 @@ function getShareHTML() {
 function getShareUrl(socialNetwork) {
     switch (socialNetwork) {
         case "FACEBOOK":
-            return  `https://www.facebook.com/sharer/sharer.php?u=${WEBSTORE_URL}`;
+            return `https://www.facebook.com/v3.3/dialog/share?app_id=2977926445596296&href=${WEBSTORE_URL}%2Ftv%2Fwhite_lines&display=page`
         case "TWITTER":
             return `https://twitter.com/intent/tweet?text=${WEBSTORE_SUMMARY}&url=${WEBSTORE_URL}`;
         case "LINKEDIN":
