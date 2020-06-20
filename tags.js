@@ -36,6 +36,10 @@ GOOGLE_SEARCH_DESCRIPTION_META = 'og:description';
 WIKI_CLASS_NAME = 'edicratic-image';
 ENTITY_PARENT_CLASSNAME = 'edicratic-entity-parent';
 
+//urls
+WEBSTORE_URL = 'https://chrome.google.com/webstore/detail/webcheck-ai/faiaendcmomnolaeadadkanohcmcnaip'
+WEBSTORE_SUMMARY = 'Check%20out%20this%20new%20Chrome%20Extension!';
+
 window.addEventListener('scroll', adjustSpansBasedOnHeight);
 
 document.body.onmousemove = e => handleMouseMove(e);
@@ -106,6 +110,7 @@ async function modifySingleNode(node, text) {
 
     //add data
     idToData[uniqueId] = {'Information': itemsArray};
+    idToData[uniqueId]['Share'] = getShareHTML();
 
     //create pointer
     let pointer = document.createElement('div');
@@ -120,6 +125,7 @@ async function modifySingleNode(node, text) {
     tabs.innerHTML = `
         <a class="edicratic-tab edicratic-selected">Information</a>
         <a class="edicratic-tab">News</a>
+        <a class="edicratic-tab">Share</a>
     `
     tooltip.appendChild(tabs);
     //TODO write onclick method
@@ -188,6 +194,7 @@ function handleTabClick(e, id) {
     handleTabSwitchProcesssing(previousTabText,idToSelected[id]);
     let tooltipChildren = tooltip.children;
     let index = 0;
+    let height = tooltip.getElementsByClassName('info-edicratic')[0].clientHeight;
     for(var i = 0; i < tooltipChildren.length; i++) {
         if(tooltipChildren[i].id === `${id}-content`) {
             index = i;
@@ -197,6 +204,7 @@ function handleTabClick(e, id) {
             } else {
                 tooltipChildren[i].innerHTML = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">Searching...</div>`;
             }
+            tooltip.getElementsByClassName('info-edicratic')[0].style.height = `${height}px`
 
         }
     }
@@ -234,6 +242,7 @@ function modifyAllText(regex, entity, matches, childList, set, automatic) {
                 text = text.replace(regex, `<div data-type="${automatic ? 'whitelist_check' : 'webcheck'}" id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text.match(regex)}</div>`);
                 let data = proccessWikiData(matches, uniqueId);
                 idToData[uniqueId] = {'Information': data};
+                idToData[uniqueId]['Share'] = getShareHTML();
                 var newElement = document.createElement('div');
                 newElement.className = ENTITY_PARENT_CLASSNAME;
                 newElement.style.display = "inline";
@@ -274,6 +283,7 @@ function createTooltip(data, id, infoType) {
     tabs.innerHTML = `
         <a class="edicratic-tab ${infoType === 'Information' ? 'edicratic-selected' : ''}">Information</a>
         <a class="edicratic-tab ${infoType === 'News' ? 'edicratic-selected' : ''}">News</a>
+        <a class="edicratic-tab">Share</a>
     `
     tooltip.appendChild(tabs);
     idToSelected[id] = infoType;
@@ -326,14 +336,14 @@ async function mouseOverHandle(e, id, text) {
             document.body.prepend(tooltip);
             document.body.appendChild(pointer);
             addShowMoreListeners(id);
-            positionTooltips(id);
+            positionTooltips(id, true);
         }, 500); 
     }
     e.preventDefault();
     e.stopPropagation();
 }
 
-function positionTooltips(id) {
+function positionTooltips(id, initial) {
     const span = document.getElementById(`${id}-parent`);
     const anchor = document.getElementById(`${id}-parent-parent`);
     let x = anchor.getBoundingClientRect().left + window.pageXOffset;
@@ -370,6 +380,7 @@ function positionTooltips(id) {
 
     let top = anchor.getBoundingClientRect().top;
     let bottom = window.innerHeight - top;
+    if (initial) span.getElementsByClassName('info-edicratic')[0].style.height = `${Math.min(270, Math.max(top, bottom) - 160)}px`
     if (top <= bottom) {
         span.style.top = `${y + anchor.clientHeight + TOOL_TIP_POINTER_HEIGHT}px`;
         onTop[id] = false;
@@ -574,7 +585,6 @@ function makePostRequest(isAutomatic) {
         handleClearedEvent();
     }
     PREVIOUS_TEXT = document.body.innerText;
-    window.addEventListener('scroll', checkForSizeChange);
     var spinner;
     if(!isAutomatic) {
         spinner = document.createElement('div');
@@ -597,10 +607,13 @@ function makePostRequest(isAutomatic) {
             throw new Error(result.status);
         }
     }).then(data =>{
-        chrome.runtime.sendMessage({data: 'hasHTML'});
-        if(!isAutomatic && spinner) spinner.style.display = 'none';
-        recordWebCheck(data.local_id || 'NO_ID');
         body = JSON.parse(data.body);
+        if(!isAutomatic && spinner) spinner.style.display = 'none';
+        if(isAutomatic && body.length < 30) return;
+        chrome.runtime.sendMessage({data: 'hasHTML'});
+        recordWebCheck(data.local_id || 'NO_ID');
+        console.log(body);
+        window.addEventListener('scroll', checkForSizeChange);
         processEntities(body, isAutomatic);
         if(!isAutomatic) chrome.runtime.sendMessage({data: DATA_LOADED});
     }).catch(e => {
@@ -627,7 +640,7 @@ function stripHtml(html) {
 
 function adjustSpansBasedOnHeight() {
     if(OPEN_SPAN) {
-        positionTooltips(OPEN_SPAN);
+        positionTooltips(OPEN_SPAN, false);
     }
 }
 
@@ -822,5 +835,34 @@ function handleClearedEvent() {
     let entities = document.getElementsByClassName(ANCHOR_CLASS_NAME);
     for (var i = 0; i < entities.length; i++) {
         entities[i].classList.remove(ANCHOR_OVERRIDE_CLASS_NAME);
+    }
+}
+
+function getShareHTML() {
+    return `
+    <h4>Share</h4><hr/>
+    <div class="info-edicratic">
+    <h3 class="edicratic-text-style">Share With Friends!</h3>
+    <a onclick="window.open('${getShareUrl("FACEBOOK")}')"class="fa fa-facebook"></a>
+    <a onclick="window.open('${getShareUrl("TWITTER")}')" class="fa fa-twitter"></a>
+    <a onclick="window.open('${getShareUrl("LINKEDIN")}')" class="fa fa-linkedin"></a>
+    <a onclick="window.open('${getShareUrl("PINTEREST")}')" class="fa fa-pinterest"></a>
+    <a onclick="window.open('${getShareUrl("EMAIL")}')" class="fa fa-envelope"></a>
+    </div>
+    `
+}
+
+function getShareUrl(socialNetwork) {
+    switch (socialNetwork) {
+        case "FACEBOOK":
+            return `https://www.facebook.com/v3.3/dialog/share?app_id=2977926445596296&href=${WEBSTORE_URL}%2Ftv%2Fwhite_lines&display=page`
+        case "TWITTER":
+            return `https://twitter.com/intent/tweet?text=${WEBSTORE_SUMMARY}&url=${WEBSTORE_URL}`;
+        case "LINKEDIN":
+            return `https://www.linkedin.com/shareArticle?mini=true&url=${WEBSTORE_URL}&title=&summary=${WEBSTORE_SUMMARY}`;
+        case "PINTEREST":
+            return `https://pinterest.com/pin/create/button/?url=${WEBSTORE_URL}&media=https://webcheck.edicratic.com/img/logo128.png&description=${WEBSTORE_SUMMARY}`;
+        case "EMAIL":
+            return `mailto:info@example.com?&subject=&body=${WEBSTORE_URL}%20${WEBSTORE_SUMMARY}`;
     }
 }

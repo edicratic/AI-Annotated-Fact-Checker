@@ -12,7 +12,22 @@
 		"scopes": ["https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"]
     },
     "web_accessible_resources": [
-        "images/logo48.png"
+        "images/logo48.png",
+        "fonts/fa-solid-900.woff2",
+        "fonts/fa-solid-900.woff",
+        "fonts/fa-solid-900.ttf",
+        "fonts/fa-solid-900.svg",
+        "fonts/fa-solid-900.eot",
+        "fonts/fa-regular-400.woff2",
+        "fonts/fa-regular-400.woff",
+        "fonts/fa-regular-400.ttf",
+        "fonts/fa-regular-400.svg",
+        "fonts/fa-regular-400.eot",
+        "fonts/fa-brands-400.woff2",
+        "fonts/fa-brands-400.woff",
+        "fonts/fa-brands-400.ttf",
+        "fonts/fa-brands-400.svg",
+        "fonts/fa-brands-400.eot"
       ],
     "permissions": [
         "background",
@@ -38,9 +53,9 @@
     },
     "content_scripts": [
         {
-            "js": ["autoCheck.js","user.js", "tags.js", "expandLibrary.js"],
+            "js": ["autoCheck.js","user.js", "tags.js", "expandLibrary.js", "fontawesome.js"],
             "run_at": "document_end",
-            "css": ["tags.css", "expandLibrary.css"],
+            "css": ["tags.css", "expandLibrary.css", "fontawesome.css"],
             "matches": ["http://*/*", "https://*/*"]
         }
     ],
