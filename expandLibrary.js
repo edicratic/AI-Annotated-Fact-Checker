@@ -39,27 +39,27 @@ function sendBackData(paragraph, text) {
 
 async function lookUpTerm(term, automatic) {
     var URL = getWikiUrl(term);
-    var encyclopediaUrl = getNewEnclopediaUrl(term);
+    //var encyclopediaUrl = getNewEnclopediaUrl(term);
     var data;
     var newData;
     let isValidNewWorld = false;
-    try {
-      var newEnclopedia = await fetchWiki(encyclopediaUrl);
-      newData = await newEnclopedia.json();
-      if(newData && newData.query && newData.query.pages) {
-        isValidNewWorld = true;
-        let pages = newData.query.pages;
-        Object.keys(pages).forEach(key => {
-          pages[key].type = 'NEW_WORLD'
-          pages[key].rank = 1;
-        });
-        newData.query.pages = pages;
-      }
-    } catch (e) {
-      handleUpdate(e.message);
-      console.log(e);
-      return;
-    }
+    // try {
+    //   var newEnclopedia = await fetchWiki(encyclopediaUrl);
+    //   newData = await newEnclopedia.json();
+    //   if(newData && newData.query && newData.query.pages) {
+    //     isValidNewWorld = true;
+    //     let pages = newData.query.pages;
+    //     Object.keys(pages).forEach(key => {
+    //       pages[key].type = 'NEW_WORLD'
+    //       pages[key].rank = 1;
+    //     });
+    //     newData.query.pages = pages;
+    //   }
+    // } catch (e) {
+    //   handleUpdate(e.message);
+    //   console.log(e);
+    //   return;
+    // }
     try {
       var result = await fetchWiki(URL);
       data = await result.json();
