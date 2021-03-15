@@ -25,29 +25,32 @@ if (localStorage['hasHTML'] === 'false')  {
 }
 clearButton.onclick = () => removeAllHTML();
 
-chrome.storage.local.get(['authStatus'], function(result) {
-  if(chrome.runtime.lastError || result.authStatus === null || result.authStatus === undefined || result.authStatus === "Logged Out"){
-      chrome.runtime.sendMessage({input: "/auth-status",params: {method: "GET"}, message: "callWebCheckAPI"}, messageResponse => {
-          const [response, error] = messageResponse;
-          if (response === null) {
-              setButtonLogin(changeColor, buttonIcon)
-          } else {
-              setButtonNormal(changeColor, buttonIcon);
-          }
-        });
+// chrome.storage.local.get(['authStatus'], function(result) {
+//   if(chrome.runtime.lastError || result.authStatus === null || result.authStatus === undefined || result.authStatus === "Logged Out"){
+//       chrome.runtime.sendMessage({input: "/auth-status",params: {method: "GET"}, message: "callWebCheckAPI"}, messageResponse => {
+//           const [response, error] = messageResponse;
+//           if (response === null) {
+//               setButtonLogin(changeColor, buttonIcon)
+//           } else {
+//               setButtonNormal(changeColor, buttonIcon);
+//           }
+//         });
       
-  } else if(result.authStatus === "Authenticated"){
-      setButtonNormal(changeColor, buttonIcon);
-  }
-});
+//   } else if(result.authStatus === "Authenticated"){
+//       setButtonNormal(changeColor, buttonIcon);
+//   }
+// });
 
-function setButtonLogin(changeColor, buttonIcon) {
-  changeColor.style.backgroundColor = '#3958ae';
-  buttonIcon.style.display = 'none';
-  let text = document.getElementById('webcheck-text');
-  text.innerText = 'Login To Webcheck';
-  changeColor.onclick = () => chrome.runtime.sendMessage({message: "runOAuthFlow"})
-}
+setButtonNormal(changeColor, buttonIcon);
+
+
+// function setButtonLogin(changeColor, buttonIcon) {
+//   changeColor.style.backgroundColor = '#3958ae';
+//   buttonIcon.style.display = 'none';
+//   let text = document.getElementById('webcheck-text');
+//   text.innerText = 'Login To Webcheck';
+//   changeColor.onclick = () => chrome.runtime.sendMessage({message: "runOAuthFlow"})
+// }
 
 function setButtonNormal(changeColor, buttonIcon) {
   changeColor.style.backgroundColor = '';
@@ -84,7 +87,9 @@ function performWebCheck(){
         code: `chrome.runtime.sendMessage({data: 'webCheckLoadScript', loaded: typeof scriptAlreadyLoaded === "undefined" ? false : scriptAlreadyLoaded});`
       });
       changeColor.style.display = "none"
-      loader.style.display = "";
+      if (!!loader){
+        loader.style = {display: ""}
+      }
   });
 }
 

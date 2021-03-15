@@ -71,119 +71,120 @@ function endTimer(tab) {
     determineTimeChange(tab);
     let currentTime = new Date();
     let timeChange = currentTime - (tooltipData["start"] || 0);
-    try {
-        chrome.storage.local.get(['edicratic-information'], function(result) {
-        let arr = result['edicratic-information'] || [];
-        let newData = {
-            'clicks': tooltipData['clicks'], /* Click data type {source, destination, type, url}*/
-            'session_type': tooltipData['session_type'], /*highlight or webcheck*/
-            'start': tooltipData['start'].getTime(), /*time of hover */
-            'term': tooltipData['term'], /* entity*/
-            'time_spent': timeChange, /*time spent on tooltip */
-            'time_stamp': tooltipData['time_stamp'].getTime(), /*time of webcheck or highlight */
-            'url': tooltipData['url'], /*webpage url */
-            'webcheck_id': tooltipData['webcheck_id'],/*id of webcheck */
-            "information_tab_time": tooltipData['information_tab_time'], /*time spent on wiki tab */
-            "news_tab_time": tooltipData['news_tab_time'],/*time spent on news tab */
-        };
-        arr.push(newData);
-        //uncomment to debug
-        //console.log(arr);
-        chrome.storage.local.set({'edicratic-information': arr}); /*array of hovers */
+    // try {
+    //     chrome.storage.local.get(['edicratic-information'], function(result) {
+    //     let arr = result['edicratic-information'] || [];
+    //     let newData = {
+    //         'clicks': tooltipData['clicks'], /* Click data type {source, destination, type, url}*/
+    //         'session_type': tooltipData['session_type'], /*highlight or webcheck*/
+    //         'start': tooltipData['start'].getTime(), /*time of hover */
+    //         'term': tooltipData['term'], /* entity*/
+    //         'time_spent': timeChange, /*time spent on tooltip */
+    //         'time_stamp': tooltipData['time_stamp'].getTime(), /*time of webcheck or highlight */
+    //         'url': tooltipData['url'], /*webpage url */
+    //         'webcheck_id': tooltipData['webcheck_id'],/*id of webcheck */
+    //         "information_tab_time": tooltipData['information_tab_time'], /*time spent on wiki tab */
+    //         "news_tab_time": tooltipData['news_tab_time'],/*time spent on news tab */
+    //     };
+    //     arr.push(newData);
+    //     //uncomment to debug
+    //     //console.log(arr);
+    //      chrome.storage.local.set({'edicratic-information': arr}); /*array of hovers */
 
-        });
-    } catch(e) {
-        handleUpdate(e.message);
+    //     });
+    // } catch(e) {
+    //     handleUpdate(e.message);
 
-    }
+    // }
 }
 
 
-function recordWebCheck(id) {
-    webcheckId = id;
-    sessionTimeStamp = new Date();
-}
+// function recordWebCheck(id) {
+//     webcheckId = id;
+//     sessionTimeStamp = new Date();
+// }
 
-function invalidateInformation() {
-    chrome.storage.local.get(["edicratic-information"], (result) => {
-        let arrayOfHovers = result['edicratic-information'];
-        // console.log(arrayOfHovers);
-        if(arrayOfHovers.length > 0){
-            params = {
-                method: "POST",
-                body: JSON.stringify({
-                    body: {
-                        type: "Hover",
-                        content: arrayOfHovers,
-                    } 
-                }),
-                headers: {
-                   'Content-Type': 'application/json',
-               }
-             }
-            chrome.runtime.sendMessage({input: LOG_URL,params, message:"callWebCheckAPI"}, messageResponse => {
-                const [response, error] = messageResponse;
-                if (response === null) {
-                    console.log(error);
-                } else {
-                    const body = response.body ?  new Blob([response.body]) : undefined;
-                    chrome.storage.local.set({'edicratic-information': []});
-                }
-            });
-        }
-    })
-}
+// function invalidateInformation() {
+//     //Don't do anything, since the server no longer needs extensive logs
+//     chrome.storage.local.get(["edicratic-information"], (result) => {
+//         let arrayOfHovers = result['edicratic-information'];
+//         // console.log(arrayOfHovers);
+//         if(arrayOfHovers.length > 0){
+//             params = {
+//                 method: "POST",
+//                 body: JSON.stringify({
+//                     body: {
+//                         type: "Hover",
+//                         content: arrayOfHovers,
+//                     } 
+//                 }),
+//                 headers: {
+//                    'Content-Type': 'application/json',
+//                }
+//              }
+//             chrome.runtime.sendMessage({input: LOG_URL,params, message:"callWebCheckAPI"}, messageResponse => {
+//                 const [response, error] = messageResponse;
+//                 if (response === null) {
+//                     console.log(error);
+//                 } else {
+//                     const body = response.body ?  new Blob([response.body]) : undefined;
+//                     chrome.storage.local.set({'edicratic-information': []});
+//                 }
+//             });
+//         }
+//     })
+// }
 
-function whitelistChange(type, list) {
-    params = {
-        method: "POST",
-        body: JSON.stringify({
-            body: {
-                type: "Whitelist_Update",
-                content: {
-                    whitelist: list,
-                    action: type
-                },
-            } 
-        }),
-        headers: {
-           'Content-Type': 'application/json',
-       }
-     }
-     chrome.runtime.sendMessage({input: LOG_URL,params, message:"callWebCheckAPI"}, messageResponse => {
-        const [response, error] = messageResponse;
-        if (response === null) {
-            console.log(error);
+// function whitelistChange(type, list) {
+//     params = {
+//         method: "POST",
+//         body: JSON.stringify({
+//             body: {
+//                 type: "Whitelist_Update",
+//                 content: {
+//                     whitelist: list,
+//                     action: type
+//                 },
+//             } 
+//         }),
+//         headers: {
+//            'Content-Type': 'application/json',
+//        }
+//      }
+//      chrome.runtime.sendMessage({input: LOG_URL,params, message:"callWebCheckAPI"}, messageResponse => {
+//         const [response, error] = messageResponse;
+//         if (response === null) {
+//             console.log(error);
 
-        } else {
-            console.log('success');
-        }
-    });
-}
+//         } else {
+//             console.log('success');
+//         }
+//     });
+// }
 
-function autoWebCheckChange(type, time) {
-    params = {
-        method: "POST",
-        body: JSON.stringify({
-            body: {
-                type: "AutoWebCheckChange",
-                content: JSON.stringify({
-                    'type': type,
-                    'time': time,
-                }),
-            } 
-        }),
-        headers: {
-           'Content-Type': 'application/json',
-       }
-     }
-     chrome.runtime.sendMessage({input: LOG_URL,params, message:"callWebCheckAPI"}, messageResponse => {
-        const [response, error] = messageResponse;
-        if (response === null) {
-            console.log(error);
+// function autoWebCheckChange(type, time) {
+//     params = {
+//         method: "POST",
+//         body: JSON.stringify({
+//             body: {
+//                 type: "AutoWebCheckChange",
+//                 content: JSON.stringify({
+//                     'type': type,
+//                     'time': time,
+//                 }),
+//             } 
+//         }),
+//         headers: {
+//            'Content-Type': 'application/json',
+//        }
+//      }
+//      chrome.runtime.sendMessage({input: LOG_URL,params, message:"callWebCheckAPI"}, messageResponse => {
+//         const [response, error] = messageResponse;
+//         if (response === null) {
+//             console.log(error);
 
-        } else {
-            console.log('success');
-        }
-});
-}
+//         } else {
+//             console.log('success');
+//         }
+// });
+// }

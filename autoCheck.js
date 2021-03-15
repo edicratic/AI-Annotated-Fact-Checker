@@ -63,12 +63,12 @@ setInterval(() => {
     }
 
 }, 1000);
-if (window.location.href === 'https://webcheck.edicratic.com/login.html') {
-    setInterval(() => {
-        let storage = localStorage['authStatus'];
-        chrome.storage.local.set({'authStatus': storage});
-    }, 1000);
-}
+// if (window.location.href === 'https://webcheck.edicratic.com/login.html') {
+//     setInterval(() => {
+//         let storage = localStorage['authStatus'];
+//         chrome.storage.local.set({'authStatus': storage});
+//     }, 1000);
+// }
 
 if (window.location.hostname.includes('yahoo')) {
     //specific domain stuff
@@ -90,8 +90,8 @@ function runAutoCheck() {
     chrome.storage.local.get([LIST_TYPE], function (result) {
         let val = result[LIST_TYPE] || DEFAULT_BLACKLIST;
         let copyOfVal = result[LIST_TYPE];
-        chrome.storage.local.get(['authStatus'], function(result) {
-            if(chrome.runtime.lastError || result.authStatus === null || result.authStatus === undefined || result.authStatus === "Logged Out") return;
+        // chrome.storage.local.get(['authStatus'], function(result) {
+        //     if(chrome.runtime.lastError || result.authStatus === null || result.authStatus === undefined || result.authStatus === "Logged Out") return;
                 if(!copyOfVal) {
                     let storage = {};
                     storage[LIST_TYPE] = DEFAULT_BLACKLIST;
@@ -102,9 +102,10 @@ function runAutoCheck() {
                 if (val.includes(host)){
                     window.removeEventListener('scroll', checkForSizeChange);
                 } else {
+                    console.log("Making Post Request")
                     makePostRequest(true);
                 }
-        });
+     //   });
     });
 }
 
@@ -112,12 +113,12 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     if(changes['auto-webcheck-enabled']) {
         let change = changes['auto-webcheck-enabled']['newValue'];
         if(change) runAutoCheck();
-    } else if (changes['authStatus']) {
-        let change = changes['authStatus']['newValue'];
-        let old = changes['authStatus']['oldValue']
-        if (old !== change) {
-            checkAndRun();
-        }
+    // } else if (changes['authStatus']) {
+    //     let change = changes['authStatus']['newValue'];
+    //     let old = changes['authStatus']['oldValue']
+    //     if (old !== change) {
+    //         checkAndRun();
+    //     }
     } else if(changes[LIST_TYPE]) {
         let changeList = changes[LIST_TYPE];
         let oldList = changeList['oldValue'];
@@ -128,14 +129,14 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         } else {
             type = 'Add';
         }
-        whitelistChange(type, newList);
+        // whitelistChange(type, newList);
     } else if (changes['button-change-edicratic']) {
         let changeList = changes['button-change-edicratic'];
         if (!changeList['oldValue']) return;
         let oldTime = changeList['oldValue']['time'];
         let newTime = changeList['newValue']['time'];
         let oldPosition = changeList['oldValue']['on'];
-        autoWebCheckChange(oldPosition ? 'turnOff' : 'turnOn', newTime - oldTime);
+        // autoWebCheckChange(oldPosition ? 'turnOff' : 'turnOn', newTime - oldTime);
     } else if (changes['dummy-highlight']) {
         analyzeTextForSending();
     }

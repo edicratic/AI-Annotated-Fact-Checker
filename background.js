@@ -1,5 +1,5 @@
 //TODO Yukt add the caching
-BASE_URL = "https://webcheck-api.edicratic.com"
+BASE_URL = "https://webcheck-api-dev.edicratic.com"
 DEFAULT_BLACKLIST = [
   'twitter',
   'www.linkedin',
@@ -52,15 +52,14 @@ chrome.contextMenus.onClicked.addListener(() => {
   chrome.storage.local.set({'dummy-highlight': new Date().getTime()});
 });
 
-chrome.storage.local.get(['authStatus'], function(result) {
-  createBadge(result['authStatus']);
-});
+// chrome.storage.local.get(['authStatus'], function(result) {
+//   createBadge(result['authStatus']);
+// });
 
-chrome.storage.onChanged.addListener((changes, namespace) => {
-  if (!changes['authStatus']) return;
-  createBadge(changes['authStatus']['newValue']);
-
-});
+// chrome.storage.onChanged.addListener((changes, namespace) => {
+//   if (!changes['authStatus']) return;
+//   createBadge(changes['authStatus']['newValue']);
+// });
 
 // chrome.runtime.onUpdateAvailable.addListener(function(details) {
 //   console.log("updating to version " + details.version);
@@ -68,13 +67,13 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 // });
 
 function createBadge(authStatus) {
-  if(chrome.runtime.lastError || authStatus === null || authStatus === undefined || authStatus === "Logged Out") {
-    chrome.browserAction.setBadgeText({text: 'Off'});
-    chrome.browserAction.setBadgeBackgroundColor({color: 'red'});
-  } else {
+  // if(chrome.runtime.lastError || authStatus === null || authStatus === undefined || authStatus === "Logged Out") {
+  //   chrome.browserAction.setBadgeText({text: 'Off'});
+  //   chrome.browserAction.setBadgeBackgroundColor({color: 'red'});
+  // } else {
     chrome.browserAction.setBadgeText({text: 'On'});
     chrome.browserAction.setBadgeBackgroundColor({color: '#4688F1'});
-  }
+  //}
 }
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
@@ -100,17 +99,18 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   fetch(url, request.params).then(function(response) {
     // console.log("a response");
     requestFailed = false;
-    if(response.status === 401){
-      requestFailed = true;
-      chrome.storage.local.set({'authStatus': "Logged Out"}, function() {
-        //Handle Error 
-        if (chrome.runtime.lastError){
-          //TODO 
-          console.log("failed to save status, fatal error");
-        }
-        // console.log("Hi!")
-      });
-    } else if (response.status !== 200){
+    // if(response.status === 401){
+    //   requestFailed = true;
+    //   chrome.storage.local.set({'authStatus': "Logged Out"}, function() {
+    //     //Handle Error 
+    //     if (chrome.runtime.lastError){
+    //       //TODO 
+    //       console.log("failed to save status, fatal error");
+    //     }
+    //     // console.log("Hi!")
+    //   });
+    // } else
+     if (response.status !== 200){
       requestFailed = true;
     }
     response.text().then(function(text) {
@@ -155,20 +155,20 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       sendResponse([null, error]);
     });
   })
-}else if (request.message === 'runOAuthFlow'){
-  oauthFlow();
+// }else if (request.message === 'runOAuthFlow'){
+//   oauthFlow();
 }
 return true;
 });
 
-chrome.runtime.onInstalled.addListener(function(details){
-  oauthFlow();
-  let params =  { method:"POST", 
-                  body: JSON.stringify({body:{type: "installed"}}),
-                  'Content-Type': 'application/json'
-                };
-  fetch(BASE_URL + "/subscription-event", params);
-});
+// chrome.runtime.onInstalled.addListener(function(details){
+//   oauthFlow();
+//   let params =  { method:"POST", 
+//                   body: JSON.stringify({body:{type: "installed"}}),
+//                   'Content-Type': 'application/json'
+//                 };
+//   fetch(BASE_URL + "/subscription-event", params);
+// });
 
 function getToken(id_token){
   return new Promise((resolve, reject) => {
@@ -186,11 +186,11 @@ function getToken(id_token){
   });
 }
 
-function oauthFlow(){
-  chrome.tabs.create({'url': 'about:blank'}, function(authenticationTab) {
-      chrome.tabs.update(authenticationTab.id, {'url': 'https://webcheck.edicratic.com/login.html'});
-  });
-};
+// function oauthFlow(){
+//   chrome.tabs.create({'url': 'about:blank'}, function(authenticationTab) {
+//       chrome.tabs.update(authenticationTab.id, {'url': 'https://webcheck.edicratic.com/login.html'});
+//   });
+// };
 
 function createDefaultBlackList() {
   chrome.storage.local.get([LIST_TYPE], function (result) {

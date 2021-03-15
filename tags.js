@@ -593,7 +593,7 @@ function makePostRequest(isAutomatic) {
     } else {
         currentWebCheckedUrl = window.location.href;
     }
-    invalidateInformation();
+    //invalidateInformation();
     let data = {"blob": document.body.innerText.substring(0, 50000), details: {sort: true, url: window.location.href}};
     fetchWebCheck(POST_URL,  {
                       method: "POST",
@@ -608,10 +608,10 @@ function makePostRequest(isAutomatic) {
         }
     }).then(data =>{
         body = JSON.parse(data.body);
-        if(!isAutomatic && spinner) spinner.style.display = 'none';
-        if(isAutomatic && body.length < 30) return;
+        if(!!spinner) spinner.style.display = 'none';
+        //if(isAutomatic && body.length < 30) return;
         chrome.runtime.sendMessage({data: 'hasHTML'});
-        recordWebCheck(data.local_id || 'NO_ID');
+        //recordWebCheck(data.local_id || 'NO_ID');
         console.log(body);
         window.addEventListener('scroll', checkForSizeChange);
         processEntities(body, isAutomatic);
