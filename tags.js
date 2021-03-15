@@ -587,9 +587,9 @@ function makePostRequest(isAutomatic) {
     PREVIOUS_TEXT = document.body.innerText;
     var spinner;
     if(!isAutomatic) {
-        spinner = document.createElement('div');
-        spinner.classList.add('loading-edicratic');
-        document.body.appendChild(spinner);
+        // spinner = document.createElement('div');
+        // spinner.classList.add('loading-edicratic');
+        // document.body.appendChild(spinner);
     } else {
         currentWebCheckedUrl = window.location.href;
     }
