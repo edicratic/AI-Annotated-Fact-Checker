@@ -12,30 +12,30 @@ function analyzeTextForSending() {
     if (range.startOffset === range.endOffset) return;
     if (text.length > 50) return;
 
-    sendBackData(node, text);
+    // sendBackData(node, text);
     modifySingleNode(node, text.trim());
 }
 
-function sendBackData(paragraph, text) {
-    let i = 0;
-    while(paragraph.textContent.length < NUMBER_OF_CHARCATERS_IN_PARAGRAPH && i < 5) {
-        paragraph = paragraph.parentElement;
-        i+=1;
-    }
-    if(paragraph.textContent.length <= 100){
-      return
-    }
-    let raw = paragraph.innerHTML;
+// function sendBackData(paragraph, text) {
+//     let i = 0;
+//     while(paragraph.textContent.length < NUMBER_OF_CHARCATERS_IN_PARAGRAPH && i < 5) {
+//         paragraph = paragraph.parentElement;
+//         i+=1;
+//     }
+//     if(paragraph.textContent.length <= 100){
+//       return
+//     }
+//     let raw = paragraph.innerHTML;
 
-    let body = {
-      type: "Annotation",
-      subject: text,
-      raw_annotated_html: raw,
-      url: window.location.href,
-      annotation_type: "missing"
-    };
-    sendData(LOG_URL, body);
-}
+//     let body = {
+//       type: "Annotation",
+//       subject: text,
+//       raw_annotated_html: raw,
+//       url: window.location.href,
+//       annotation_type: "missing"
+//     };
+//     sendData(LOG_URL, body);
+// }
 
 async function lookUpTerm(term, automatic) {
     var URL = getWikiUrl(term);
@@ -69,11 +69,7 @@ async function lookUpTerm(term, automatic) {
       return;
     }
     if(!data || !data.query || !data.query.pages || data.query.pages.length === 0) return;
-    if (isValidNewWorld) {
-      data = mergeEntries(data, newData);
-    } else {
-      data = getMatches(data.query.pages);
-    }
+    data = getMatches(data.query.pages);
     init(data, term, automatic);
 }
 
@@ -116,29 +112,29 @@ function fetchWiki(input) {
     })
   }
 
-  function sendData(url, body) {
-      return new Promise((resolve, reject) => {
-        params = {
-                  method: "POST",
-                  body: JSON.stringify({body: body}),
-                  headers: {
-                     'Content-Type': 'application/json',
-                 }
-               }
-        chrome.runtime.sendMessage({input: url,params,message: "callWebCheckAPI",needsAuthHeaders: true}, messageResponse => {
-          const [response, error] = messageResponse;
-          if (response === null) {
-            reject(error);
-          } else {
-            const body = response.body ?  new Blob([response.body]) : undefined;
-            resolve(new Response(body, {
-              status: response.status,
-              statusText: response.statusText,
-            }));
-          }
-        });
-      });
-    }
+  // function sendData(url, body) {
+  //     return new Promise((resolve, reject) => {
+  //       params = {
+  //                 method: "POST",
+  //                 body: JSON.stringify({body: body}),
+  //                 headers: {
+  //                    'Content-Type': 'application/json',
+  //                }
+  //              }
+  //       chrome.runtime.sendMessage({input: url,params,message: "callWebCheckAPI",needsAuthHeaders: true}, messageResponse => {
+  //         const [response, error] = messageResponse;
+  //         if (response === null) {
+  //           reject(error);
+  //         } else {
+  //           const body = response.body ?  new Blob([response.body]) : undefined;
+  //           resolve(new Response(body, {
+  //             status: response.status,
+  //             statusText: response.statusText,
+  //           }));
+  //         }
+  //       });
+  //     });
+  //   }
 
 function getWikiUrl(term) {
     const params =  new URLSearchParams({

@@ -16,21 +16,24 @@ const INVALID_SEARCH_URLS = [
 ]
 evaluatePageForChecked();
 checkCurrentPage();
-chrome.storage.local.get(['authStatus'], function(result) {
-    if(chrome.runtime.lastError || result.authStatus === null || result.authStatus === undefined || result.authStatus === "Logged Out"){
-        chrome.runtime.sendMessage({input: "/auth-status",params: {method: "GET"}, message: "callWebCheckAPI"}, messageResponse => {
-            const [response, error] = messageResponse;
-            if (response === null) {
-                chrome.storage.local.set({'buttonUI': true});
-            } else {
-                chrome.storage.local.set({'buttonUI': false});
-            }
-          });
+
+chrome.storage.local.set({'buttonUI': false});
+
+// chrome.storage.local.get(['authStatus'], function(result) {
+//     if(chrome.runtime.lastError || result.authStatus === null || result.authStatus === undefined || result.authStatus === "Logged Out"){
+//         chrome.runtime.sendMessage({input: "/auth-status",params: {method: "GET"}, message: "callWebCheckAPI"}, messageResponse => {
+//             const [response, error] = messageResponse;
+//             if (response === null) {
+//                 chrome.storage.local.set({'buttonUI': true});
+//             } else {
+//                 chrome.storage.local.set({'buttonUI': false});
+//             }
+//           });
         
-    } else if(result.authStatus === "Authenticated"){
-        chrome.storage.local.set({'buttonUI': false});
-    }
-  });
+//     } else if(result.authStatus === "Authenticated"){
+//         chrome.storage.local.set({'buttonUI': false});
+//     }
+//   });
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     if(message.data === DATA_LOADED) {
