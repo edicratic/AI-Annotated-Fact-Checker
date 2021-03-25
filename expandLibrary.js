@@ -1,207 +1,42 @@
-LOG_URL = "/log"
-NUMBER_OF_CHARCATERS_IN_PARAGRAPH = 500;
-INVALID_DESCRIPTION = "Disambiguation page providing links to topics that could be referred to by the same search term";
-
-
-function analyzeTextForSending() {
-    if(!window.getSelection) return;
-    if(window.getSelection().toString() === '') return;
-    let node = window.getSelection().anchorNode;
-    const range = window.getSelection().getRangeAt(0);
-    let text = window.getSelection().toString();
-    if (range.startOffset === range.endOffset) return;
-    if (text.length > 50) return;
-
-    // sendBackData(node, text);
-    modifySingleNode(node, text.trim());
-}
-
-// function sendBackData(paragraph, text) {
-//     let i = 0;
-//     while(paragraph.textContent.length < NUMBER_OF_CHARCATERS_IN_PARAGRAPH && i < 5) {
-//         paragraph = paragraph.parentElement;
-//         i+=1;
-//     }
-//     if(paragraph.textContent.length <= 100){
-//       return
-//     }
-//     let raw = paragraph.innerHTML;
-
-//     let body = {
-//       type: "Annotation",
-//       subject: text,
-//       raw_annotated_html: raw,
-//       url: window.location.href,
-//       annotation_type: "missing"
-//     };
-//     sendData(LOG_URL, body);
-// }
-
-async function lookUpTerm(term, automatic) {
-    var URL = getWikiUrl(term);
-    //var encyclopediaUrl = getNewEnclopediaUrl(term);
-    var data;
-    var newData;
-    let isValidNewWorld = false;
-    // try {
-    //   var newEnclopedia = await fetchWiki(encyclopediaUrl);
-    //   newData = await newEnclopedia.json();
-    //   if(newData && newData.query && newData.query.pages) {
-    //     isValidNewWorld = true;
-    //     let pages = newData.query.pages;
-    //     Object.keys(pages).forEach(key => {
-    //       pages[key].type = 'NEW_WORLD'
-    //       pages[key].rank = 1;
-    //     });
-    //     newData.query.pages = pages;
-    //   }
-    // } catch (e) {
-    //   handleUpdate(e.message);
-    //   console.log(e);
-    //   return;
-    // }
-    try {
-      var result = await fetchWiki(URL);
-      data = await result.json();
-    } catch (e) {
-      handleUpdate(e.message);
-      console.log(e);
-      return;
-    }
-    if(!data || !data.query || !data.query.pages || data.query.pages.length === 0) return;
-    data = getMatches(data.query.pages);
-    init(data, term, automatic);
-}
-
-function fetchWiki(input) {
-    return new Promise((resolve, reject) => {
-      let params = {method: "GET"}
-      chrome.runtime.sendMessage({input,params,init,message: "callInternet"}, messageResponse => {
-        const [response, error] = messageResponse;
-        if (response === null) {
-          reject(error);
-        } else {
-          const body = response.body ? new Blob([response.body]) : undefined;
-          resolve(new Response(body, {
-            status: response.status,
-            statusText: response.statusText,
-          }));
-        }
-      });
-    });
-  }
-
-  function fetchNewYorkTimes(term) {
-    let dateObj = new Date();
-    let month = `${dateObj.getMonth() + 1}`
-    let day = `${dateObj.getDate()}`;
-    let date = `${dateObj.getFullYear()}-${month.length < 2 ? '0' + month : month}-${day.length < 2 ? '0' + day : day}`;
-    return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({message: 'NYTimes', term, date}, messageResponse => {
-        const [response, error] = messageResponse;
-        if (response === null) {
-          reject(error);
-        } else { 
-          const body = response.body ? new Blob([response.body]) : undefined;
-          resolve(new Response(body, {
-            status: response.status,
-            statusText: response.statusText,
-          }));
-        }
-      });
-    })
-  }
-
-  // function sendData(url, body) {
-  //     return new Promise((resolve, reject) => {
-  //       params = {
-  //                 method: "POST",
-  //                 body: JSON.stringify({body: body}),
-  //                 headers: {
-  //                    'Content-Type': 'application/json',
-  //                }
-  //              }
-  //       chrome.runtime.sendMessage({input: url,params,message: "callWebCheckAPI",needsAuthHeaders: true}, messageResponse => {
-  //         const [response, error] = messageResponse;
-  //         if (response === null) {
-  //           reject(error);
-  //         } else {
-  //           const body = response.body ?  new Blob([response.body]) : undefined;
-  //           resolve(new Response(body, {
-  //             status: response.status,
-  //             statusText: response.statusText,
-  //           }));
-  //         }
-  //       });
-  //     });
-  //   }
-
-function getWikiUrl(term) {
-    const params =  new URLSearchParams({
-        "action": "query",
-        "format": "json",
-        "prop": "description|extracts|pageimages",
-        "list": "",
-        "generator": "search",
-        "exsentences": "2",
-        "exlimit": "5",
-        "exintro": 1,
-        "gsrsearch": term,
-        "gsrlimit": 5,
-        "gsrinfo": "totalhits",
-        "gsrsort": "relevance",
-    });
-    return `https://en.wikipedia.org/w/api.php?${params.toString()}`;
-}
-
-function getNewEnclopediaUrl(term) {
-  const params =  new URLSearchParams({
-    "action": "query",
-    "format": "json",
-    "list": "",
-    "generator": "search",
-    "exsentences": "2",
-    "exlimit": "5",
-    "prop": "extracts",
-    "exintro": 1,
-    "gsrsearch": term,
-    "gsrlimit": 5,
-    "gsrinfo": "totalhits",
-    "gsrsort": "relevance",
-});
-  return `https://www.newworldencyclopedia.org/api.php?${params.toString()}`  
-}
-
-function getMatches(pages) {
-  var matches = [];
-  Object.keys(pages).forEach(key => {
-    if(key && pages[key].description !== INVALID_DESCRIPTION) matches.push(pages[key]);
-  })
-  matches.sort((a,b) => a.index - b.index);
-  return matches;
-}
-
-function mergeEntries(wikiData, newWorldData) {
-  let newWordMap = newWorldData.query.pages;
-  let newWikiMap = wikiData.query.pages;
-  let newMap = {};
-  let data = [];
-  Object.keys(newWikiMap).forEach(key => newMap[newWikiMap[key].title] = newWikiMap[key]);
-  Object.keys(newWordMap).forEach(key => {
-    let alreadyOccupied = !!newMap[newWordMap[key].title];
-    let index = alreadyOccupied ? newMap[newWordMap[key].title].index : undefined;
-    newMap[newWordMap[key].title] = newWordMap[key]
-    if (alreadyOccupied) {
-      newMap[newWordMap[key].title].rank = 0;
-      newMap[newWordMap[key].title].index = index;
-    }
-  });
-  Object.keys(newMap).forEach(key => {if (newMap[key].description !== INVALID_DESCRIPTION) data.push(newMap[key])});
-  data.sort((a,b) => {
-    let difference = a.rank || 0 - b.rank || 0;
-    return difference === 0 ? a.index - b.index : difference
-  });
-  //console.log(data);
-  return data;
-}
-
+var $jscomp=$jscomp||{};$jscomp.scope={};$jscomp.createTemplateTagFirstArg=function(a){return a.raw=a};$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){a.raw=b;return a};$jscomp.arrayIteratorImpl=function(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}};$jscomp.arrayIterator=function(a){return{next:$jscomp.arrayIteratorImpl(a)}};$jscomp.makeIterator=function(a){var b="undefined"!=typeof Symbol&&Symbol.iterator&&a[Symbol.iterator];return b?b.call(a):$jscomp.arrayIterator(a)};
+$jscomp.ASSUME_ES5=!1;$jscomp.ASSUME_NO_NATIVE_MAP=!1;$jscomp.ASSUME_NO_NATIVE_SET=!1;$jscomp.SIMPLE_FROUND_POLYFILL=!1;$jscomp.ISOLATE_POLYFILLS=!1;$jscomp.FORCE_POLYFILL_PROMISE=!1;$jscomp.FORCE_POLYFILL_PROMISE_WHEN_NO_UNHANDLED_REJECTION=!1;$jscomp.defineProperty=$jscomp.ASSUME_ES5||"function"==typeof Object.defineProperties?Object.defineProperty:function(a,b,d){if(a==Array.prototype||a==Object.prototype)return a;a[b]=d.value;return a};
+$jscomp.getGlobal=function(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var d=a[b];if(d&&d.Math==Math)return d}throw Error("Cannot find global object");};$jscomp.global=$jscomp.getGlobal(this);$jscomp.IS_SYMBOL_NATIVE="function"===typeof Symbol&&"symbol"===typeof Symbol("x");$jscomp.TRUST_ES6_POLYFILLS=!$jscomp.ISOLATE_POLYFILLS||$jscomp.IS_SYMBOL_NATIVE;$jscomp.polyfills={};
+$jscomp.propertyToPolyfillSymbol={};$jscomp.POLYFILL_PREFIX="$jscp$";var $jscomp$lookupPolyfilledValue=function(a,b){var d=$jscomp.propertyToPolyfillSymbol[b];if(null==d)return a[b];d=a[d];return void 0!==d?d:a[b]};$jscomp.polyfill=function(a,b,d,f){b&&($jscomp.ISOLATE_POLYFILLS?$jscomp.polyfillIsolated(a,b,d,f):$jscomp.polyfillUnisolated(a,b,d,f))};
+$jscomp.polyfillUnisolated=function(a,b,d,f){d=$jscomp.global;a=a.split(".");for(f=0;f<a.length-1;f++){var e=a[f];if(!(e in d))return;d=d[e]}a=a[a.length-1];f=d[a];b=b(f);b!=f&&null!=b&&$jscomp.defineProperty(d,a,{configurable:!0,writable:!0,value:b})};
+$jscomp.polyfillIsolated=function(a,b,d,f){var e=a.split(".");a=1===e.length;f=e[0];f=!a&&f in $jscomp.polyfills?$jscomp.polyfills:$jscomp.global;for(var k=0;k<e.length-1;k++){var c=e[k];if(!(c in f))return;f=f[c]}e=e[e.length-1];d=$jscomp.IS_SYMBOL_NATIVE&&"es6"===d?f[e]:null;b=b(d);null!=b&&(a?$jscomp.defineProperty($jscomp.polyfills,e,{configurable:!0,writable:!0,value:b}):b!==d&&(void 0===$jscomp.propertyToPolyfillSymbol[e]&&($jscomp.propertyToPolyfillSymbol[e]=$jscomp.IS_SYMBOL_NATIVE?$jscomp.global.Symbol(e):
+$jscomp.POLYFILL_PREFIX+e),$jscomp.defineProperty(f,$jscomp.propertyToPolyfillSymbol[e],{configurable:!0,writable:!0,value:b})))};$jscomp.underscoreProtoCanBeSet=function(){var a={a:!0},b={};try{return b.__proto__=a,b.a}catch(d){}return!1};$jscomp.setPrototypeOf=$jscomp.TRUST_ES6_POLYFILLS&&"function"==typeof Object.setPrototypeOf?Object.setPrototypeOf:$jscomp.underscoreProtoCanBeSet()?function(a,b){a.__proto__=b;if(a.__proto__!==b)throw new TypeError(a+" is not extensible");return a}:null;
+$jscomp.generator={};$jscomp.generator.ensureIteratorResultIsObject_=function(a){if(!(a instanceof Object))throw new TypeError("Iterator result "+a+" is not an object");};$jscomp.generator.Context=function(){this.isRunning_=!1;this.yieldAllIterator_=null;this.yieldResult=void 0;this.nextAddress=1;this.finallyAddress_=this.catchAddress_=0;this.finallyContexts_=this.abruptCompletion_=null};
+$jscomp.generator.Context.prototype.start_=function(){if(this.isRunning_)throw new TypeError("Generator is already running");this.isRunning_=!0};$jscomp.generator.Context.prototype.stop_=function(){this.isRunning_=!1};$jscomp.generator.Context.prototype.jumpToErrorHandler_=function(){this.nextAddress=this.catchAddress_||this.finallyAddress_};$jscomp.generator.Context.prototype.next_=function(a){this.yieldResult=a};
+$jscomp.generator.Context.prototype.throw_=function(a){this.abruptCompletion_={exception:a,isException:!0};this.jumpToErrorHandler_()};$jscomp.generator.Context.prototype.return=function(a){this.abruptCompletion_={return:a};this.nextAddress=this.finallyAddress_};$jscomp.generator.Context.prototype.jumpThroughFinallyBlocks=function(a){this.abruptCompletion_={jumpTo:a};this.nextAddress=this.finallyAddress_};$jscomp.generator.Context.prototype.yield=function(a,b){this.nextAddress=b;return{value:a}};
+$jscomp.generator.Context.prototype.yieldAll=function(a,b){a=$jscomp.makeIterator(a);var d=a.next();$jscomp.generator.ensureIteratorResultIsObject_(d);if(d.done)this.yieldResult=d.value,this.nextAddress=b;else return this.yieldAllIterator_=a,this.yield(d.value,b)};$jscomp.generator.Context.prototype.jumpTo=function(a){this.nextAddress=a};$jscomp.generator.Context.prototype.jumpToEnd=function(){this.nextAddress=0};
+$jscomp.generator.Context.prototype.setCatchFinallyBlocks=function(a,b){this.catchAddress_=a;void 0!=b&&(this.finallyAddress_=b)};$jscomp.generator.Context.prototype.setFinallyBlock=function(a){this.catchAddress_=0;this.finallyAddress_=a||0};$jscomp.generator.Context.prototype.leaveTryBlock=function(a,b){this.nextAddress=a;this.catchAddress_=b||0};
+$jscomp.generator.Context.prototype.enterCatchBlock=function(a){this.catchAddress_=a||0;a=this.abruptCompletion_.exception;this.abruptCompletion_=null;return a};$jscomp.generator.Context.prototype.enterFinallyBlock=function(a,b,d){d?this.finallyContexts_[d]=this.abruptCompletion_:this.finallyContexts_=[this.abruptCompletion_];this.catchAddress_=a||0;this.finallyAddress_=b||0};
+$jscomp.generator.Context.prototype.leaveFinallyBlock=function(a,b){b=this.finallyContexts_.splice(b||0)[0];if(b=this.abruptCompletion_=this.abruptCompletion_||b){if(b.isException)return this.jumpToErrorHandler_();void 0!=b.jumpTo&&this.finallyAddress_<b.jumpTo?(this.nextAddress=b.jumpTo,this.abruptCompletion_=null):this.nextAddress=this.finallyAddress_}else this.nextAddress=a};$jscomp.generator.Context.prototype.forIn=function(a){return new $jscomp.generator.Context.PropertyIterator(a)};
+$jscomp.generator.Context.PropertyIterator=function(a){this.object_=a;this.properties_=[];for(var b in a)this.properties_.push(b);this.properties_.reverse()};$jscomp.generator.Context.PropertyIterator.prototype.getNext=function(){for(;0<this.properties_.length;){var a=this.properties_.pop();if(a in this.object_)return a}return null};$jscomp.generator.Engine_=function(a){this.context_=new $jscomp.generator.Context;this.program_=a};
+$jscomp.generator.Engine_.prototype.next_=function(a){this.context_.start_();if(this.context_.yieldAllIterator_)return this.yieldAllStep_(this.context_.yieldAllIterator_.next,a,this.context_.next_);this.context_.next_(a);return this.nextStep_()};
+$jscomp.generator.Engine_.prototype.return_=function(a){this.context_.start_();var b=this.context_.yieldAllIterator_;if(b)return this.yieldAllStep_("return"in b?b["return"]:function(d){return{value:d,done:!0}},a,this.context_.return);this.context_.return(a);return this.nextStep_()};
+$jscomp.generator.Engine_.prototype.throw_=function(a){this.context_.start_();if(this.context_.yieldAllIterator_)return this.yieldAllStep_(this.context_.yieldAllIterator_["throw"],a,this.context_.next_);this.context_.throw_(a);return this.nextStep_()};
+$jscomp.generator.Engine_.prototype.yieldAllStep_=function(a,b,d){try{var f=a.call(this.context_.yieldAllIterator_,b);$jscomp.generator.ensureIteratorResultIsObject_(f);if(!f.done)return this.context_.stop_(),f;var e=f.value}catch(k){return this.context_.yieldAllIterator_=null,this.context_.throw_(k),this.nextStep_()}this.context_.yieldAllIterator_=null;d.call(this.context_,e);return this.nextStep_()};
+$jscomp.generator.Engine_.prototype.nextStep_=function(){for(;this.context_.nextAddress;)try{var a=this.program_(this.context_);if(a)return this.context_.stop_(),{value:a.value,done:!1}}catch(b){this.context_.yieldResult=void 0,this.context_.throw_(b)}this.context_.stop_();if(this.context_.abruptCompletion_){a=this.context_.abruptCompletion_;this.context_.abruptCompletion_=null;if(a.isException)throw a.exception;return{value:a.return,done:!0}}return{value:void 0,done:!0}};
+$jscomp.generator.Generator_=function(a){this.next=function(b){return a.next_(b)};this.throw=function(b){return a.throw_(b)};this.return=function(b){return a.return_(b)};this[Symbol.iterator]=function(){return this}};$jscomp.generator.createGenerator=function(a,b){b=new $jscomp.generator.Generator_(new $jscomp.generator.Engine_(b));$jscomp.setPrototypeOf&&a.prototype&&$jscomp.setPrototypeOf(b,a.prototype);return b};
+$jscomp.asyncExecutePromiseGenerator=function(a){function b(f){return a.next(f)}function d(f){return a.throw(f)}return new Promise(function(f,e){function k(c){c.done?f(c.value):Promise.resolve(c.value).then(b,d).then(k,e)}k(a.next())})};$jscomp.asyncExecutePromiseGeneratorFunction=function(a){return $jscomp.asyncExecutePromiseGenerator(a())};$jscomp.asyncExecutePromiseGeneratorProgram=function(a){return $jscomp.asyncExecutePromiseGenerator(new $jscomp.generator.Generator_(new $jscomp.generator.Engine_(a)))};
+$jscomp.initSymbol=function(){};$jscomp.polyfill("Symbol",function(a){if(a)return a;var b=function(e,k){this.$jscomp$symbol$id_=e;$jscomp.defineProperty(this,"description",{configurable:!0,writable:!0,value:k})};b.prototype.toString=function(){return this.$jscomp$symbol$id_};var d=0,f=function(e){if(this instanceof f)throw new TypeError("Symbol is not a constructor");return new b("jscomp_symbol_"+(e||"")+"_"+d++,e)};return f},"es6","es3");
+$jscomp.polyfill("Symbol.iterator",function(a){if(a)return a;a=Symbol("Symbol.iterator");for(var b="Array Int8Array Uint8Array Uint8ClampedArray Int16Array Uint16Array Int32Array Uint32Array Float32Array Float64Array".split(" "),d=0;d<b.length;d++){var f=$jscomp.global[b[d]];"function"===typeof f&&"function"!=typeof f.prototype[a]&&$jscomp.defineProperty(f.prototype,a,{configurable:!0,writable:!0,value:function(){return $jscomp.iteratorPrototype($jscomp.arrayIteratorImpl(this))}})}return a},"es6",
+"es3");$jscomp.iteratorPrototype=function(a){a={next:a};a[Symbol.iterator]=function(){return this};return a};
+$jscomp.polyfill("Promise",function(a){function b(){this.batch_=null}function d(c){return c instanceof e?c:new e(function(g,h){g(c)})}if(a&&(!($jscomp.FORCE_POLYFILL_PROMISE||$jscomp.FORCE_POLYFILL_PROMISE_WHEN_NO_UNHANDLED_REJECTION&&"undefined"===typeof $jscomp.global.PromiseRejectionEvent)||!$jscomp.global.Promise||-1===$jscomp.global.Promise.toString().indexOf("[native code]")))return a;b.prototype.asyncExecute=function(c){if(null==this.batch_){this.batch_=[];var g=this;this.asyncExecuteFunction(function(){g.executeBatch_()})}this.batch_.push(c)};
+var f=$jscomp.global.setTimeout;b.prototype.asyncExecuteFunction=function(c){f(c,0)};b.prototype.executeBatch_=function(){for(;this.batch_&&this.batch_.length;){var c=this.batch_;this.batch_=[];for(var g=0;g<c.length;++g){var h=c[g];c[g]=null;try{h()}catch(l){this.asyncThrow_(l)}}}this.batch_=null};b.prototype.asyncThrow_=function(c){this.asyncExecuteFunction(function(){throw c;})};var e=function(c){this.state_=0;this.result_=void 0;this.onSettledCallbacks_=[];this.isRejectionHandled_=!1;var g=this.createResolveAndReject_();
+try{c(g.resolve,g.reject)}catch(h){g.reject(h)}};e.prototype.createResolveAndReject_=function(){function c(l){return function(m){h||(h=!0,l.call(g,m))}}var g=this,h=!1;return{resolve:c(this.resolveTo_),reject:c(this.reject_)}};e.prototype.resolveTo_=function(c){if(c===this)this.reject_(new TypeError("A Promise cannot resolve to itself"));else if(c instanceof e)this.settleSameAsPromise_(c);else{a:switch(typeof c){case "object":var g=null!=c;break a;case "function":g=!0;break a;default:g=!1}g?this.resolveToNonPromiseObj_(c):
+this.fulfill_(c)}};e.prototype.resolveToNonPromiseObj_=function(c){var g=void 0;try{g=c.then}catch(h){this.reject_(h);return}"function"==typeof g?this.settleSameAsThenable_(g,c):this.fulfill_(c)};e.prototype.reject_=function(c){this.settle_(2,c)};e.prototype.fulfill_=function(c){this.settle_(1,c)};e.prototype.settle_=function(c,g){if(0!=this.state_)throw Error("Cannot settle("+c+", "+g+"): Promise already settled in state"+this.state_);this.state_=c;this.result_=g;2===this.state_&&this.scheduleUnhandledRejectionCheck_();
+this.executeOnSettledCallbacks_()};e.prototype.scheduleUnhandledRejectionCheck_=function(){var c=this;f(function(){if(c.notifyUnhandledRejection_()){var g=$jscomp.global.console;"undefined"!==typeof g&&g.error(c.result_)}},1)};e.prototype.notifyUnhandledRejection_=function(){if(this.isRejectionHandled_)return!1;var c=$jscomp.global.CustomEvent,g=$jscomp.global.Event,h=$jscomp.global.dispatchEvent;if("undefined"===typeof h)return!0;"function"===typeof c?c=new c("unhandledrejection",{cancelable:!0}):
+"function"===typeof g?c=new g("unhandledrejection",{cancelable:!0}):(c=$jscomp.global.document.createEvent("CustomEvent"),c.initCustomEvent("unhandledrejection",!1,!0,c));c.promise=this;c.reason=this.result_;return h(c)};e.prototype.executeOnSettledCallbacks_=function(){if(null!=this.onSettledCallbacks_){for(var c=0;c<this.onSettledCallbacks_.length;++c)k.asyncExecute(this.onSettledCallbacks_[c]);this.onSettledCallbacks_=null}};var k=new b;e.prototype.settleSameAsPromise_=function(c){var g=this.createResolveAndReject_();
+c.callWhenSettled_(g.resolve,g.reject)};e.prototype.settleSameAsThenable_=function(c,g){var h=this.createResolveAndReject_();try{c.call(g,h.resolve,h.reject)}catch(l){h.reject(l)}};e.prototype.then=function(c,g){function h(n,p){return"function"==typeof n?function(q){try{l(n(q))}catch(r){m(r)}}:p}var l,m,t=new e(function(n,p){l=n;m=p});this.callWhenSettled_(h(c,l),h(g,m));return t};e.prototype.catch=function(c){return this.then(void 0,c)};e.prototype.callWhenSettled_=function(c,g){function h(){switch(l.state_){case 1:c(l.result_);
+break;case 2:g(l.result_);break;default:throw Error("Unexpected state: "+l.state_);}}var l=this;null==this.onSettledCallbacks_?k.asyncExecute(h):this.onSettledCallbacks_.push(h);this.isRejectionHandled_=!0};e.resolve=d;e.reject=function(c){return new e(function(g,h){h(c)})};e.race=function(c){return new e(function(g,h){for(var l=$jscomp.makeIterator(c),m=l.next();!m.done;m=l.next())d(m.value).callWhenSettled_(g,h)})};e.all=function(c){var g=$jscomp.makeIterator(c),h=g.next();return h.done?d([]):new e(function(l,
+m){function t(q){return function(r){n[q]=r;p--;0==p&&l(n)}}var n=[],p=0;do n.push(void 0),p++,d(h.value).callWhenSettled_(t(n.length-1),m),h=g.next();while(!h.done)})};return e},"es6","es3");$jscomp.iteratorFromArray=function(a,b){a instanceof String&&(a+="");var d=0,f=!1,e={next:function(){if(!f&&d<a.length){var k=d++;return{value:b(k,a[k]),done:!1}}f=!0;return{done:!0,value:void 0}}};e[Symbol.iterator]=function(){return e};return e};
+$jscomp.polyfill("Array.prototype.keys",function(a){return a?a:function(){return $jscomp.iteratorFromArray(this,function(b){return b})}},"es6","es3");LOG_URL="/log";NUMBER_OF_CHARCATERS_IN_PARAGRAPH=500;INVALID_DESCRIPTION="Disambiguation page providing links to topics that could be referred to by the same search term";
+function analyzeTextForSending(){if(window.getSelection&&""!==window.getSelection().toString()){var a=window.getSelection().anchorNode,b=window.getSelection().getRangeAt(0),d=window.getSelection().toString();b.startOffset!==b.endOffset&&(50<d.length||modifySingleNode(a,d.trim()))}}
+function lookUpTerm(a,b){var d,f,e,k;return $jscomp.asyncExecutePromiseGeneratorProgram(function(c){switch(c.nextAddress){case 1:return d=getWikiUrl(a),c.setCatchFinallyBlocks(2),c.yield(fetchWiki(d),4);case 4:return e=c.yieldResult,c.yield(e.json(),5);case 5:f=c.yieldResult;c.leaveTryBlock(3);break;case 2:return k=c.enterCatchBlock(),handleUpdate(k.message),console.log(k),c.return();case 3:if(!f||!f.query||!f.query.pages||0===f.query.pages.length)return c.return();f=getMatches(f.query.pages);init(f,
+a,b);c.jumpToEnd()}})}function fetchWiki(a){return new Promise(function(b,d){chrome.runtime.sendMessage({input:a,params:{method:"GET"},init:init,message:"callInternet"},function(f){var e=$jscomp.makeIterator(f);f=e.next().value;e=e.next().value;null===f?d(e):(e=f.body?new Blob([f.body]):void 0,b(new Response(e,{status:f.status,statusText:f.statusText})))})})}
+function fetchNewYorkTimes(a){var b=new Date,d=""+(b.getMonth()+1),f=""+b.getDate(),e=b.getFullYear()+"-"+(2>d.length?"0"+d:d)+"-"+(2>f.length?"0"+f:f);return new Promise(function(k,c){chrome.runtime.sendMessage({message:"NYTimes",term:a,date:e},function(g){var h=$jscomp.makeIterator(g);g=h.next().value;h=h.next().value;null===g?c(h):(h=g.body?new Blob([g.body]):void 0,k(new Response(h,{status:g.status,statusText:g.statusText})))})})}
+function getWikiUrl(a){return"https://en.wikipedia.org/w/api.php?"+(new URLSearchParams({action:"query",format:"json",prop:"description|extracts|pageimages",list:"",generator:"search",exsentences:"2",exlimit:"5",exintro:1,gsrsearch:a,gsrlimit:5,gsrinfo:"totalhits",gsrsort:"relevance"})).toString()}
+function getNewEnclopediaUrl(a){return"https://www.newworldencyclopedia.org/api.php?"+(new URLSearchParams({action:"query",format:"json",list:"",generator:"search",exsentences:"2",exlimit:"5",prop:"extracts",exintro:1,gsrsearch:a,gsrlimit:5,gsrinfo:"totalhits",gsrsort:"relevance"})).toString()}function getMatches(a){var b=[];Object.keys(a).forEach(function(d){d&&a[d].description!==INVALID_DESCRIPTION&&b.push(a[d])});b.sort(function(d,f){return d.index-f.index});return b}
+function mergeEntries(a,b){var d=b.query.pages,f=a.query.pages,e={},k=[];Object.keys(f).forEach(function(c){return e[f[c].title]=f[c]});Object.keys(d).forEach(function(c){var g=!!e[d[c].title],h=g?e[d[c].title].index:void 0;e[d[c].title]=d[c];g&&(e[d[c].title].rank=0,e[d[c].title].index=h)});Object.keys(e).forEach(function(c){e[c].description!==INVALID_DESCRIPTION&&k.push(e[c])});k.sort(function(c,g){var h=c.rank||0-g.rank||0;return 0===h?c.index-g.index:h});return k};

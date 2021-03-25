@@ -1,103 +1,22 @@
-MODAL = 'edicratic-modal'
-LOG_URL = "/reporting"
-MODAL_OPENED = 'MODAL_OPENED'
-document.body.addEventListener('mousedown', checkForModalClose);
-
-
-chrome.runtime.onMessage.addListener(
-    function(request, sender, sendResponse) {
-      // console.log(request);
-      if (request.message === "bugReport"){
-        //if auth set to true in local storage
-            createModal();
-            //TODO check Auth
-            //alert("Please log in to report a bug");
-      }
-      return true;
-  });
-
-
-
-function createModal() {
-    // console.log("creating a modal");
-    if(!document.getElementById(MODAL)) {
-        let div = document.createElement('div');
-        div.className = 'edicratic-modal';
-        div.id = MODAL;
-        div.innerHTML = `
-            <span id="close-icon" class="edicratic-close">&times;</span>
-            <img id='logo-id' class="edicratic-logo">
-            <h2 class="edicratic-modal-header-2">Bug Report</h2>
-            <hr/>
-    <div class="modal-body-edicratic">
-        <textarea id="feedback-edicratic-text" placeholder="Enter feedback here..." class="edicratic-textarea"></textarea>
-        <h4 class="edicratic-text-style">Thank you for your feedback! Users like you motivate our developers.</h4>
-        <div id="edicratic-feedback-button" class="edicratic-button">Submit Report</div>
-        <br/>
-    </div>
-    `
-    var imgURL = chrome.extension.getURL("/images/logo48.png");
-    //sdiv.style.bottom = `${dist - window.innerHeight / 2}px`
-    chrome.runtime.sendMessage({
-        data: MODAL_OPENED,
-    });
-    document.body.appendChild(div);
-    document.getElementById('logo-id').src = imgURL;
-    let feedbackButton = document.getElementById('edicratic-feedback-button');
-    let close = document.getElementById('close-icon');
-    feedbackButton.onclick = () => handleFeedbackButtonClick();
-    close.onclick = () => removeModal();
-}
-
-}
-
-function sendLog(url, body) {
-    return new Promise((resolve, reject) => {
-      params = {
-                method: "POST",
-                body: JSON.stringify({body: body}),
-                headers: {
-                   'Content-Type': 'application/json',
-               }
-             }
-      chrome.runtime.sendMessage({input: url,params, message:"callWebCheckAPI", needsAuthHeaders: true}, messageResponse => {
-        const [response, error] = messageResponse;
-        if (response === null) {
-          reject(error);
-        } else {
-          const body = response.body ?  new Blob([response.body]) : undefined;
-          resolve(new Response(body, {
-            status: response.status,
-            statusText: response.statusText,
-          }));
-        }
-      });
-    });
-  }
-
-function handleFeedbackButtonClick() {
-    let currentUrl = window.location.href;
-    let textAreaFeedback = document.getElementById('feedback-edicratic-text');
-    let text = textAreaFeedback.value;
-    params = {type: "Feedback", content: text, url: currentUrl};
-    sendLog(LOG_URL, params);
-    removeModal();
-}
-
-function removeModal() {
-    let feedbackModal = document.getElementById(MODAL);
-    feedbackModal.parentElement.removeChild(feedbackModal);
-    document.body.removeEventListener('mousedown', checkForModalClose);
-}
-
-function checkForModalClose(e) {
-    let elementFirst = e.target;
-    if(!elementFirst) return;
-    let parentElement = e.target.parentElement;
-    if(!parentElement) return;
-    if(parentElement.className !== 'modal-body-edicratic' && parentElement.className !== 'edicratic-modal' &&
-    elementFirst.className !== 'modal-body-edicratic' && elementFirst.className !== 'edicratic-modal') {
-        removeModal();
-    }
-
-}
+var $jscomp=$jscomp||{};$jscomp.scope={};$jscomp.createTemplateTagFirstArg=function(b){return b.raw=b};$jscomp.createTemplateTagFirstArgWithRaw=function(b,d){b.raw=d;return b};$jscomp.arrayIteratorImpl=function(b){var d=0;return function(){return d<b.length?{done:!1,value:b[d++]}:{done:!0}}};$jscomp.arrayIterator=function(b){return{next:$jscomp.arrayIteratorImpl(b)}};$jscomp.makeIterator=function(b){var d="undefined"!=typeof Symbol&&Symbol.iterator&&b[Symbol.iterator];return d?d.call(b):$jscomp.arrayIterator(b)};
+$jscomp.ASSUME_ES5=!1;$jscomp.ASSUME_NO_NATIVE_MAP=!1;$jscomp.ASSUME_NO_NATIVE_SET=!1;$jscomp.SIMPLE_FROUND_POLYFILL=!1;$jscomp.ISOLATE_POLYFILLS=!1;$jscomp.FORCE_POLYFILL_PROMISE=!1;$jscomp.FORCE_POLYFILL_PROMISE_WHEN_NO_UNHANDLED_REJECTION=!1;
+$jscomp.getGlobal=function(b){b=["object"==typeof globalThis&&globalThis,b,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var d=0;d<b.length;++d){var f=b[d];if(f&&f.Math==Math)return f}throw Error("Cannot find global object");};$jscomp.global=$jscomp.getGlobal(this);
+$jscomp.defineProperty=$jscomp.ASSUME_ES5||"function"==typeof Object.defineProperties?Object.defineProperty:function(b,d,f){if(b==Array.prototype||b==Object.prototype)return b;b[d]=f.value;return b};$jscomp.IS_SYMBOL_NATIVE="function"===typeof Symbol&&"symbol"===typeof Symbol("x");$jscomp.TRUST_ES6_POLYFILLS=!$jscomp.ISOLATE_POLYFILLS||$jscomp.IS_SYMBOL_NATIVE;$jscomp.polyfills={};$jscomp.propertyToPolyfillSymbol={};$jscomp.POLYFILL_PREFIX="$jscp$";
+var $jscomp$lookupPolyfilledValue=function(b,d){var f=$jscomp.propertyToPolyfillSymbol[d];if(null==f)return b[d];f=b[f];return void 0!==f?f:b[d]};$jscomp.polyfill=function(b,d,f,h){d&&($jscomp.ISOLATE_POLYFILLS?$jscomp.polyfillIsolated(b,d,f,h):$jscomp.polyfillUnisolated(b,d,f,h))};
+$jscomp.polyfillUnisolated=function(b,d,f,h){f=$jscomp.global;b=b.split(".");for(h=0;h<b.length-1;h++){var c=b[h];if(!(c in f))return;f=f[c]}b=b[b.length-1];h=f[b];d=d(h);d!=h&&null!=d&&$jscomp.defineProperty(f,b,{configurable:!0,writable:!0,value:d})};
+$jscomp.polyfillIsolated=function(b,d,f,h){var c=b.split(".");b=1===c.length;h=c[0];h=!b&&h in $jscomp.polyfills?$jscomp.polyfills:$jscomp.global;for(var l=0;l<c.length-1;l++){var a=c[l];if(!(a in h))return;h=h[a]}c=c[c.length-1];f=$jscomp.IS_SYMBOL_NATIVE&&"es6"===f?h[c]:null;d=d(f);null!=d&&(b?$jscomp.defineProperty($jscomp.polyfills,c,{configurable:!0,writable:!0,value:d}):d!==f&&(void 0===$jscomp.propertyToPolyfillSymbol[c]&&($jscomp.propertyToPolyfillSymbol[c]=$jscomp.IS_SYMBOL_NATIVE?$jscomp.global.Symbol(c):
+$jscomp.POLYFILL_PREFIX+c),$jscomp.defineProperty(h,$jscomp.propertyToPolyfillSymbol[c],{configurable:!0,writable:!0,value:d})))};
+$jscomp.polyfill("Promise",function(b){function d(){this.batch_=null}function f(a){return a instanceof c?a:new c(function(e,g){e(a)})}if(b&&(!($jscomp.FORCE_POLYFILL_PROMISE||$jscomp.FORCE_POLYFILL_PROMISE_WHEN_NO_UNHANDLED_REJECTION&&"undefined"===typeof $jscomp.global.PromiseRejectionEvent)||!$jscomp.global.Promise||-1===$jscomp.global.Promise.toString().indexOf("[native code]")))return b;d.prototype.asyncExecute=function(a){if(null==this.batch_){this.batch_=[];var e=this;this.asyncExecuteFunction(function(){e.executeBatch_()})}this.batch_.push(a)};
+var h=$jscomp.global.setTimeout;d.prototype.asyncExecuteFunction=function(a){h(a,0)};d.prototype.executeBatch_=function(){for(;this.batch_&&this.batch_.length;){var a=this.batch_;this.batch_=[];for(var e=0;e<a.length;++e){var g=a[e];a[e]=null;try{g()}catch(k){this.asyncThrow_(k)}}}this.batch_=null};d.prototype.asyncThrow_=function(a){this.asyncExecuteFunction(function(){throw a;})};var c=function(a){this.state_=0;this.result_=void 0;this.onSettledCallbacks_=[];this.isRejectionHandled_=!1;var e=this.createResolveAndReject_();
+try{a(e.resolve,e.reject)}catch(g){e.reject(g)}};c.prototype.createResolveAndReject_=function(){function a(k){return function(m){g||(g=!0,k.call(e,m))}}var e=this,g=!1;return{resolve:a(this.resolveTo_),reject:a(this.reject_)}};c.prototype.resolveTo_=function(a){if(a===this)this.reject_(new TypeError("A Promise cannot resolve to itself"));else if(a instanceof c)this.settleSameAsPromise_(a);else{a:switch(typeof a){case "object":var e=null!=a;break a;case "function":e=!0;break a;default:e=!1}e?this.resolveToNonPromiseObj_(a):
+this.fulfill_(a)}};c.prototype.resolveToNonPromiseObj_=function(a){var e=void 0;try{e=a.then}catch(g){this.reject_(g);return}"function"==typeof e?this.settleSameAsThenable_(e,a):this.fulfill_(a)};c.prototype.reject_=function(a){this.settle_(2,a)};c.prototype.fulfill_=function(a){this.settle_(1,a)};c.prototype.settle_=function(a,e){if(0!=this.state_)throw Error("Cannot settle("+a+", "+e+"): Promise already settled in state"+this.state_);this.state_=a;this.result_=e;2===this.state_&&this.scheduleUnhandledRejectionCheck_();
+this.executeOnSettledCallbacks_()};c.prototype.scheduleUnhandledRejectionCheck_=function(){var a=this;h(function(){if(a.notifyUnhandledRejection_()){var e=$jscomp.global.console;"undefined"!==typeof e&&e.error(a.result_)}},1)};c.prototype.notifyUnhandledRejection_=function(){if(this.isRejectionHandled_)return!1;var a=$jscomp.global.CustomEvent,e=$jscomp.global.Event,g=$jscomp.global.dispatchEvent;if("undefined"===typeof g)return!0;"function"===typeof a?a=new a("unhandledrejection",{cancelable:!0}):
+"function"===typeof e?a=new e("unhandledrejection",{cancelable:!0}):(a=$jscomp.global.document.createEvent("CustomEvent"),a.initCustomEvent("unhandledrejection",!1,!0,a));a.promise=this;a.reason=this.result_;return g(a)};c.prototype.executeOnSettledCallbacks_=function(){if(null!=this.onSettledCallbacks_){for(var a=0;a<this.onSettledCallbacks_.length;++a)l.asyncExecute(this.onSettledCallbacks_[a]);this.onSettledCallbacks_=null}};var l=new d;c.prototype.settleSameAsPromise_=function(a){var e=this.createResolveAndReject_();
+a.callWhenSettled_(e.resolve,e.reject)};c.prototype.settleSameAsThenable_=function(a,e){var g=this.createResolveAndReject_();try{a.call(e,g.resolve,g.reject)}catch(k){g.reject(k)}};c.prototype.then=function(a,e){function g(n,p){return"function"==typeof n?function(q){try{k(n(q))}catch(r){m(r)}}:p}var k,m,t=new c(function(n,p){k=n;m=p});this.callWhenSettled_(g(a,k),g(e,m));return t};c.prototype.catch=function(a){return this.then(void 0,a)};c.prototype.callWhenSettled_=function(a,e){function g(){switch(k.state_){case 1:a(k.result_);
+break;case 2:e(k.result_);break;default:throw Error("Unexpected state: "+k.state_);}}var k=this;null==this.onSettledCallbacks_?l.asyncExecute(g):this.onSettledCallbacks_.push(g);this.isRejectionHandled_=!0};c.resolve=f;c.reject=function(a){return new c(function(e,g){g(a)})};c.race=function(a){return new c(function(e,g){for(var k=$jscomp.makeIterator(a),m=k.next();!m.done;m=k.next())f(m.value).callWhenSettled_(e,g)})};c.all=function(a){var e=$jscomp.makeIterator(a),g=e.next();return g.done?f([]):new c(function(k,
+m){function t(q){return function(r){n[q]=r;p--;0==p&&k(n)}}var n=[],p=0;do n.push(void 0),p++,f(g.value).callWhenSettled_(t(n.length-1),m),g=e.next();while(!g.done)})};return c},"es6","es3");MODAL="edicratic-modal";LOG_URL="/reporting";MODAL_OPENED="MODAL_OPENED";document.body.addEventListener("mousedown",checkForModalClose);chrome.runtime.onMessage.addListener(function(b,d,f){"bugReport"===b.message&&createModal();return!0});
+function createModal(){if(!document.getElementById(MODAL)){var b=document.createElement("div");b.className="edicratic-modal";b.id=MODAL;b.innerHTML='\n            <span id="close-icon" class="edicratic-close">&times;</span>\n            <img id=\'logo-id\' class="edicratic-logo">\n            <h2 class="edicratic-modal-header-2">Bug Report</h2>\n            <hr/>\n    <div class="modal-body-edicratic">\n        <textarea id="feedback-edicratic-text" placeholder="Enter feedback here..." class="edicratic-textarea"></textarea>\n        <h4 class="edicratic-text-style">Thank you for your feedback! Users like you motivate our developers.</h4>\n        <div id="edicratic-feedback-button" class="edicratic-button">Submit Report</div>\n        <br/>\n    </div>\n    ';
+var d=chrome.extension.getURL("/images/logo48.png");chrome.runtime.sendMessage({data:MODAL_OPENED});document.body.appendChild(b);document.getElementById("logo-id").src=d;b=document.getElementById("edicratic-feedback-button");d=document.getElementById("close-icon");b.onclick=function(){return handleFeedbackButtonClick()};d.onclick=function(){return removeModal()}}}
+function sendLog(b,d){return new Promise(function(f,h){params={method:"POST",body:JSON.stringify({body:d}),headers:{"Content-Type":"application/json"}};chrome.runtime.sendMessage({input:b,params:params,message:"callWebCheckAPI",needsAuthHeaders:!0},function(c){var l=$jscomp.makeIterator(c);c=l.next().value;l=l.next().value;null===c?h(l):(l=c.body?new Blob([c.body]):void 0,f(new Response(l,{status:c.status,statusText:c.statusText})))})})}
+function handleFeedbackButtonClick(){var b=window.location.href;params={type:"Feedback",content:document.getElementById("feedback-edicratic-text").value,url:b};sendLog(LOG_URL,params);removeModal()}function removeModal(){var b=document.getElementById(MODAL);b.parentElement.removeChild(b);document.body.removeEventListener("mousedown",checkForModalClose)}
+function checkForModalClose(b){var d=b.target;d&&(b=b.target.parentElement)&&"modal-body-edicratic"!==b.className&&"edicratic-modal"!==b.className&&"modal-body-edicratic"!==d.className&&"edicratic-modal"!==d.className&&removeModal()};

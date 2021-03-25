@@ -1,868 +1,102 @@
-var scriptAlreadyLoaded = true;
-var cleared = false;
-var timer;
-ANCHOR_CLASS_NAME = 'edicratic-anchor-tag-style';
-ANCHOR_OVERRIDE_CLASS_NAME = 'edicratic-anchor-tag-override';
-TOOL_TIP_CLASS_NAME = 'edicratic-tooltip';
-POST_URL = '/process';
-INNER_LINK = 'edicratic-inner-link';
-PARAGRAPH_CLASS_NAME = 'edicratic-paragraph-classname'
-NEW_LINE_ID = "please-remove-me";
-idToData = {};
-idToTerm = {};
-idToSelected = {};
-onLeft = {};
-onTop = {};
-tooltips = {};
-pointers = {};
-OPEN_SPAN = undefined;
-DATA_LOADED = 'DATA_LOADED'
-BUTTON_PRESSED = 'BUTTON_PRESSED';
-PREVIOUS_TEXT = "";
-NEW_NODES = null;
-TOOL_TIP_POINTER_HEIGHT = 12;
-ARROW_UP_CLASSNAME = 'edicratic-tooltip-bottom-rightsideup';
-ARROW_DOWN_CLASSNAME = 'edicratic-tooltip-bottom-upsidedown'
-TAB_CONTAINER_CLASS_NAME = 'edicratic-tabContainer';
-INDIVIDUAL_TAB_CLASS_NAME = 'edicratic-tab';
-SHOW_HIDDEN_TEXT = 'edicratic-show-hidden';
-ENTITY_HEADER = 'edicratic-entity-header'
-ENTITY_LINK_CLASS_NAME = 'edicratic-entity-link';
-IMAGE_NYT_CLASSNAME = 'edicratic-image-nyt';
-GRAY_POINTER_CLASSNAME = 'edicratic-grey-pointer';
-IMAGE_BELOW_TEXT = 'edicratic-image-below';
-GOOGLE_SEARCH_IMAGE_META = 'og:image';
-GOOGLE_SEARCH_DESCRIPTION_META = 'og:description';
-WIKI_CLASS_NAME = 'edicratic-image';
-ENTITY_PARENT_CLASSNAME = 'edicratic-entity-parent';
-
-//urls
-WEBSTORE_URL = 'https://chrome.google.com/webstore/detail/webcheck-ai/faiaendcmomnolaeadadkanohcmcnaip'
-WEBSTORE_SUMMARY = 'Check%20out%20this%20new%20Chrome%20Extension!';
-
-window.addEventListener('scroll', adjustSpansBasedOnHeight);
-
-document.body.onmousemove = e => handleMouseMove(e);
-chrome.runtime.onMessage.addListener(
-    function(request, sender, sendResponse) {
-    if (request.message === "runWebCheck"){
-        makePostRequest(request.automatic);
-    } else if (request.message === 'removeAllHTML') {
-        removeAllEdicraticHTML();
-    }
-    return true;
-  });
-
-function init(data, entity, automatic) {
-    var regex = undefined;
-    try {
-        var regex = new RegExp(entity, "i");
-    } catch(e) {
-        console.log(e);
-    }
-    let childList = document.body.childNodes;
-    const set = new Set();
-    if(regex) modifyAllText(regex, entity, data, NEW_NODES || childList, set, automatic);
-}
-
-async function modifySingleNode(node, text) {
-    var url = getWikiUrl(text);
-    var data;
-    try {
-        var result = await fetchWiki(url);
-        data = await result.json();
-    } catch(e) {
-        console.log(e);
-    }
-    var regex = undefined;
-    try {
-        var regex = new RegExp(text);
-    } catch(e) {
-        console.log(e);
-    }
-
-    if(!node || !node.textContent || !data || !data.query || !data.query.pages || data.query.pages.length === 0 || !regex || !node.textContent.match(regex)) {
-        //alert("Sorry, could not find a match for that :(. Try to highlight specific terms");
-        document.body.classList.add('edicratic-red');
-        return;
-    }
-
-    var pages = data.query.pages;
-    var matches = getMatches(pages);
-    var innerText = node.textContent;
-    var uniqueId = "d3" + Math.floor(Math.random() * 1000000);
-    idToTerm[uniqueId] = text;
-    innerText = innerText.replace(text, `<div data-unique="${new Date().getTime()}" id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text}</div>`);
-    let itemsArray = proccessWikiData(matches, uniqueId);
-
-    var newElement = document.createElement('div');
-    newElement.style.display = "inline";
-    newElement.className = ENTITY_PARENT_CLASSNAME;
-    newElement.innerHTML = innerText;
-    newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId, text);
-    newElement.onmouseleave = () => clearTimeout(timer);
-    node.parentElement.replaceChild(newElement, node);
-
-    var tooltip = document.createElement('span');
-    tooltip.id = `${uniqueId}-parent`;
-    tooltip.className = TOOL_TIP_CLASS_NAME;
-    tooltip.innerHTML = `<div id=${uniqueId}-content> ${itemsArray}</div>`
-
-    //add data
-    idToData[uniqueId] = {'Information': itemsArray};
-    idToData[uniqueId]['Share'] = getShareHTML();
-
-    //create pointer
-    let pointer = document.createElement('div');
-    pointer.className = 'edicratic-tooltip-bottom';
-    pointer.id = `${uniqueId}-pointer`;
-    pointer.style.display = 'none';
-    pointers[uniqueId] = pointer;
-
-    let tabs = document.createElement('div');
-    tabs.className = 'edicratic-tabContainer';
-    tabs.id =`${uniqueId}-tabs`;
-    tabs.innerHTML = `
-        <a class="edicratic-tab edicratic-selected">Information</a>
-        <a class="edicratic-tab">News</a>
-        <a class="edicratic-tab">Share</a>
-    `
-    tooltip.appendChild(tabs);
-    //TODO write onclick method
-    let tabChildren = tabs.children;
-    for (var i = 0; i < tabChildren.length; i++) {
-        tabChildren[i].onclick = (e) => handleTabClick(e, uniqueId);
-    }
-    idToSelected[uniqueId] = 'Information';
-    tooltips[uniqueId] = tooltip;
-    // addShowMoreListeners(uniqueId);
-    tooltip.onclick = e => e.preventDefault();
-    tooltip.onmouseleave = e => handleMouseLeave(e);
-    testEndpoint(text, uniqueId);
-
-    //rehighlight text
-    let element = document.getElementById(`${uniqueId}-parent-parent`)
-    const selection = window.getSelection();
-    const range = document.createRange();
-    range.selectNodeContents(element);
-    selection.removeAllRanges();
-    selection.addRange(range);
-}
-
-function addShowMoreListeners(id) {
-    let tooltip = document.getElementById(`${id}-parent`);
-    if (!tooltip) return;
-    let showMoreLinks = tooltip.getElementsByClassName(SHOW_HIDDEN_TEXT);
-    let images = tooltip.getElementsByClassName(IMAGE_NYT_CLASSNAME);
-    let imagesWiki = tooltip.getElementsByClassName(WIKI_CLASS_NAME);
-    let links = tooltip.getElementsByClassName(ENTITY_LINK_CLASS_NAME);
-    for(var i = 0; i < images.length; i++) {
-        images[i].onerror = (e) => {
-            let br = document.createElement('br');
-            if(e.target.parentElement) e.target.parentElement.replaceChild(br, e.target);
-        };
-    }
-    for (var i = 0; i < imagesWiki.length; i++) {
-        imagesWiki[i].onerror = (e) => {
-            if(e.target.parentElement) {
-                e.target.parentElement.removeChild(e.target);
-            }
-        }
-    }
-    for(var i = 0; i < showMoreLinks.length; i++) {
-        showMoreLinks[i].onclick = (e) => showHiddenText(e, id);
-    }
-    for(var i = 0; i < links.length; i++) {
-        links[i].onclick = (e) => handleArticleClick(e, id);
-    }
-}
-
-function handleTabClick(e, id) {
-    let tooltip = document.getElementById(`${id}-parent`);
-    let tabs = document.getElementById(`${id}-tabs`);
-    let currentTab = e.toElement;
-    let tabChildren = tabs.children;
-    var previousTabText = '';
-    for(var i = 0; i < tabChildren.length; i++) {
-        if (tabChildren[i].classList.contains('edicratic-selected')) {
-            tabChildren[i].classList.remove('edicratic-selected');
-            previousTabText = tabChildren[i].textContent || tabChildren[i].innerText;
-        }
-    }
-    currentTab.classList.add('edicratic-selected');
-    idToSelected[id] = currentTab.innerText || currentTab.textContent;
-    handleTabSwitchProcesssing(previousTabText,idToSelected[id]);
-    let tooltipChildren = tooltip.children;
-    let index = 0;
-    let height = tooltip.getElementsByClassName('info-edicratic')[0].clientHeight;
-    for(var i = 0; i < tooltipChildren.length; i++) {
-        if(tooltipChildren[i].id === `${id}-content`) {
-            index = i;
-            let innerHTML = idToData[id][currentTab.textContent || currentTab.innerText];
-            if(innerHTML && innerHTML !== ' ') {
-                tooltipChildren[i].innerHTML = innerHTML;
-            } else {
-                tooltipChildren[i].innerHTML = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">Searching...</div>`;
-            }
-            tooltip.getElementsByClassName('info-edicratic')[0].style.height = `${height}px`
-
-        }
-    }
-    addShowMoreListeners(id);
-}
-
-function updatePointerColor(id) {
-    let pointer = document.getElementById(`${id}-pointer`);
-    if(onLeft[id] && onTop[id] && idToSelected[id] === 'Information') {
-        pointer.classList.add(GRAY_POINTER_CLASSNAME);
-    } else if (onTop[id] && onLeft[id] === undefined && idToSelected[id] === 'News') {
-        pointer.classList.add(GRAY_POINTER_CLASSNAME);
-    } else {
-        pointer.classList.remove(GRAY_POINTER_CLASSNAME);
-    }
-}
-
-function modifyAllText(regex, entity, matches, childList, set, automatic) {
-    for (var i = 0; i < childList.length; i++) {
-        const child = childList[i];
-        if(!set.has(child) && child.className !== ANCHOR_CLASS_NAME && child.className !== TOOL_TIP_CLASS_NAME && child.tagName !== 'NAV') {
-            set.add(child);
-            if(child.nodeName === '#comment' || child.nodeName === 'NOSCRIPT' || child.nodeName === 'IMG'
-                || child.nodeName === 'SCRIPT' ||  child.nodeName === 'STYLE') continue;
-            const nextList = child.childNodes;
-            const length = nextList.length;
-            var text = child.textContent;
-            if (length === 0 && text !== "" && text !== undefined && checkMatch(text, entity, regex)) {
-                if (!noNearbyTags(child, regex)) {
-                    return;
-                }
-                child.innerText = "";
-                var uniqueId = "d" + i + Math.floor(Math.random() * 1000000);
-                idToTerm[uniqueId] = entity;
-                text = text.replace(regex, `<div data-type="${automatic ? 'whitelist_check' : 'webcheck'}" id="${uniqueId}-parent-parent" class="${ANCHOR_CLASS_NAME}">${text.match(regex)}</div>`);
-                let data = proccessWikiData(matches, uniqueId);
-                idToData[uniqueId] = {'Information': data};
-                idToData[uniqueId]['Share'] = getShareHTML();
-                var newElement = document.createElement('div');
-                newElement.className = ENTITY_PARENT_CLASSNAME;
-                newElement.style.display = "inline";
-                newElement.innerHTML = text;
-                newElement.onmouseover = (e) => mouseOverHandle(e, uniqueId, entity);
-                newElement.onmouseleave = () => clearTimeout(timer);
-                if(child.nodeName !== "#text") {
-                    child.appendChild(newElement);
-                } else {
-                    child.parentElement.replaceChild(newElement, child);
-                }
-                set.add(newElement);
-                createTooltip(data, uniqueId, 'Information');
-            }
-            if (length !== 0) {
-                modifyAllText(regex, entity, matches, nextList, set, automatic)
-            }
-    }
-    }
-}
-
-function createTooltip(data, id, infoType) {
-    var tooltip = document.createElement('span');
-    tooltip.id = `${id}-parent`;
-    tooltip.className = TOOL_TIP_CLASS_NAME;
-    tooltip.innerHTML = `<div id=${id}-content> ${data}</div>`
-
-    let pointer = document.createElement('div');
-    pointer.className = 'edicratic-tooltip-bottom';
-    pointer.style.display = 'none';
-    pointer.id = `${id}-pointer`;
-    // document.body.appendChild(pointer);
-    pointers[id] = pointer;
-
-    let tabs = document.createElement('div');
-    tabs.className = 'edicratic-tabContainer';
-    tabs.id =`${id}-tabs`;
-    tabs.innerHTML = `
-        <a class="edicratic-tab ${infoType === 'Information' ? 'edicratic-selected' : ''}">Information</a>
-        <a class="edicratic-tab ${infoType === 'News' ? 'edicratic-selected' : ''}">News</a>
-        <a class="edicratic-tab">Share</a>
-    `
-    tooltip.appendChild(tabs);
-    idToSelected[id] = infoType;
-
-    let tabChildren = tabs.children;
-    for (var i = 0; i < tabChildren.length; i++) {
-        tabChildren[i].onclick = (e) => handleTabClick(e, id);
-    }
-
-    // document.body.prepend(tooltip)
-    // addShowMoreListeners(id);
-    tooltip.onclick = e => e.preventDefault();
-    tooltip.onmouseleave = e => handleMouseLeave(e);
-    tooltips[id] = tooltip;
-
-}
-
-function handleMouseLeave(e) {
-    clearTimeout(timer);
-    let orginalId = e.target ? e.target.id || undefined : undefined;
-    if(orginalId) removeSpan(orginalId.substring(0, orginalId.indexOf('-')));
-
-}
-
-async function mouseOverHandle(e, id, text) {
-    if (cleared && !e.target.dataset['unique']) return;
-    if (e.target && e.target.id) {
-        id = e.target.id;
-        id = id.substring(0, id.indexOf('-'));
-        let entityElement = document.getElementById(`${id}-parent-parent`);
-        if(entityElement) {
-            startTimer(entityElement.textContent || entityElement.innerText, e.target);
-            if(entityElement.dataset['unique']) entityElement.style.marginBottom = '0px';
-        }
-        if (OPEN_SPAN) {
-            removeSpan(OPEN_SPAN);
-        }
-        let isHighlightLookup = !!entityElement.dataset['unique'];
-        let type = idToSelected[id] || 'Information';
-        let tooltip = tooltips[id];
-        let pointer = pointers[id];
-        if(!tooltip || !pointer) return;
-        clearTimeout(timer);
-        if (!idToData[id]['News'] && text && !isHighlightLookup) {
-                idToData[id]['News'] = ' ';
-                testEndpoint(text, id);
-        }
-        timer = setTimeout(async function() {
-            OPEN_SPAN = id;
-            document.body.prepend(tooltip);
-            document.body.appendChild(pointer);
-            addShowMoreListeners(id);
-            positionTooltips(id, true);
-        }, 500); 
-    }
-    e.preventDefault();
-    e.stopPropagation();
-}
-
-function positionTooltips(id, initial) {
-    const span = document.getElementById(`${id}-parent`);
-    const anchor = document.getElementById(`${id}-parent-parent`);
-    let x = anchor.getBoundingClientRect().left + window.pageXOffset;
-    let y = anchor.getBoundingClientRect().top + window.pageYOffset;
-    span.style.visibility = 'visible';
-    span.style.display = 'block';
-    let anchorRight = anchor.getBoundingClientRect().right;
-    let anchorLeft = anchor.getBoundingClientRect().left;
-    let spanWidth = 400;
-    span.style.width = `${spanWidth}px`
-    let pointer = document.getElementById(`${id}-pointer`);
-    pointer.style.display = 'block';
-    
-    let distanceLeft = anchor.getBoundingClientRect().left;
-    let distanceRight = window.innerWidth - anchor.clientWidth - distanceLeft;
-    let halfWidth = span.clientWidth / 2;
-    let pointerDistance = x - spanWidth / 2 + anchor.clientWidth / 2 + 
-    span.clientWidth / 2;
-    if(halfWidth > distanceLeft) {
-        onLeft[id] = true;
-        span.style.left = `${x + anchor.clientWidth / 2 - TOOL_TIP_POINTER_HEIGHT}px`;
-        pointer.style.left = `${pointerDistance + 1}px`;
-
-    } else if (halfWidth > distanceRight) {
-        onLeft[id] = false;
-        span.style.left = `${x - spanWidth + anchor.clientWidth / 2 + TOOL_TIP_POINTER_HEIGHT}px`;
-        pointer.style.left = `${pointerDistance - 1}px`;
-
-    } else {
-        onLeft[id] = undefined;
-        span.style.left = `${x - spanWidth / 2 + anchor.clientWidth / 2}px`;
-        pointer.style.left = `${pointerDistance}px`;
-    }
-
-    let top = anchor.getBoundingClientRect().top;
-    let bottom = window.innerHeight - top;
-    if (initial) span.getElementsByClassName('info-edicratic')[0].style.height = `${Math.min(270, Math.max(top, bottom) - 160)}px`
-    if (top <= bottom) {
-        span.style.top = `${y + anchor.clientHeight + TOOL_TIP_POINTER_HEIGHT}px`;
-        onTop[id] = false;
-        pointer.style.bottom = `${window.innerHeight - span.offsetTop - 3}px`
-        pointer.classList.remove(ARROW_UP_CLASSNAME);
-        pointer.classList.add(ARROW_DOWN_CLASSNAME);
-    } else {
-        span.style.top = `${y - span.clientHeight - TOOL_TIP_POINTER_HEIGHT}px`;
-        onTop[id] = true;
-        pointer.style.top = `${y - TOOL_TIP_POINTER_HEIGHT - 3}px`
-        pointer.classList.remove(ARROW_DOWN_CLASSNAME);
-        pointer.classList.add(ARROW_UP_CLASSNAME);
-    }
-    //updatePointerColor(id);
-}
-
-function removeSpan(id) {
-    const span = document.getElementById(`${id}-parent`);
-    if(OPEN_SPAN === id) OPEN_SPAN = undefined;
-    if(!span) return;
-    const pointer = document.getElementById(`${id}-pointer`);
-    span.parentElement.removeChild(span);
-    pointer.parentElement.removeChild(pointer);
-    endTimer(idToSelected[id]);
-}
-
-function fetchWebCheck(input, params) {
-    return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({input,params, message: "callWebCheckAPI", needsAuthHeaders: true}, messageResponse => {
-        const [response, error] = messageResponse;
-        if (response === null) {
-          reject(error);
-        } else {
-          // Use undefined on a 204 - No Content
-          //TODO @ Yukt halp??
-          //response = JSON.parse(response.body);
-          //This is a bit hacky
-          const body = response.body ?  new Blob([response.body]) : undefined;
-          resolve(new Response(body, {
-            status: response.status,
-            statusText: response.statusText,
-          }));
-        }
-      });
-    });
-  }
-
-  //TODO rename NYTimes method and endpoint method
-
-function handleArticleClick(e, id) {
-    let dataset = e.target.dataset;
-    let category = dataset['category'];
-    let url = dataset['url'];
-    handleReadArticleProcess(category, url);
-    removeSpan(id);
-    window.open(url, '_blank');
-}
-
-async function testEndpoint(term, id) {
-    // console.log(term);
-    let content = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">`;
-    var str;
-    try {
-        let resultNYTimes = await fetchNewYorkTimes(term);
-        let dataNYTimes = await resultNYTimes.text();
-        str = await new window.DOMParser().parseFromString(dataNYTimes, "text/xml");
-    } catch(e) {
-        handleUpdate(e.message);
-        return;
-    }
-
-    let items = str.querySelectorAll("item");
-    if(!items || items.length === 0) {
-        idToData[id]['News'] =  `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">No Results Found</div>`;
-        let tooltipField = document.getElementById(`${id}-content`);
-        if(idToSelected[id] === 'News') tooltipField.innerHTML = `<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">No Results Found</div>`
-        return;
-    }
-    items = Array.prototype.slice.call(items, 0).slice(0, 6);
-    items.sort((a, b) => {
-        let element1 = a.getElementsByTagName('pubDate')[0];
-        let element2 = b.getElementsByTagName('pubDate')[0];
-        let date1 = element1 ? element1 .textContent : null;
-        let date2 = element2 ? element2.textContent : null;
-        return date1 && date2 ? new Date(date2) - new Date(date1) : 0;
-    });
-    let numArticles = 5;
-    for(var i = 0; i < items.length && i < numArticles; i++) {
-        let item = items[i];
-        let children = item.children;
-        let title = null;
-        let url = null;
-        let date = null;
-        for(var j = 0; j < children.length; j++) {
-            if(children[j].tagName === 'title') {
-                title = children[j].innerText || children[j].textContent;
-            } else if(children[j].tagName === 'link') {
-                url = children[j].innerText || children[j].textContent;
-            } else if (children[j].tagName === 'pubDate') {
-                date = children[j].innerText || children[j].textContent;
-            }
-        }
-        if(url === window.location.href) {
-            numArticles++;
-            continue;
-        }
-        if(title && url && date) {
-            let data;
-            let res;
-            try {
-                res = await extractMetaData(url);
-                data = await res.json();
-            } catch(e) {
-                console.log(e.message)
-                continue;
-            }
-            let source = data.source;
-            let updatedId = `${Math.floor(Math.random() * 1000000)}` + id;
-            let empty = data.description === 'EMPTY';
-            let dateString = new Date(date).toDateString();
-            let newElement = `<b class="${stripHtml(ENTITY_HEADER)}">${title}</b><br/><i>${dateString}</i><p class=${PARAGRAPH_CLASS_NAME}>`
-            + (source ? `<img id="${updatedId}-image" onError="this.parentElement.removeChild(this);" src="${source}" class="${IMAGE_BELOW_TEXT}"/>` : ``) + `<span style="display: none" id="${updatedId}-hidden">` + 
-            (source ? `<img onError="this.parentElement.removeChild(this);" ${empty ? 'style="width:100%; height:100%;margin-bottom: 1rem;"' : ''}class='edicratic-image-nyt' src="${source}"/>` : ``)  +
-            `${!empty ? stripHtml(data.description) : ''}`
-            + `${empty ? '' : '<br/><br/>'}</span></p>` +
-            (empty ? `` : `<a data-url="${url}" id="${updatedId}"class="${INNER_LINK} ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`) +
-            `<a data-category="News" data-url="${url}"class="${ENTITY_LINK_CLASS_NAME}">Read Article</a><br/><br/>`
-       
-            content += newElement;
-            if(idToSelected[id] === 'News') {
-                let tooltipField = document.getElementById(`${id}-content`);
-                if(i === 0) {
-                    if(tooltipField) tooltipField.getElementsByClassName('info-edicratic')[0].innerHTML = newElement;
-                } else {
-                    if(tooltipField) tooltipField.getElementsByClassName('info-edicratic')[0].innerHTML += newElement;
-                }
-                addShowMoreListeners(id);
-            }
-            idToData[id]['News'] = content;
-        }
-    }
-    idToData[id]['News'] = content;
-}
-
-function extractMetaData(url) {
-    return new Promise((resolve, reject ) => {
-        getWebUrl(url).then(res => {
-            if (res.status === 200){
-                return res.text();
-            }else{
-                // console.log(res.statusText);
-                reject(new Error(res.statusText));
-            }
-        }).then(data => {
-            let el = document.createElement('div');
-            el.innerHTML = data;
-            let metaTags = el.getElementsByTagName('meta');
-            var description = "EMPTY";
-            var image = '';
-            for (var i = 0; i < metaTags.length; i++) {
-                let tag = metaTags[i];
-                let property = tag.getAttribute('property');
-                let name = tag.getAttribute('name');
-                if (property === GOOGLE_SEARCH_DESCRIPTION_META
-                || name === GOOGLE_SEARCH_DESCRIPTION_META) {
-                    description = tag.content;
-                } else if (property === GOOGLE_SEARCH_IMAGE_META
-                    || name === GOOGLE_SEARCH_IMAGE_META) {
-                    image = tag.content;
-                }
-            }
-            let source = image && image.includes('https') ? image : '';
-            body = JSON.stringify({description, source});
-            resolve(new Response(body, {
-                status: 200,
-            }));
-        }).catch(err => {reject(err)});
-    });
-
-}
-
-function getWebUrl(url) {
-    return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({message: 'basicGET', url}, messageResponse => {
-        const [response, error] = messageResponse;
-        if (response === null) {
-          reject(error);
-        } else {
-          const body = response.body ? new Blob([response.body]) : undefined;
-          resolve(new Response(body, {
-            status: response.status,
-            statusText: response.statusText,
-          }));
-        }
-      });
-    })
-  }
-
-function makePostRequest(isAutomatic) {
-    if (cleared) {
-        cleared = false;
-        handleClearedEvent();
-    }
-    PREVIOUS_TEXT = document.body.innerText;
-    var spinner;
-    if(!isAutomatic) {
-        // spinner = document.createElement('div');
-        // spinner.classList.add('loading-edicratic');
-        // document.body.appendChild(spinner);
-    } else {
-        currentWebCheckedUrl = window.location.href;
-    }
-    //invalidateInformation();
-    let data = {"blob": document.body.innerText.substring(0, 50000), details: {sort: true, url: window.location.href}};
-    fetchWebCheck(POST_URL,  {
-                      method: "POST",
-                      body: JSON.stringify({body: data}),
-                      headers: {
-                          'Content-Type': 'application/json',
-    }}).then(result => {
-        if (result.ok) {
-            return result.json();
-        } else {
-            throw new Error(result.status);
-        }
-    }).then(data =>{
-        body = JSON.parse(data.body);
-        if(!!spinner) spinner.style.display = 'none';
-        //if(isAutomatic && body.length < 30) return;
-        chrome.runtime.sendMessage({data: 'hasHTML'});
-        //recordWebCheck(data.local_id || 'NO_ID');
-        console.log(body);
-        window.addEventListener('scroll', checkForSizeChange);
-        processEntities(body, isAutomatic);
-        if(!isAutomatic) chrome.runtime.sendMessage({data: DATA_LOADED});
-    }).catch(e => {
-        handleUpdate(e.message);
-        console.log(e);
-        if(!isAutomatic && spinner) spinner.style.display = 'none';
-        if (!isAutomatic) alert("Oops. Something went wrong :(. Please try again." + "\nIf your issue is persistent, go to webcheck.edicratic.com/support.html for help.");
-    });
-}
-
-async function processEntities(entities, isAutomatic) {
-   for (var i = 0; i < entities.length; i++) {
-       lookUpTerm(entities[i].entity, isAutomatic);
-       await sleep(10);
-       if (i === 199) await sleep(1000);
-   }
-}
-
-function stripHtml(html) {
-   var tmp = document.createElement("DIV");
-   tmp.innerHTML = html;
-   return tmp.textContent || tmp.innerText || "";
-}
-
-function adjustSpansBasedOnHeight() {
-    if(OPEN_SPAN) {
-        positionTooltips(OPEN_SPAN, false);
-    }
-}
-
-function showHiddenText(e, tooltipId) {
-    let id = e.target.id;
-    let hiddenText = document.getElementById(`${id}-hidden`);
-    let hiddenImage = document.getElementById(`${id}-image`);
-    let type = e.target.textContent || e.target.innerText;
-    if (hiddenText.style.display === 'none') {
-        e.target.textContent = 'Show Less';
-        hiddenText.style.display = 'inline';
-        if(hiddenImage) hiddenImage.style.display = 'none';
-    } else {
-        e.target.textContent = 'Show More';
-        hiddenText.style.display = 'none';
-        if(hiddenImage) hiddenImage.style.display = 'inline';
-    }
-    handleShowMore(idToSelected[tooltipId], e.target.dataset['url'], type);
-}
-
-function checkMatch(text, entity, regex) {
-    var first = text.toLowerCase();
-    var second = entity.toLowerCase();
-    if (first === second) {
-        return true;
-    }
-    var matchArray = text.match(regex);
-    if (!matchArray) return false;
-    let previousCharacter = first[matchArray.index - 1];
-    let nextCharacter = first[matchArray.index + matchArray[0].length];
-    if (!previousCharacter && !nextCharacter) return true;
-    return first.includes(second) && (!previousCharacter || !previousCharacter.match(/[a-z\-]/i)) && (!nextCharacter || !nextCharacter.match(/[a-z\-]/i));
-}
-
-function noNearbyTags(child, regex) {
-    let previousChild = child;
-    while(child.textContent && child.textContent.length < 300) {
-        previousChild = child;
-        child = child.parentElement;
-    }
-    if(!child.textContent) child = previousChild;
-    if (child.textContent.length > 400) child == previousChild;
-    if (child.nodeName[0] === '#') return true;
-    let noMatches = true;
-    let matchingTags = child.getElementsByClassName(ANCHOR_CLASS_NAME);
-    if(!matchingTags) return true;
-    for(var i = 0; i < matchingTags.length; i++) {
-        let text = matchingTags[i].innerText || matchingTags[i].textContent;
-        if (regex.test(text)) {
-            noMatches = false;
-            break;
-        }
-    }
-    return noMatches;
-}
-
-function handleMouseMove(e) {
-    if (!OPEN_SPAN) return;
-    let anchor = document.getElementById(`${OPEN_SPAN}-parent-parent`)
-    if (invalidPosition(anchor, e, OPEN_SPAN)) {
-        let spans = document.getElementsByClassName(TOOL_TIP_CLASS_NAME);
-        for (var i = 0; i < spans.length; i++) {
-            let id = spans[i].id;
-            id = id.substring(0, id.indexOf('-'));
-            removeSpan(id);
-        }
-        clearTimeout(timer);
-        OPEN_SPAN = undefined;
-    }
-}
-
-function invalidPosition(anchor, e, OPEN_SPAN) {
-    let target = e.target;
-    let parent = e.target.parentElement;
-    let top = anchor.getBoundingClientRect().top;
-    let bottom = top + anchor.clientHeight;
-    return invalidPositionHelper(target) &&
-    !(onTop[OPEN_SPAN] ? e.clientY > top - 20 && e.clientY < top + 20 : e.clientY > bottom - 20 && e.clientY < bottom + 20);
-}
-
-function invalidPositionHelper(element) {
-    for(let i = 0; i < 10; i++) {
-        if(!element) {
-            return true;
-        } else if(element.className === TOOL_TIP_CLASS_NAME || element.className === ANCHOR_CLASS_NAME) {
-            return false;
-        } else {
-            element = element.parentElement;
-
-        }
-    }
-    return true;
-}
-
-function proccessWikiData(items, id) {
-    let content = `<h4>Wiki Articles</h4><hr/><div class="info-edicratic">`;
-    for (var i = 0; i < items.length; i++) {
-        let item = items[i];
-        let wikilink = !item.type ? `https://en.wikipedia.org/?curid=${item.pageid}` : `https://www.newworldencyclopedia.org/entry/${item.title}`;
-        let pageDescription = stripHtml(item.extract) || item.description;
-        if (!pageDescription) continue;
-        let words = pageDescription.split(' ');
-        let visibleArray = words.slice(0, 20);
-        let hiddenArray = words.slice(20);
-        let modiifiedId = 't' + `${i}` + id + `${Math.floor(Math.random() * 1000000)}`;
-        content += `<b class="${ENTITY_HEADER}">${item.title}:</b><p class=${PARAGRAPH_CLASS_NAME}>`
-        + (item.thumbnail ? `<img class='edicratic-image' src="${item.thumbnail.source}"/>` : ``) +
-        `${visibleArray.join(' ')}<span id="${modiifiedId}-show-more-hidden" style="display: none">
-        ${hiddenArray.join(' ')} <br/><br/>` + `<a class="${ENTITY_LINK_CLASS_NAME}" data-url="${wikilink}"
-        data-category="Information">${!item.type ? 'Learn More' : 'The New World Encyclopedia'}</a></span></p>
-        <a data-url="${wikilink}" id="${modiifiedId}-show-more" class="${INNER_LINK} ${SHOW_HIDDEN_TEXT}">Show More</a><br/><br/>`
-    }
-    return content + '</div>';
-
-}
-
-const sleep = ms => {
-    return new Promise(resolve => {
-      setTimeout(resolve, ms);
-    });
-  }
-
-function checkForSizeChange() {
-    let allText = document.body.innerText;
-    let prevTextLength = PREVIOUS_TEXT.length;
-    if(allText.length > prevTextLength + 200) {
-        let difference = getDifference(PREVIOUS_TEXT, allText);
-        NEW_NODES = separateChildNodes(document.body.childNodes);
-        PREVIOUS_TEXT = allText;
-        makePostRequestOnScroll(difference);
-    }
-}
-
-function makePostRequestOnScroll(text) {
-    let data = {"blob": text, details: {sort: true, url: window.location.href}};
-    fetchWebCheck(POST_URL,  {
-        method: "POST",
-        body: JSON.stringify({body: data}),
-        headers: {
-            'Content-Type': 'application/json',
-    }}).then(res => {
-        if(res.ok) {
-            return res.json();
-        } else {
-            throw new Error(res.status);
-        }
-    }).then(data => {
-        let body = JSON.parse(data.body);
-        processEntities(body);
-
-    }).catch(e => {
-        //probably don't want to tell user when this happens
-        //alert("Oops. Smething went wrong :(. Please try again. Error: " + e)
-    });
-
-}
-
-function getDifference(a, b) {
-    var i = 0;
-    var j = 0;
-    var result = "";
-    
-    while (j < b.length)
-    {
-        if (a[i] != b[j] || i == a.length)
-            result += b[j];
-        else
-            i++;
-        j++;
-    }
-    return result;
-}
-
-function separateChildNodes(newNodes) {
-    let updatedNodes = [];
-    newNodes.forEach(node => {
-        if(node.className !== TOOL_TIP_CLASS_NAME) updatedNodes.push(node);
-    });
-    return updatedNodes;
-}
-
-function removeAllEdicraticHTML() {
-    cleared = true;
-    window.removeEventListener('scroll', checkForSizeChange);
-    let entities = document.getElementsByClassName(ANCHOR_CLASS_NAME);
-    for(var i = 0; i < entities.length; i++) {
-        entities[i].classList.add(ANCHOR_OVERRIDE_CLASS_NAME);
-    }
-}
-
-function handleClearedEvent() {
-    let entities = document.getElementsByClassName(ANCHOR_CLASS_NAME);
-    for (var i = 0; i < entities.length; i++) {
-        entities[i].classList.remove(ANCHOR_OVERRIDE_CLASS_NAME);
-    }
-}
-
-function getShareHTML() {
-    return `
-    <h4>Share</h4><hr/>
-    <div class="info-edicratic">
-    <h3 class="edicratic-text-style">Share With Friends!</h3>
-    <a onclick="window.open('${getShareUrl("FACEBOOK")}')"class="fa fa-facebook"></a>
-    <a onclick="window.open('${getShareUrl("TWITTER")}')" class="fa fa-twitter"></a>
-    <a onclick="window.open('${getShareUrl("LINKEDIN")}')" class="fa fa-linkedin"></a>
-    <a onclick="window.open('${getShareUrl("PINTEREST")}')" class="fa fa-pinterest"></a>
-    <a onclick="window.open('${getShareUrl("EMAIL")}')" class="fa fa-envelope"></a>
-    </div>
-    `
-}
-
-function getShareUrl(socialNetwork) {
-    switch (socialNetwork) {
-        case "FACEBOOK":
-            return `https://www.facebook.com/v3.3/dialog/share?app_id=2977926445596296&href=${WEBSTORE_URL}%2Ftv%2Fwhite_lines&display=page`
-        case "TWITTER":
-            return `https://twitter.com/intent/tweet?text=${WEBSTORE_SUMMARY}&url=${WEBSTORE_URL}`;
-        case "LINKEDIN":
-            return `https://www.linkedin.com/shareArticle?mini=true&url=${WEBSTORE_URL}&title=&summary=${WEBSTORE_SUMMARY}`;
-        case "PINTEREST":
-            return `https://pinterest.com/pin/create/button/?url=${WEBSTORE_URL}&media=https://webcheck.edicratic.com/img/logo128.png&description=${WEBSTORE_SUMMARY}`;
-        case "EMAIL":
-            return `mailto:info@example.com?&subject=&body=${WEBSTORE_URL}%20${WEBSTORE_SUMMARY}`;
-    }
-}
+var $jscomp=$jscomp||{};$jscomp.scope={};$jscomp.createTemplateTagFirstArg=function(a){return a.raw=a};$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){a.raw=b;return a};$jscomp.arrayIteratorImpl=function(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}};$jscomp.arrayIterator=function(a){return{next:$jscomp.arrayIteratorImpl(a)}};$jscomp.makeIterator=function(a){var b="undefined"!=typeof Symbol&&Symbol.iterator&&a[Symbol.iterator];return b?b.call(a):$jscomp.arrayIterator(a)};
+$jscomp.ASSUME_ES5=!1;$jscomp.ASSUME_NO_NATIVE_MAP=!1;$jscomp.ASSUME_NO_NATIVE_SET=!1;$jscomp.SIMPLE_FROUND_POLYFILL=!1;$jscomp.ISOLATE_POLYFILLS=!1;$jscomp.FORCE_POLYFILL_PROMISE=!1;$jscomp.FORCE_POLYFILL_PROMISE_WHEN_NO_UNHANDLED_REJECTION=!1;$jscomp.defineProperty=$jscomp.ASSUME_ES5||"function"==typeof Object.defineProperties?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b]=c.value;return a};
+$jscomp.getGlobal=function(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var c=a[b];if(c&&c.Math==Math)return c}throw Error("Cannot find global object");};$jscomp.global=$jscomp.getGlobal(this);$jscomp.IS_SYMBOL_NATIVE="function"===typeof Symbol&&"symbol"===typeof Symbol("x");$jscomp.TRUST_ES6_POLYFILLS=!$jscomp.ISOLATE_POLYFILLS||$jscomp.IS_SYMBOL_NATIVE;$jscomp.polyfills={};
+$jscomp.propertyToPolyfillSymbol={};$jscomp.POLYFILL_PREFIX="$jscp$";var $jscomp$lookupPolyfilledValue=function(a,b){var c=$jscomp.propertyToPolyfillSymbol[b];if(null==c)return a[b];c=a[c];return void 0!==c?c:a[b]};$jscomp.polyfill=function(a,b,c,d){b&&($jscomp.ISOLATE_POLYFILLS?$jscomp.polyfillIsolated(a,b,c,d):$jscomp.polyfillUnisolated(a,b,c,d))};
+$jscomp.polyfillUnisolated=function(a,b,c,d){c=$jscomp.global;a=a.split(".");for(d=0;d<a.length-1;d++){var e=a[d];if(!(e in c))return;c=c[e]}a=a[a.length-1];d=c[a];b=b(d);b!=d&&null!=b&&$jscomp.defineProperty(c,a,{configurable:!0,writable:!0,value:b})};
+$jscomp.polyfillIsolated=function(a,b,c,d){var e=a.split(".");a=1===e.length;d=e[0];d=!a&&d in $jscomp.polyfills?$jscomp.polyfills:$jscomp.global;for(var m=0;m<e.length-1;m++){var f=e[m];if(!(f in d))return;d=d[f]}e=e[e.length-1];c=$jscomp.IS_SYMBOL_NATIVE&&"es6"===c?d[e]:null;b=b(c);null!=b&&(a?$jscomp.defineProperty($jscomp.polyfills,e,{configurable:!0,writable:!0,value:b}):b!==c&&(void 0===$jscomp.propertyToPolyfillSymbol[e]&&($jscomp.propertyToPolyfillSymbol[e]=$jscomp.IS_SYMBOL_NATIVE?$jscomp.global.Symbol(e):
+$jscomp.POLYFILL_PREFIX+e),$jscomp.defineProperty(d,$jscomp.propertyToPolyfillSymbol[e],{configurable:!0,writable:!0,value:b})))};$jscomp.underscoreProtoCanBeSet=function(){var a={a:!0},b={};try{return b.__proto__=a,b.a}catch(c){}return!1};$jscomp.setPrototypeOf=$jscomp.TRUST_ES6_POLYFILLS&&"function"==typeof Object.setPrototypeOf?Object.setPrototypeOf:$jscomp.underscoreProtoCanBeSet()?function(a,b){a.__proto__=b;if(a.__proto__!==b)throw new TypeError(a+" is not extensible");return a}:null;
+$jscomp.generator={};$jscomp.generator.ensureIteratorResultIsObject_=function(a){if(!(a instanceof Object))throw new TypeError("Iterator result "+a+" is not an object");};$jscomp.generator.Context=function(){this.isRunning_=!1;this.yieldAllIterator_=null;this.yieldResult=void 0;this.nextAddress=1;this.finallyAddress_=this.catchAddress_=0;this.finallyContexts_=this.abruptCompletion_=null};
+$jscomp.generator.Context.prototype.start_=function(){if(this.isRunning_)throw new TypeError("Generator is already running");this.isRunning_=!0};$jscomp.generator.Context.prototype.stop_=function(){this.isRunning_=!1};$jscomp.generator.Context.prototype.jumpToErrorHandler_=function(){this.nextAddress=this.catchAddress_||this.finallyAddress_};$jscomp.generator.Context.prototype.next_=function(a){this.yieldResult=a};
+$jscomp.generator.Context.prototype.throw_=function(a){this.abruptCompletion_={exception:a,isException:!0};this.jumpToErrorHandler_()};$jscomp.generator.Context.prototype.return=function(a){this.abruptCompletion_={return:a};this.nextAddress=this.finallyAddress_};$jscomp.generator.Context.prototype.jumpThroughFinallyBlocks=function(a){this.abruptCompletion_={jumpTo:a};this.nextAddress=this.finallyAddress_};$jscomp.generator.Context.prototype.yield=function(a,b){this.nextAddress=b;return{value:a}};
+$jscomp.generator.Context.prototype.yieldAll=function(a,b){a=$jscomp.makeIterator(a);var c=a.next();$jscomp.generator.ensureIteratorResultIsObject_(c);if(c.done)this.yieldResult=c.value,this.nextAddress=b;else return this.yieldAllIterator_=a,this.yield(c.value,b)};$jscomp.generator.Context.prototype.jumpTo=function(a){this.nextAddress=a};$jscomp.generator.Context.prototype.jumpToEnd=function(){this.nextAddress=0};
+$jscomp.generator.Context.prototype.setCatchFinallyBlocks=function(a,b){this.catchAddress_=a;void 0!=b&&(this.finallyAddress_=b)};$jscomp.generator.Context.prototype.setFinallyBlock=function(a){this.catchAddress_=0;this.finallyAddress_=a||0};$jscomp.generator.Context.prototype.leaveTryBlock=function(a,b){this.nextAddress=a;this.catchAddress_=b||0};
+$jscomp.generator.Context.prototype.enterCatchBlock=function(a){this.catchAddress_=a||0;a=this.abruptCompletion_.exception;this.abruptCompletion_=null;return a};$jscomp.generator.Context.prototype.enterFinallyBlock=function(a,b,c){c?this.finallyContexts_[c]=this.abruptCompletion_:this.finallyContexts_=[this.abruptCompletion_];this.catchAddress_=a||0;this.finallyAddress_=b||0};
+$jscomp.generator.Context.prototype.leaveFinallyBlock=function(a,b){b=this.finallyContexts_.splice(b||0)[0];if(b=this.abruptCompletion_=this.abruptCompletion_||b){if(b.isException)return this.jumpToErrorHandler_();void 0!=b.jumpTo&&this.finallyAddress_<b.jumpTo?(this.nextAddress=b.jumpTo,this.abruptCompletion_=null):this.nextAddress=this.finallyAddress_}else this.nextAddress=a};$jscomp.generator.Context.prototype.forIn=function(a){return new $jscomp.generator.Context.PropertyIterator(a)};
+$jscomp.generator.Context.PropertyIterator=function(a){this.object_=a;this.properties_=[];for(var b in a)this.properties_.push(b);this.properties_.reverse()};$jscomp.generator.Context.PropertyIterator.prototype.getNext=function(){for(;0<this.properties_.length;){var a=this.properties_.pop();if(a in this.object_)return a}return null};$jscomp.generator.Engine_=function(a){this.context_=new $jscomp.generator.Context;this.program_=a};
+$jscomp.generator.Engine_.prototype.next_=function(a){this.context_.start_();if(this.context_.yieldAllIterator_)return this.yieldAllStep_(this.context_.yieldAllIterator_.next,a,this.context_.next_);this.context_.next_(a);return this.nextStep_()};
+$jscomp.generator.Engine_.prototype.return_=function(a){this.context_.start_();var b=this.context_.yieldAllIterator_;if(b)return this.yieldAllStep_("return"in b?b["return"]:function(c){return{value:c,done:!0}},a,this.context_.return);this.context_.return(a);return this.nextStep_()};
+$jscomp.generator.Engine_.prototype.throw_=function(a){this.context_.start_();if(this.context_.yieldAllIterator_)return this.yieldAllStep_(this.context_.yieldAllIterator_["throw"],a,this.context_.next_);this.context_.throw_(a);return this.nextStep_()};
+$jscomp.generator.Engine_.prototype.yieldAllStep_=function(a,b,c){try{var d=a.call(this.context_.yieldAllIterator_,b);$jscomp.generator.ensureIteratorResultIsObject_(d);if(!d.done)return this.context_.stop_(),d;var e=d.value}catch(m){return this.context_.yieldAllIterator_=null,this.context_.throw_(m),this.nextStep_()}this.context_.yieldAllIterator_=null;c.call(this.context_,e);return this.nextStep_()};
+$jscomp.generator.Engine_.prototype.nextStep_=function(){for(;this.context_.nextAddress;)try{var a=this.program_(this.context_);if(a)return this.context_.stop_(),{value:a.value,done:!1}}catch(b){this.context_.yieldResult=void 0,this.context_.throw_(b)}this.context_.stop_();if(this.context_.abruptCompletion_){a=this.context_.abruptCompletion_;this.context_.abruptCompletion_=null;if(a.isException)throw a.exception;return{value:a.return,done:!0}}return{value:void 0,done:!0}};
+$jscomp.generator.Generator_=function(a){this.next=function(b){return a.next_(b)};this.throw=function(b){return a.throw_(b)};this.return=function(b){return a.return_(b)};this[Symbol.iterator]=function(){return this}};$jscomp.generator.createGenerator=function(a,b){b=new $jscomp.generator.Generator_(new $jscomp.generator.Engine_(b));$jscomp.setPrototypeOf&&a.prototype&&$jscomp.setPrototypeOf(b,a.prototype);return b};
+$jscomp.asyncExecutePromiseGenerator=function(a){function b(d){return a.next(d)}function c(d){return a.throw(d)}return new Promise(function(d,e){function m(f){f.done?d(f.value):Promise.resolve(f.value).then(b,c).then(m,e)}m(a.next())})};$jscomp.asyncExecutePromiseGeneratorFunction=function(a){return $jscomp.asyncExecutePromiseGenerator(a())};$jscomp.asyncExecutePromiseGeneratorProgram=function(a){return $jscomp.asyncExecutePromiseGenerator(new $jscomp.generator.Generator_(new $jscomp.generator.Engine_(a)))};
+$jscomp.initSymbol=function(){};$jscomp.polyfill("Symbol",function(a){if(a)return a;var b=function(e,m){this.$jscomp$symbol$id_=e;$jscomp.defineProperty(this,"description",{configurable:!0,writable:!0,value:m})};b.prototype.toString=function(){return this.$jscomp$symbol$id_};var c=0,d=function(e){if(this instanceof d)throw new TypeError("Symbol is not a constructor");return new b("jscomp_symbol_"+(e||"")+"_"+c++,e)};return d},"es6","es3");
+$jscomp.polyfill("Symbol.iterator",function(a){if(a)return a;a=Symbol("Symbol.iterator");for(var b="Array Int8Array Uint8Array Uint8ClampedArray Int16Array Uint16Array Int32Array Uint32Array Float32Array Float64Array".split(" "),c=0;c<b.length;c++){var d=$jscomp.global[b[c]];"function"===typeof d&&"function"!=typeof d.prototype[a]&&$jscomp.defineProperty(d.prototype,a,{configurable:!0,writable:!0,value:function(){return $jscomp.iteratorPrototype($jscomp.arrayIteratorImpl(this))}})}return a},"es6",
+"es3");$jscomp.iteratorPrototype=function(a){a={next:a};a[Symbol.iterator]=function(){return this};return a};
+$jscomp.polyfill("Promise",function(a){function b(){this.batch_=null}function c(f){return f instanceof e?f:new e(function(l,g){l(f)})}if(a&&(!($jscomp.FORCE_POLYFILL_PROMISE||$jscomp.FORCE_POLYFILL_PROMISE_WHEN_NO_UNHANDLED_REJECTION&&"undefined"===typeof $jscomp.global.PromiseRejectionEvent)||!$jscomp.global.Promise||-1===$jscomp.global.Promise.toString().indexOf("[native code]")))return a;b.prototype.asyncExecute=function(f){if(null==this.batch_){this.batch_=[];var l=this;this.asyncExecuteFunction(function(){l.executeBatch_()})}this.batch_.push(f)};
+var d=$jscomp.global.setTimeout;b.prototype.asyncExecuteFunction=function(f){d(f,0)};b.prototype.executeBatch_=function(){for(;this.batch_&&this.batch_.length;){var f=this.batch_;this.batch_=[];for(var l=0;l<f.length;++l){var g=f[l];f[l]=null;try{g()}catch(k){this.asyncThrow_(k)}}}this.batch_=null};b.prototype.asyncThrow_=function(f){this.asyncExecuteFunction(function(){throw f;})};var e=function(f){this.state_=0;this.result_=void 0;this.onSettledCallbacks_=[];this.isRejectionHandled_=!1;var l=this.createResolveAndReject_();
+try{f(l.resolve,l.reject)}catch(g){l.reject(g)}};e.prototype.createResolveAndReject_=function(){function f(k){return function(h){g||(g=!0,k.call(l,h))}}var l=this,g=!1;return{resolve:f(this.resolveTo_),reject:f(this.reject_)}};e.prototype.resolveTo_=function(f){if(f===this)this.reject_(new TypeError("A Promise cannot resolve to itself"));else if(f instanceof e)this.settleSameAsPromise_(f);else{a:switch(typeof f){case "object":var l=null!=f;break a;case "function":l=!0;break a;default:l=!1}l?this.resolveToNonPromiseObj_(f):
+this.fulfill_(f)}};e.prototype.resolveToNonPromiseObj_=function(f){var l=void 0;try{l=f.then}catch(g){this.reject_(g);return}"function"==typeof l?this.settleSameAsThenable_(l,f):this.fulfill_(f)};e.prototype.reject_=function(f){this.settle_(2,f)};e.prototype.fulfill_=function(f){this.settle_(1,f)};e.prototype.settle_=function(f,l){if(0!=this.state_)throw Error("Cannot settle("+f+", "+l+"): Promise already settled in state"+this.state_);this.state_=f;this.result_=l;2===this.state_&&this.scheduleUnhandledRejectionCheck_();
+this.executeOnSettledCallbacks_()};e.prototype.scheduleUnhandledRejectionCheck_=function(){var f=this;d(function(){if(f.notifyUnhandledRejection_()){var l=$jscomp.global.console;"undefined"!==typeof l&&l.error(f.result_)}},1)};e.prototype.notifyUnhandledRejection_=function(){if(this.isRejectionHandled_)return!1;var f=$jscomp.global.CustomEvent,l=$jscomp.global.Event,g=$jscomp.global.dispatchEvent;if("undefined"===typeof g)return!0;"function"===typeof f?f=new f("unhandledrejection",{cancelable:!0}):
+"function"===typeof l?f=new l("unhandledrejection",{cancelable:!0}):(f=$jscomp.global.document.createEvent("CustomEvent"),f.initCustomEvent("unhandledrejection",!1,!0,f));f.promise=this;f.reason=this.result_;return g(f)};e.prototype.executeOnSettledCallbacks_=function(){if(null!=this.onSettledCallbacks_){for(var f=0;f<this.onSettledCallbacks_.length;++f)m.asyncExecute(this.onSettledCallbacks_[f]);this.onSettledCallbacks_=null}};var m=new b;e.prototype.settleSameAsPromise_=function(f){var l=this.createResolveAndReject_();
+f.callWhenSettled_(l.resolve,l.reject)};e.prototype.settleSameAsThenable_=function(f,l){var g=this.createResolveAndReject_();try{f.call(l,g.resolve,g.reject)}catch(k){g.reject(k)}};e.prototype.then=function(f,l){function g(p,q){return"function"==typeof p?function(t){try{k(p(t))}catch(v){h(v)}}:q}var k,h,n=new e(function(p,q){k=p;h=q});this.callWhenSettled_(g(f,k),g(l,h));return n};e.prototype.catch=function(f){return this.then(void 0,f)};e.prototype.callWhenSettled_=function(f,l){function g(){switch(k.state_){case 1:f(k.result_);
+break;case 2:l(k.result_);break;default:throw Error("Unexpected state: "+k.state_);}}var k=this;null==this.onSettledCallbacks_?m.asyncExecute(g):this.onSettledCallbacks_.push(g);this.isRejectionHandled_=!0};e.resolve=c;e.reject=function(f){return new e(function(l,g){g(f)})};e.race=function(f){return new e(function(l,g){for(var k=$jscomp.makeIterator(f),h=k.next();!h.done;h=k.next())c(h.value).callWhenSettled_(l,g)})};e.all=function(f){var l=$jscomp.makeIterator(f),g=l.next();return g.done?c([]):new e(function(k,
+h){function n(t){return function(v){p[t]=v;q--;0==q&&k(p)}}var p=[],q=0;do p.push(void 0),q++,c(g.value).callWhenSettled_(n(p.length-1),h),g=l.next();while(!g.done)})};return e},"es6","es3");$jscomp.checkEs6ConformanceViaProxy=function(){try{var a={},b=Object.create(new $jscomp.global.Proxy(a,{get:function(c,d,e){return c==a&&"q"==d&&e==b}}));return!0===b.q}catch(c){return!1}};$jscomp.USE_PROXY_FOR_ES6_CONFORMANCE_CHECKS=!1;$jscomp.ES6_CONFORMANCE=$jscomp.USE_PROXY_FOR_ES6_CONFORMANCE_CHECKS&&$jscomp.checkEs6ConformanceViaProxy();
+$jscomp.owns=function(a,b){return Object.prototype.hasOwnProperty.call(a,b)};
+$jscomp.polyfill("WeakMap",function(a){function b(){if(!a||!Object.seal)return!1;try{var k=Object.seal({}),h=Object.seal({}),n=new a([[k,2],[h,3]]);if(2!=n.get(k)||3!=n.get(h))return!1;n.delete(k);n.set(h,4);return!n.has(k)&&4==n.get(h)}catch(p){return!1}}function c(){}function d(k){var h=typeof k;return"object"===h&&null!==k||"function"===h}function e(k){if(!$jscomp.owns(k,f)){var h=new c;$jscomp.defineProperty(k,f,{value:h})}}function m(k){if(!$jscomp.ISOLATE_POLYFILLS){var h=Object[k];h&&(Object[k]=
+function(n){if(n instanceof c)return n;Object.isExtensible(n)&&e(n);return h(n)})}}if($jscomp.USE_PROXY_FOR_ES6_CONFORMANCE_CHECKS){if(a&&$jscomp.ES6_CONFORMANCE)return a}else if(b())return a;var f="$jscomp_hidden_"+Math.random();m("freeze");m("preventExtensions");m("seal");var l=0,g=function(k){this.id_=(l+=Math.random()+1).toString();if(k){k=$jscomp.makeIterator(k);for(var h;!(h=k.next()).done;)h=h.value,this.set(h[0],h[1])}};g.prototype.set=function(k,h){if(!d(k))throw Error("Invalid WeakMap key");
+e(k);if(!$jscomp.owns(k,f))throw Error("WeakMap key fail: "+k);k[f][this.id_]=h;return this};g.prototype.get=function(k){return d(k)&&$jscomp.owns(k,f)?k[f][this.id_]:void 0};g.prototype.has=function(k){return d(k)&&$jscomp.owns(k,f)&&$jscomp.owns(k[f],this.id_)};g.prototype.delete=function(k){return d(k)&&$jscomp.owns(k,f)&&$jscomp.owns(k[f],this.id_)?delete k[f][this.id_]:!1};return g},"es6","es3");$jscomp.MapEntry=function(){};
+$jscomp.polyfill("Map",function(a){function b(){if($jscomp.ASSUME_NO_NATIVE_MAP||!a||"function"!=typeof a||!a.prototype.entries||"function"!=typeof Object.seal)return!1;try{var g=Object.seal({x:4}),k=new a($jscomp.makeIterator([[g,"s"]]));if("s"!=k.get(g)||1!=k.size||k.get({x:4})||k.set({x:4},"t")!=k||2!=k.size)return!1;var h=k.entries(),n=h.next();if(n.done||n.value[0]!=g||"s"!=n.value[1])return!1;n=h.next();return n.done||4!=n.value[0].x||"t"!=n.value[1]||!h.next().done?!1:!0}catch(p){return!1}}
+if($jscomp.USE_PROXY_FOR_ES6_CONFORMANCE_CHECKS){if(a&&$jscomp.ES6_CONFORMANCE)return a}else if(b())return a;var c=new WeakMap,d=function(g){this.data_={};this.head_=f();this.size=0;if(g){g=$jscomp.makeIterator(g);for(var k;!(k=g.next()).done;)k=k.value,this.set(k[0],k[1])}};d.prototype.set=function(g,k){g=0===g?0:g;var h=e(this,g);h.list||(h.list=this.data_[h.id]=[]);h.entry?h.entry.value=k:(h.entry={next:this.head_,previous:this.head_.previous,head:this.head_,key:g,value:k},h.list.push(h.entry),
+this.head_.previous.next=h.entry,this.head_.previous=h.entry,this.size++);return this};d.prototype.delete=function(g){g=e(this,g);return g.entry&&g.list?(g.list.splice(g.index,1),g.list.length||delete this.data_[g.id],g.entry.previous.next=g.entry.next,g.entry.next.previous=g.entry.previous,g.entry.head=null,this.size--,!0):!1};d.prototype.clear=function(){this.data_={};this.head_=this.head_.previous=f();this.size=0};d.prototype.has=function(g){return!!e(this,g).entry};d.prototype.get=function(g){return(g=
+e(this,g).entry)&&g.value};d.prototype.entries=function(){return m(this,function(g){return[g.key,g.value]})};d.prototype.keys=function(){return m(this,function(g){return g.key})};d.prototype.values=function(){return m(this,function(g){return g.value})};d.prototype.forEach=function(g,k){for(var h=this.entries(),n;!(n=h.next()).done;)n=n.value,g.call(k,n[1],n[0],this)};d.prototype[Symbol.iterator]=d.prototype.entries;var e=function(g,k){var h=k&&typeof k;"object"==h||"function"==h?c.has(k)?h=c.get(k):
+(h=""+ ++l,c.set(k,h)):h="p_"+k;var n=g.data_[h];if(n&&$jscomp.owns(g.data_,h))for(g=0;g<n.length;g++){var p=n[g];if(k!==k&&p.key!==p.key||k===p.key)return{id:h,list:n,index:g,entry:p}}return{id:h,list:n,index:-1,entry:void 0}},m=function(g,k){var h=g.head_;return $jscomp.iteratorPrototype(function(){if(h){for(;h.head!=g.head_;)h=h.previous;for(;h.next!=h.head;)return h=h.next,{done:!1,value:k(h)};h=null}return{done:!0,value:void 0}})},f=function(){var g={};return g.previous=g.next=g.head=g},l=0;
+return d},"es6","es3");
+$jscomp.polyfill("Set",function(a){function b(){if($jscomp.ASSUME_NO_NATIVE_SET||!a||"function"!=typeof a||!a.prototype.entries||"function"!=typeof Object.seal)return!1;try{var d=Object.seal({x:4}),e=new a($jscomp.makeIterator([d]));if(!e.has(d)||1!=e.size||e.add(d)!=e||1!=e.size||e.add({x:4})!=e||2!=e.size)return!1;var m=e.entries(),f=m.next();if(f.done||f.value[0]!=d||f.value[1]!=d)return!1;f=m.next();return f.done||f.value[0]==d||4!=f.value[0].x||f.value[1]!=f.value[0]?!1:m.next().done}catch(l){return!1}}
+if($jscomp.USE_PROXY_FOR_ES6_CONFORMANCE_CHECKS){if(a&&$jscomp.ES6_CONFORMANCE)return a}else if(b())return a;var c=function(d){this.map_=new Map;if(d){d=$jscomp.makeIterator(d);for(var e;!(e=d.next()).done;)this.add(e.value)}this.size=this.map_.size};c.prototype.add=function(d){d=0===d?0:d;this.map_.set(d,d);this.size=this.map_.size;return this};c.prototype.delete=function(d){d=this.map_.delete(d);this.size=this.map_.size;return d};c.prototype.clear=function(){this.map_.clear();this.size=0};c.prototype.has=
+function(d){return this.map_.has(d)};c.prototype.entries=function(){return this.map_.entries()};c.prototype.values=function(){return this.map_.values()};c.prototype.keys=c.prototype.values;c.prototype[Symbol.iterator]=c.prototype.values;c.prototype.forEach=function(d,e){var m=this;this.map_.forEach(function(f){return d.call(e,f,f,m)})};return c},"es6","es3");$jscomp.polyfill("Object.is",function(a){return a?a:function(b,c){return b===c?0!==b||1/b===1/c:b!==b&&c!==c}},"es6","es3");
+$jscomp.polyfill("Array.prototype.includes",function(a){return a?a:function(b,c){var d=this;d instanceof String&&(d=String(d));var e=d.length;c=c||0;for(0>c&&(c=Math.max(c+e,0));c<e;c++){var m=d[c];if(m===b||Object.is(m,b))return!0}return!1}},"es7","es3");
+$jscomp.checkStringArgs=function(a,b,c){if(null==a)throw new TypeError("The 'this' value for String.prototype."+c+" must not be null or undefined");if(b instanceof RegExp)throw new TypeError("First argument to String.prototype."+c+" must not be a regular expression");return a+""};$jscomp.polyfill("String.prototype.includes",function(a){return a?a:function(b,c){return-1!==$jscomp.checkStringArgs(this,b,"includes").indexOf(b,c||0)}},"es6","es3");var scriptAlreadyLoaded=!0,cleared=!1,timer;
+ANCHOR_CLASS_NAME="edicratic-anchor-tag-style";ANCHOR_OVERRIDE_CLASS_NAME="edicratic-anchor-tag-override";TOOL_TIP_CLASS_NAME="edicratic-tooltip";POST_URL="/process";INNER_LINK="edicratic-inner-link";PARAGRAPH_CLASS_NAME="edicratic-paragraph-classname";NEW_LINE_ID="please-remove-me";idToData={};idToTerm={};idToSelected={};onLeft={};onTop={};tooltips={};pointers={};OPEN_SPAN=void 0;DATA_LOADED="DATA_LOADED";BUTTON_PRESSED="BUTTON_PRESSED";PREVIOUS_TEXT="";NEW_NODES=null;TOOL_TIP_POINTER_HEIGHT=12;
+ARROW_UP_CLASSNAME="edicratic-tooltip-bottom-rightsideup";ARROW_DOWN_CLASSNAME="edicratic-tooltip-bottom-upsidedown";TAB_CONTAINER_CLASS_NAME="edicratic-tabContainer";INDIVIDUAL_TAB_CLASS_NAME="edicratic-tab";SHOW_HIDDEN_TEXT="edicratic-show-hidden";ENTITY_HEADER="edicratic-entity-header";ENTITY_LINK_CLASS_NAME="edicratic-entity-link";IMAGE_NYT_CLASSNAME="edicratic-image-nyt";GRAY_POINTER_CLASSNAME="edicratic-grey-pointer";IMAGE_BELOW_TEXT="edicratic-image-below";GOOGLE_SEARCH_IMAGE_META="og:image";
+GOOGLE_SEARCH_DESCRIPTION_META="og:description";WIKI_CLASS_NAME="edicratic-image";ENTITY_PARENT_CLASSNAME="edicratic-entity-parent";WEBSTORE_URL="https://chrome.google.com/webstore/detail/webcheck-ai/faiaendcmomnolaeadadkanohcmcnaip";WEBSTORE_SUMMARY="Check%20out%20this%20new%20Chrome%20Extension!";window.addEventListener("scroll",adjustSpansBasedOnHeight);document.body.onmousemove=function(a){return handleMouseMove(a)};
+chrome.runtime.onMessage.addListener(function(a,b,c){"runWebCheck"===a.message?makePostRequest(a.automatic):"removeAllHTML"===a.message&&removeAllEdicraticHTML();return!0});function init(a,b,c){var d=void 0;try{d=new RegExp(b,"i")}catch(f){console.log(f)}var e=document.body.childNodes,m=new Set;d&&modifyAllText(d,b,a,NEW_NODES||e,m,c)}
+function modifySingleNode(a,b){var c,d,e,m,f,l,g,k,h,n,p,q,t,v,u,y,C,D,z;return $jscomp.asyncExecutePromiseGeneratorProgram(function(w){switch(w.nextAddress){case 1:return c=getWikiUrl(b),w.setCatchFinallyBlocks(2),w.yield(fetchWiki(c),4);case 4:return e=w.yieldResult,w.yield(e.json(),5);case 5:d=w.yieldResult;w.leaveTryBlock(3);break;case 2:m=w.enterCatchBlock(),console.log(m);case 3:f=void 0;try{f=new RegExp(b)}catch(x){console.log(x)}if(!(a&&a.textContent&&d&&d.query&&d.query.pages&&0!==d.query.pages.length&&
+f&&a.textContent.match(f)))return document.body.classList.add("edicratic-red"),w.return();l=d.query.pages;g=getMatches(l);k=a.textContent;h="d3"+Math.floor(1E6*Math.random());idToTerm[h]=b;k=k.replace(b,'<div data-unique="'+(new Date).getTime()+'" id="'+h+'-parent-parent" class="'+ANCHOR_CLASS_NAME+'">'+b+"</div>");n=proccessWikiData(g,h);p=document.createElement("div");p.style.display="inline";p.className=ENTITY_PARENT_CLASSNAME;p.innerHTML=k;p.onmouseover=function(x){return mouseOverHandle(x,h,
+b)};p.onmouseleave=function(){return clearTimeout(timer)};a.parentElement.replaceChild(p,a);q=document.createElement("span");q.id=h+"-parent";q.className=TOOL_TIP_CLASS_NAME;q.innerHTML="<div id="+h+"-content> "+n+"</div>";idToData[h]={Information:n};idToData[h].Share=getShareHTML();t=document.createElement("div");t.className="edicratic-tooltip-bottom";t.id=h+"-pointer";t.style.display="none";pointers[h]=t;v=document.createElement("div");v.className="edicratic-tabContainer";v.id=h+"-tabs";v.innerHTML=
+'\n        <a class="edicratic-tab edicratic-selected">Information</a>\n        <a class="edicratic-tab">News</a>\n        <a class="edicratic-tab">Share</a>\n    ';q.appendChild(v);u=v.children;for(y=0;y<u.length;y++)u[y].onclick=function(x){return handleTabClick(x,h)};idToSelected[h]="Information";tooltips[h]=q;q.onclick=function(x){return x.preventDefault()};q.onmouseleave=function(x){return handleMouseLeave(x)};testEndpoint(b,h);C=document.getElementById(h+"-parent-parent");D=window.getSelection();
+z=document.createRange();z.selectNodeContents(C);D.removeAllRanges();D.addRange(z);w.jumpToEnd()}})}
+function addShowMoreListeners(a){var b=document.getElementById(a+"-parent");if(b){var c=b.getElementsByClassName(SHOW_HIDDEN_TEXT),d=b.getElementsByClassName(IMAGE_NYT_CLASSNAME),e=b.getElementsByClassName(WIKI_CLASS_NAME);b=b.getElementsByClassName(ENTITY_LINK_CLASS_NAME);for(var m=0;m<d.length;m++)d[m].onerror=function(f){var l=document.createElement("br");f.target.parentElement&&f.target.parentElement.replaceChild(l,f.target)};for(m=0;m<e.length;m++)e[m].onerror=function(f){f.target.parentElement&&
+f.target.parentElement.removeChild(f.target)};for(m=0;m<c.length;m++)c[m].onclick=function(f){return showHiddenText(f,a)};for(m=0;m<b.length;m++)b[m].onclick=function(f){return handleArticleClick(f,a)}}}
+function handleTabClick(a,b){var c=document.getElementById(b+"-parent"),d=document.getElementById(b+"-tabs");a=a.toElement;var e=d.children,m="";for(d=0;d<e.length;d++)e[d].classList.contains("edicratic-selected")&&(e[d].classList.remove("edicratic-selected"),m=e[d].textContent||e[d].innerText);a.classList.add("edicratic-selected");idToSelected[b]=a.innerText||a.textContent;handleTabSwitchProcesssing(m,idToSelected[b]);e=c.children;m=c.getElementsByClassName("info-edicratic")[0].clientHeight;for(d=
+0;d<e.length;d++)if(e[d].id===b+"-content"){var f=idToData[b][a.textContent||a.innerText];e[d].innerHTML=f&&" "!==f?f:'<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">Searching...</div>';c.getElementsByClassName("info-edicratic")[0].style.height=m+"px"}addShowMoreListeners(b)}
+function updatePointerColor(a){var b=document.getElementById(a+"-pointer");onLeft[a]&&onTop[a]&&"Information"===idToSelected[a]?b.classList.add(GRAY_POINTER_CLASSNAME):onTop[a]&&void 0===onLeft[a]&&"News"===idToSelected[a]?b.classList.add(GRAY_POINTER_CLASSNAME):b.classList.remove(GRAY_POINTER_CLASSNAME)}
+function modifyAllText(a,b,c,d,e,m){for(var f=0;f<d.length;f++){var l=d[f];if(!e.has(l)&&l.className!==ANCHOR_CLASS_NAME&&l.className!==TOOL_TIP_CLASS_NAME&&"NAV"!==l.tagName&&(e.add(l),"#comment"!==l.nodeName&&"NOSCRIPT"!==l.nodeName&&"IMG"!==l.nodeName&&"SCRIPT"!==l.nodeName&&"STYLE"!==l.nodeName)){var g=l.childNodes,k=g.length,h=l.textContent;if(0===k&&""!==h&&void 0!==h&&checkMatch(h,b,a)){if(!noNearbyTags(l,a))break;l.innerText="";var n="d"+f+Math.floor(1E6*Math.random());idToTerm[n]=b;h=h.replace(a,
+'<div data-type="'+(m?"whitelist_check":"webcheck")+'" id="'+n+'-parent-parent" class="'+ANCHOR_CLASS_NAME+'">'+h.match(a)+"</div>");var p=proccessWikiData(c,n);idToData[n]={Information:p};idToData[n].Share=getShareHTML();var q=document.createElement("div");q.className=ENTITY_PARENT_CLASSNAME;q.style.display="inline";q.innerHTML=h;q.onmouseover=function(t){return mouseOverHandle(t,n,b)};q.onmouseleave=function(){return clearTimeout(timer)};"#text"!==l.nodeName?l.appendChild(q):l.parentElement.replaceChild(q,
+l);e.add(q);createTooltip(p,n,"Information")}0!==k&&modifyAllText(a,b,c,g,e,m)}}}
+function createTooltip(a,b,c){var d=document.createElement("span");d.id=b+"-parent";d.className=TOOL_TIP_CLASS_NAME;d.innerHTML="<div id="+b+"-content> "+a+"</div>";a=document.createElement("div");a.className="edicratic-tooltip-bottom";a.style.display="none";a.id=b+"-pointer";pointers[b]=a;a=document.createElement("div");a.className="edicratic-tabContainer";a.id=b+"-tabs";a.innerHTML='\n        <a class="edicratic-tab '+("Information"===c?"edicratic-selected":"")+'">Information</a>\n        <a class="edicratic-tab '+
+("News"===c?"edicratic-selected":"")+'">News</a>\n        <a class="edicratic-tab">Share</a>\n    ';d.appendChild(a);idToSelected[b]=c;c=a.children;for(a=0;a<c.length;a++)c[a].onclick=function(e){return handleTabClick(e,b)};d.onclick=function(e){return e.preventDefault()};d.onmouseleave=function(e){return handleMouseLeave(e)};tooltips[b]=d}function handleMouseLeave(a){clearTimeout(timer);(a=a.target?a.target.id||void 0:void 0)&&removeSpan(a.substring(0,a.indexOf("-")))}
+function mouseOverHandle(a,b,c){var d,e,m,f;return $jscomp.asyncExecutePromiseGeneratorProgram(function(l){if(cleared&&!a.target.dataset.unique)return l.return();if(a.target&&a.target.id){b=a.target.id;b=b.substring(0,b.indexOf("-"));if(d=document.getElementById(b+"-parent-parent"))startTimer(d.textContent||d.innerText,a.target),d.dataset.unique&&(d.style.marginBottom="0px");OPEN_SPAN&&removeSpan(OPEN_SPAN);e=!!d.dataset.unique;m=tooltips[b];f=pointers[b];if(!m||!f)return l.return();clearTimeout(timer);
+idToData[b].News||!c||e||(idToData[b].News=" ",testEndpoint(c,b));timer=setTimeout(function(){return $jscomp.asyncExecutePromiseGeneratorProgram(function(g){OPEN_SPAN=b;document.body.prepend(m);document.body.appendChild(f);addShowMoreListeners(b);positionTooltips(b,!0);g.jumpToEnd()})},500)}a.preventDefault();a.stopPropagation();l.jumpToEnd()})}
+function positionTooltips(a,b){var c=document.getElementById(a+"-parent"),d=document.getElementById(a+"-parent-parent"),e=d.getBoundingClientRect().left+window.pageXOffset,m=d.getBoundingClientRect().top+window.pageYOffset;c.style.visibility="visible";c.style.display="block";d.getBoundingClientRect();d.getBoundingClientRect();c.style.width="400px";var f=document.getElementById(a+"-pointer");f.style.display="block";var l=d.getBoundingClientRect().left,g=window.innerWidth-d.clientWidth-l,k=c.clientWidth/
+2,h=e-200+d.clientWidth/2+c.clientWidth/2;k>l?(onLeft[a]=!0,c.style.left=e+d.clientWidth/2-TOOL_TIP_POINTER_HEIGHT+"px",f.style.left=h+1+"px"):k>g?(onLeft[a]=!1,c.style.left=e-400+d.clientWidth/2+TOOL_TIP_POINTER_HEIGHT+"px",f.style.left=h-1+"px"):(onLeft[a]=void 0,c.style.left=e-200+d.clientWidth/2+"px",f.style.left=h+"px");e=d.getBoundingClientRect().top;l=window.innerHeight-e;b&&(c.getElementsByClassName("info-edicratic")[0].style.height=Math.min(270,Math.max(e,l)-160)+"px");e<=l?(c.style.top=
+m+d.clientHeight+TOOL_TIP_POINTER_HEIGHT+"px",onTop[a]=!1,f.style.bottom=window.innerHeight-c.offsetTop-3+"px",f.classList.remove(ARROW_UP_CLASSNAME),f.classList.add(ARROW_DOWN_CLASSNAME)):(c.style.top=m-c.clientHeight-TOOL_TIP_POINTER_HEIGHT+"px",onTop[a]=!0,f.style.top=m-TOOL_TIP_POINTER_HEIGHT-3+"px",f.classList.remove(ARROW_DOWN_CLASSNAME),f.classList.add(ARROW_UP_CLASSNAME))}
+function removeSpan(a){var b=document.getElementById(a+"-parent");OPEN_SPAN===a&&(OPEN_SPAN=void 0);if(b){var c=document.getElementById(a+"-pointer");b.parentElement.removeChild(b);c.parentElement.removeChild(c);endTimer(idToSelected[a])}}
+function fetchWebCheck(a,b){return new Promise(function(c,d){chrome.runtime.sendMessage({input:a,params:b,message:"callWebCheckAPI",needsAuthHeaders:!0},function(e){var m=$jscomp.makeIterator(e);e=m.next().value;m=m.next().value;null===e?d(m):(m=e.body?new Blob([e.body]):void 0,c(new Response(m,{status:e.status,statusText:e.statusText})))})})}function handleArticleClick(a,b){a=a.target.dataset;var c=a.url;handleReadArticleProcess(a.category,c);removeSpan(b);window.open(c,"_blank")}
+function testEndpoint(a,b){var c,d,e,m,f,l,g,k,h,n,p,q,t,v,u,y,C,D,z,w,x,G,F,E;return $jscomp.asyncExecutePromiseGeneratorProgram(function(r){switch(r.nextAddress){case 1:return c='<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">',r.setCatchFinallyBlocks(2),r.yield(fetchNewYorkTimes(a),4);case 4:return e=r.yieldResult,r.yield(e.text(),5);case 5:return m=r.yieldResult,r.yield((new window.DOMParser).parseFromString(m,"text/xml"),6);case 6:d=r.yieldResult;r.leaveTryBlock(3);break;
+case 2:return f=r.enterCatchBlock(),handleUpdate(f.message),r.return();case 3:l=d.querySelectorAll("item");if(!l||0===l.length)return idToData[b].News='<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">No Results Found</div>',g=document.getElementById(b+"-content"),"News"===idToSelected[b]&&(g.innerHTML='<h4>Most Recent News Articles</h4><hr/><div class="info-edicratic">No Results Found</div>'),r.return();l=Array.prototype.slice.call(l,0).slice(0,6);l.sort(function(A,B){A=A.getElementsByTagName("pubDate")[0];
+B=B.getElementsByTagName("pubDate")[0];A=A?A.textContent:null;B=B?B.textContent:null;return A&&B?new Date(B)-new Date(A):0});k=5;h=0;case 7:if(!(h<l.length&&h<k)){r.jumpTo(9);break}n=l[h];p=n.children;v=t=q=null;for(u=0;u<p.length;u++)"title"===p[u].tagName?q=p[u].innerText||p[u].textContent:"link"===p[u].tagName?t=p[u].innerText||p[u].textContent:"pubDate"===p[u].tagName&&(v=p[u].innerText||p[u].textContent);if(t===window.location.href){k++;r.jumpTo(8);break}if(!(q&&t&&v)){r.jumpTo(8);break}C=y=
+void 0;r.setCatchFinallyBlocks(11);return r.yield(extractMetaData(t),13);case 13:return C=r.yieldResult,r.yield(C.json(),14);case 14:y=r.yieldResult;r.leaveTryBlock(12);break;case 11:D=r.enterCatchBlock();console.log(D.message);r.jumpTo(8);break;case 12:z=y.source,w=""+Math.floor(1E6*Math.random())+b,x="EMPTY"===y.description,G=(new Date(v)).toDateString(),F='<b class="'+stripHtml(ENTITY_HEADER)+'">'+q+"</b><br/><i>"+G+"</i><p class="+PARAGRAPH_CLASS_NAME+">"+(z?'<img id="'+w+'-image" onError="this.parentElement.removeChild(this);" src="'+
+z+'" class="'+IMAGE_BELOW_TEXT+'"/>':"")+('<span style="display: none" id="'+w+'-hidden">')+(z?'<img onError="this.parentElement.removeChild(this);" '+(x?'style="width:100%; height:100%;margin-bottom: 1rem;"':"")+"class='edicratic-image-nyt' src=\""+z+'"/>':"")+(""+(x?"":stripHtml(y.description)))+((x?"":"<br/><br/>")+"</span></p>")+(x?"":'<a data-url="'+t+'" id="'+w+'"class="'+INNER_LINK+" "+SHOW_HIDDEN_TEXT+'">Show More</a><br/><br/>')+('<a data-category="News" data-url="'+t+'"class="'+ENTITY_LINK_CLASS_NAME+
+'">Read Article</a><br/><br/>'),c+=F,"News"===idToSelected[b]&&(E=document.getElementById(b+"-content"),0===h?E&&(E.getElementsByClassName("info-edicratic")[0].innerHTML=F):E&&(E.getElementsByClassName("info-edicratic")[0].innerHTML+=F),addShowMoreListeners(b)),idToData[b].News=c;case 8:h++;r.jumpTo(7);break;case 9:idToData[b].News=c,r.jumpToEnd()}})}
+function extractMetaData(a){return new Promise(function(b,c){getWebUrl(a).then(function(d){if(200===d.status)return d.text();c(Error(d.statusText))}).then(function(d){var e=document.createElement("div");e.innerHTML=d;e=e.getElementsByTagName("meta");d="EMPTY";for(var m="",f=0;f<e.length;f++){var l=e[f],g=l.getAttribute("property"),k=l.getAttribute("name");if(g===GOOGLE_SEARCH_DESCRIPTION_META||k===GOOGLE_SEARCH_DESCRIPTION_META)d=l.content;else if(g===GOOGLE_SEARCH_IMAGE_META||k===GOOGLE_SEARCH_IMAGE_META)m=
+l.content}e=m&&m.includes("https")?m:"";body=JSON.stringify({description:d,source:e});b(new Response(body,{status:200}))}).catch(function(d){c(d)})})}function getWebUrl(a){return new Promise(function(b,c){chrome.runtime.sendMessage({message:"basicGET",url:a},function(d){var e=$jscomp.makeIterator(d);d=e.next().value;e=e.next().value;null===d?c(e):(e=d.body?new Blob([d.body]):void 0,b(new Response(e,{status:d.status,statusText:d.statusText})))})})}
+function makePostRequest(a){cleared&&(cleared=!1,handleClearedEvent());PREVIOUS_TEXT=document.body.innerText;a&&(currentWebCheckedUrl=window.location.href);var b={blob:document.body.innerText.substring(0,5E4),details:{sort:!0,url:window.location.href}};fetchWebCheck(POST_URL,{method:"POST",body:JSON.stringify({body:b}),headers:{"Content-Type":"application/json"}}).then(function(c){if(c.ok)return c.json();throw Error(c.status);}).then(function(c){body=JSON.parse(c.body);chrome.runtime.sendMessage({data:"hasHTML"});
+console.log(body);window.addEventListener("scroll",checkForSizeChange);processEntities(body,a);a||chrome.runtime.sendMessage({data:DATA_LOADED})}).catch(function(c){handleUpdate(c.message);console.log(c);a||alert("Oops. Something went wrong :(. Please try again.\nIf your issue is persistent, go to webcheck.edicratic.com/support.html for help.")})}
+function processEntities(a,b){var c;return $jscomp.asyncExecutePromiseGeneratorProgram(function(d){switch(d.nextAddress){case 1:c=0;case 2:if(!(c<a.length)){d.jumpTo(0);break}lookUpTerm(a[c].entity,b);return d.yield(sleep(10),5);case 5:if(199!==c){d.jumpTo(3);break}return d.yield(sleep(1E3),3);case 3:c++,d.jumpTo(2)}})}function stripHtml(a){var b=document.createElement("DIV");b.innerHTML=a;return b.textContent||b.innerText||""}
+function adjustSpansBasedOnHeight(){OPEN_SPAN&&positionTooltips(OPEN_SPAN,!1)}
+function showHiddenText(a,b){var c=a.target.id,d=document.getElementById(c+"-hidden");c=document.getElementById(c+"-image");var e=a.target.textContent||a.target.innerText;"none"===d.style.display?(a.target.textContent="Show Less",d.style.display="inline",c&&(c.style.display="none")):(a.target.textContent="Show More",d.style.display="none",c&&(c.style.display="inline"));handleShowMore(idToSelected[b],a.target.dataset.url,e)}
+function checkMatch(a,b,c){var d=a.toLowerCase();b=b.toLowerCase();if(d===b)return!0;c=a.match(c);if(!c)return!1;a=d[c.index-1];c=d[c.index+c[0].length];return a||c?d.includes(b)&&(!a||!a.match(/[a-z\-]/i))&&(!c||!c.match(/[a-z\-]/i)):!0}
+function noNearbyTags(a,b){for(var c=a;a.textContent&&300>a.textContent.length;)c=a,a=a.parentElement;a.textContent||(a=c);400<a.textContent.length&&a==c;if("#"===a.nodeName[0])return!0;c=!0;a=a.getElementsByClassName(ANCHOR_CLASS_NAME);if(!a)return!0;for(var d=0;d<a.length;d++)if(b.test(a[d].innerText||a[d].textContent)){c=!1;break}return c}
+function handleMouseMove(a){if(OPEN_SPAN){var b=document.getElementById(OPEN_SPAN+"-parent-parent");if(invalidPosition(b,a,OPEN_SPAN)){a=document.getElementsByClassName(TOOL_TIP_CLASS_NAME);for(b=0;b<a.length;b++){var c=a[b].id;c=c.substring(0,c.indexOf("-"));removeSpan(c)}clearTimeout(timer);OPEN_SPAN=void 0}}}
+function invalidPosition(a,b,c){var d=b.target,e=a.getBoundingClientRect().top;a=e+a.clientHeight;return invalidPositionHelper(d)&&!(onTop[c]?b.clientY>e-20&&b.clientY<e+20:b.clientY>a-20&&b.clientY<a+20)}function invalidPositionHelper(a){for(var b=0;10>b;b++)if(a){if(a.className===TOOL_TIP_CLASS_NAME||a.className===ANCHOR_CLASS_NAME)return!1;a=a.parentElement}else break;return!0}
+function proccessWikiData(a,b){for(var c='<h4>Wiki Articles</h4><hr/><div class="info-edicratic">',d=0;d<a.length;d++){var e=a[d],m=e.type?"https://www.newworldencyclopedia.org/entry/"+e.title:"https://en.wikipedia.org/?curid="+e.pageid,f=stripHtml(e.extract)||e.description;if(f){var l=f.split(" ");f=l.slice(0,20);l=l.slice(20);var g="t"+d+b+(""+Math.floor(1E6*Math.random()));c+='<b class="'+ENTITY_HEADER+'">'+e.title+":</b><p class="+PARAGRAPH_CLASS_NAME+">"+(e.thumbnail?"<img class='edicratic-image' src=\""+
+e.thumbnail.source+'"/>':"")+(f.join(" ")+'<span id="'+g+'-show-more-hidden" style="display: none">\n        '+l.join(" ")+' <br/><br/><a class="')+(ENTITY_LINK_CLASS_NAME+'" data-url="'+m+'"\n        data-category="Information">'+(e.type?"The New World Encyclopedia":"Learn More")+'</a></span></p>\n        <a data-url="'+m+'" id="'+g+'-show-more" class="'+INNER_LINK+" "+SHOW_HIDDEN_TEXT+'">Show More</a><br/><br/>')}}return c+"</div>"}
+var sleep=function(a){return new Promise(function(b){setTimeout(b,a)})};function checkForSizeChange(){var a=document.body.innerText;if(a.length>PREVIOUS_TEXT.length+200){var b=getDifference(PREVIOUS_TEXT,a);NEW_NODES=separateChildNodes(document.body.childNodes);PREVIOUS_TEXT=a;makePostRequestOnScroll(b)}}
+function makePostRequestOnScroll(a){fetchWebCheck(POST_URL,{method:"POST",body:JSON.stringify({body:{blob:a,details:{sort:!0,url:window.location.href}}}),headers:{"Content-Type":"application/json"}}).then(function(b){if(b.ok)return b.json();throw Error(b.status);}).then(function(b){b=JSON.parse(b.body);processEntities(b)}).catch(function(b){})}function getDifference(a,b){for(var c=0,d=0,e="";d<b.length;)a[c]!=b[d]||c==a.length?e+=b[d]:c++,d++;return e}
+function separateChildNodes(a){var b=[];a.forEach(function(c){c.className!==TOOL_TIP_CLASS_NAME&&b.push(c)});return b}function removeAllEdicraticHTML(){cleared=!0;window.removeEventListener("scroll",checkForSizeChange);for(var a=document.getElementsByClassName(ANCHOR_CLASS_NAME),b=0;b<a.length;b++)a[b].classList.add(ANCHOR_OVERRIDE_CLASS_NAME)}
+function handleClearedEvent(){for(var a=document.getElementsByClassName(ANCHOR_CLASS_NAME),b=0;b<a.length;b++)a[b].classList.remove(ANCHOR_OVERRIDE_CLASS_NAME)}
+function getShareHTML(){return'\n    <h4>Share</h4><hr/>\n    <div class="info-edicratic">\n    <h3 class="edicratic-text-style">Share With Friends!</h3>\n    <a onclick="window.open(\''+getShareUrl("FACEBOOK")+'\')"class="fa fa-facebook"></a>\n    <a onclick="window.open(\''+getShareUrl("TWITTER")+'\')" class="fa fa-twitter"></a>\n    <a onclick="window.open(\''+getShareUrl("LINKEDIN")+'\')" class="fa fa-linkedin"></a>\n    <a onclick="window.open(\''+getShareUrl("PINTEREST")+'\')" class="fa fa-pinterest"></a>\n    <a onclick="window.open(\''+
+getShareUrl("EMAIL")+'\')" class="fa fa-envelope"></a>\n    </div>\n    '}
+function getShareUrl(a){switch(a){case "FACEBOOK":return"https://www.facebook.com/v3.3/dialog/share?app_id=2977926445596296&href="+WEBSTORE_URL+"%2Ftv%2Fwhite_lines&display=page";case "TWITTER":return"https://twitter.com/intent/tweet?text="+WEBSTORE_SUMMARY+"&url="+WEBSTORE_URL;case "LINKEDIN":return"https://www.linkedin.com/shareArticle?mini=true&url="+WEBSTORE_URL+"&title=&summary="+WEBSTORE_SUMMARY;case "PINTEREST":return"https://pinterest.com/pin/create/button/?url="+WEBSTORE_URL+"&media=https://webcheck.edicratic.com/img/logo128.png&description="+
+WEBSTORE_SUMMARY;case "EMAIL":return"mailto:info@example.com?&subject=&body="+WEBSTORE_URL+"%20"+WEBSTORE_SUMMARY}};

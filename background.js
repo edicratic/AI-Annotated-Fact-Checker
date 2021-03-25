@@ -1,206 +1,22 @@
-//TODO Yukt add the caching
-BASE_URL = "https://webcheck-api-dev.edicratic.com"
-DEFAULT_BLACKLIST = [
-  'twitter',
-  'www.linkedin',
-  'www.amazon',
-  'www.facebook',
-  'www.linkedin',
-  'mail.google',
-  'outlook.office',
-  'mail.aol',
-  'www.google',
-  'www.zoho',
-  'mail.com',
-  'mail.yahoo',
-  'www.tiktok',
-  'www.facebook',
-  'www.whatsapp',
-  'www.messenger',
-  'www.instagram',
-  'www.tiktok',
-  'www.ebay',
-  'www.walmart',
-  'www.target',
-  'www.alibaba',
-  'www.wayfair',
-  'www.wish',
-  'www.shopify',
-  'www.youtube',
-  'www.netflix',
-  'docs.google',
-  'support.google',
-  'vimeo',
-  'accounts.google',
-  'drive.google',
-  'github',
-  'www.dropbox',
-  'www.paypal',
-  'www.dailymotion',
-  'news.google',
-  'bitly',
-  'bit.ly'
-]
-LIST_TYPE = 'blacklisted-edicratic';
-
-chrome.contextMenus.create({
-  title: "WebCheck This Term", 
-  contexts:["selection"], 
-  id: 'CONTEXT_MENU_ID',
-});
-chrome.contextMenus.onClicked.addListener(() => {
-  chrome.storage.local.set({'dummy-highlight': new Date().getTime()});
-});
-
-// chrome.storage.local.get(['authStatus'], function(result) {
-//   createBadge(result['authStatus']);
-// });
-
-// chrome.storage.onChanged.addListener((changes, namespace) => {
-//   if (!changes['authStatus']) return;
-//   createBadge(changes['authStatus']['newValue']);
-// });
-
-// chrome.runtime.onUpdateAvailable.addListener(function(details) {
-//   console.log("updating to version " + details.version);
-//   chrome.runtime.reload();
-// });
-
-function createBadge(authStatus) {
-  // if(chrome.runtime.lastError || authStatus === null || authStatus === undefined || authStatus === "Logged Out") {
-  //   chrome.browserAction.setBadgeText({text: 'Off'});
-  //   chrome.browserAction.setBadgeBackgroundColor({color: 'red'});
-  // } else {
-    chrome.browserAction.setBadgeText({text: 'On'});
-    chrome.browserAction.setBadgeBackgroundColor({color: '#4688F1'});
-  //}
-}
-
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    if (request.message === "callInternet"){
-      // console.log("calling the internet");
-      fetch(request.input, request.params).then(function(response) {
-        // console.log("a response");
-        response.text().then(function(text) {
-          sendResponse([{
-            body: text,
-            status: response.status,
-            statusText: response.statusText,
-          }, null]);
-        });
-      }, function(error) {
-        // console.log("here?");
-        console.log(error);
-        sendResponse([null, error]);
-      });
-}else if (request.message === "callWebCheckAPI"){
-  // console.log("calling the internet");
-  url = BASE_URL + request.input;
-  fetch(url, request.params).then(function(response) {
-    // console.log("a response");
-    requestFailed = false;
-    // if(response.status === 401){
-    //   requestFailed = true;
-    //   chrome.storage.local.set({'authStatus': "Logged Out"}, function() {
-    //     //Handle Error 
-    //     if (chrome.runtime.lastError){
-    //       //TODO 
-    //       console.log("failed to save status, fatal error");
-    //     }
-    //     // console.log("Hi!")
-    //   });
-    // } else
-     if (response.status !== 200){
-      requestFailed = true;
-    }
-    response.text().then(function(text) {
-      if (requestFailed){
-        sendResponse([null, text]);
-      }else{
-        sendResponse([{
-          body: text,
-          status: response.status,
-          statusText: response.statusText,
-        }, null]);
-      }
-    });
-  }, function(error) {
-    // console.log("here?");
-    console.log(error);
-    sendResponse([null, error]);
-  });
-}  else if (request.message === 'NYTimes') {
-  //TODO attach auth here, Chris
-  let url = `https://news.google.com/rss/search?q=${request.term}`;
-  fetch(url).then(response => {
-    response.text().then(text => {
-      sendResponse([{
-        body: text,
-        status: response.status,
-        statusText: response.statusText,
-      }, null]);
-    }, function(error) {
-      sendResponse([null, error]);
-    });
-  })
-} else if(request.message === 'basicGET') {
-  fetch(request.url).then(response => {
-    response.text().then(text => {
-      sendResponse([{
-        body: text,
-        status: response.status,
-        statusText: response.statusText,
-      }, null]);
-    }, function(error) {
-      sendResponse([null, error]);
-    });
-  })
-// }else if (request.message === 'runOAuthFlow'){
-//   oauthFlow();
-}
-return true;
-});
-
-// chrome.runtime.onInstalled.addListener(function(details){
-//   oauthFlow();
-//   let params =  { method:"POST", 
-//                   body: JSON.stringify({body:{type: "installed"}}),
-//                   'Content-Type': 'application/json'
-//                 };
-//   fetch(BASE_URL + "/subscription-event", params);
-// });
-
-function getToken(id_token){
-  return new Promise((resolve, reject) => {
-      let params =  {method:"POST", body: JSON.stringify({body:{oauth2_identifier:{type: "google", id_token: id_token}}}),
-                      'Content-Type': 'application/json'};
-      fetch(BASE_URL + "/token",params).then(res => {
-          if(res.status === 200){
-            resolve(res);
-          }else{
-            reject(res);
-          }
-      }).catch(err => {
-          reject(err);
-      });
-  });
-}
-
-// function oauthFlow(){
-//   chrome.tabs.create({'url': 'about:blank'}, function(authenticationTab) {
-//       chrome.tabs.update(authenticationTab.id, {'url': 'https://webcheck.edicratic.com/login.html'});
-//   });
-// };
-
-function createDefaultBlackList() {
-  chrome.storage.local.get([LIST_TYPE], function (result) {
-      if(!result[LIST_TYPE]) {
-          let storage = {};
-          storage[LIST_TYPE] = DEFAULT_BLACKLIST;
-          chrome.storage.local.set(storage);
-          chrome.storage.local.set({'button-change-edicratic': {'time': new Date().getTime(), 'on': true}});
-      }
-  })
-}
-
-chrome.runtime.setUninstallURL("https://webcheck.edicratic.com/uninstall.html?origin=extension")
+var $jscomp=$jscomp||{};$jscomp.scope={};$jscomp.createTemplateTagFirstArg=function(b){return b.raw=b};$jscomp.createTemplateTagFirstArgWithRaw=function(b,g){b.raw=g;return b};$jscomp.arrayIteratorImpl=function(b){var g=0;return function(){return g<b.length?{done:!1,value:b[g++]}:{done:!0}}};$jscomp.arrayIterator=function(b){return{next:$jscomp.arrayIteratorImpl(b)}};$jscomp.makeIterator=function(b){var g="undefined"!=typeof Symbol&&Symbol.iterator&&b[Symbol.iterator];return g?g.call(b):$jscomp.arrayIterator(b)};
+$jscomp.ASSUME_ES5=!1;$jscomp.ASSUME_NO_NATIVE_MAP=!1;$jscomp.ASSUME_NO_NATIVE_SET=!1;$jscomp.SIMPLE_FROUND_POLYFILL=!1;$jscomp.ISOLATE_POLYFILLS=!1;$jscomp.FORCE_POLYFILL_PROMISE=!1;$jscomp.FORCE_POLYFILL_PROMISE_WHEN_NO_UNHANDLED_REJECTION=!1;
+$jscomp.getGlobal=function(b){b=["object"==typeof globalThis&&globalThis,b,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var g=0;g<b.length;++g){var f=b[g];if(f&&f.Math==Math)return f}throw Error("Cannot find global object");};$jscomp.global=$jscomp.getGlobal(this);
+$jscomp.defineProperty=$jscomp.ASSUME_ES5||"function"==typeof Object.defineProperties?Object.defineProperty:function(b,g,f){if(b==Array.prototype||b==Object.prototype)return b;b[g]=f.value;return b};$jscomp.IS_SYMBOL_NATIVE="function"===typeof Symbol&&"symbol"===typeof Symbol("x");$jscomp.TRUST_ES6_POLYFILLS=!$jscomp.ISOLATE_POLYFILLS||$jscomp.IS_SYMBOL_NATIVE;$jscomp.polyfills={};$jscomp.propertyToPolyfillSymbol={};$jscomp.POLYFILL_PREFIX="$jscp$";
+var $jscomp$lookupPolyfilledValue=function(b,g){var f=$jscomp.propertyToPolyfillSymbol[g];if(null==f)return b[g];f=b[f];return void 0!==f?f:b[g]};$jscomp.polyfill=function(b,g,f,d){g&&($jscomp.ISOLATE_POLYFILLS?$jscomp.polyfillIsolated(b,g,f,d):$jscomp.polyfillUnisolated(b,g,f,d))};
+$jscomp.polyfillUnisolated=function(b,g,f,d){f=$jscomp.global;b=b.split(".");for(d=0;d<b.length-1;d++){var c=b[d];if(!(c in f))return;f=f[c]}b=b[b.length-1];d=f[b];g=g(d);g!=d&&null!=g&&$jscomp.defineProperty(f,b,{configurable:!0,writable:!0,value:g})};
+$jscomp.polyfillIsolated=function(b,g,f,d){var c=b.split(".");b=1===c.length;d=c[0];d=!b&&d in $jscomp.polyfills?$jscomp.polyfills:$jscomp.global;for(var p=0;p<c.length-1;p++){var a=c[p];if(!(a in d))return;d=d[a]}c=c[c.length-1];f=$jscomp.IS_SYMBOL_NATIVE&&"es6"===f?d[c]:null;g=g(f);null!=g&&(b?$jscomp.defineProperty($jscomp.polyfills,c,{configurable:!0,writable:!0,value:g}):g!==f&&(void 0===$jscomp.propertyToPolyfillSymbol[c]&&($jscomp.propertyToPolyfillSymbol[c]=$jscomp.IS_SYMBOL_NATIVE?$jscomp.global.Symbol(c):
+$jscomp.POLYFILL_PREFIX+c),$jscomp.defineProperty(d,$jscomp.propertyToPolyfillSymbol[c],{configurable:!0,writable:!0,value:g})))};
+$jscomp.polyfill("Promise",function(b){function g(){this.batch_=null}function f(a){return a instanceof c?a:new c(function(e,h){e(a)})}if(b&&(!($jscomp.FORCE_POLYFILL_PROMISE||$jscomp.FORCE_POLYFILL_PROMISE_WHEN_NO_UNHANDLED_REJECTION&&"undefined"===typeof $jscomp.global.PromiseRejectionEvent)||!$jscomp.global.Promise||-1===$jscomp.global.Promise.toString().indexOf("[native code]")))return b;g.prototype.asyncExecute=function(a){if(null==this.batch_){this.batch_=[];var e=this;this.asyncExecuteFunction(function(){e.executeBatch_()})}this.batch_.push(a)};
+var d=$jscomp.global.setTimeout;g.prototype.asyncExecuteFunction=function(a){d(a,0)};g.prototype.executeBatch_=function(){for(;this.batch_&&this.batch_.length;){var a=this.batch_;this.batch_=[];for(var e=0;e<a.length;++e){var h=a[e];a[e]=null;try{h()}catch(k){this.asyncThrow_(k)}}}this.batch_=null};g.prototype.asyncThrow_=function(a){this.asyncExecuteFunction(function(){throw a;})};var c=function(a){this.state_=0;this.result_=void 0;this.onSettledCallbacks_=[];this.isRejectionHandled_=!1;var e=this.createResolveAndReject_();
+try{a(e.resolve,e.reject)}catch(h){e.reject(h)}};c.prototype.createResolveAndReject_=function(){function a(k){return function(l){h||(h=!0,k.call(e,l))}}var e=this,h=!1;return{resolve:a(this.resolveTo_),reject:a(this.reject_)}};c.prototype.resolveTo_=function(a){if(a===this)this.reject_(new TypeError("A Promise cannot resolve to itself"));else if(a instanceof c)this.settleSameAsPromise_(a);else{a:switch(typeof a){case "object":var e=null!=a;break a;case "function":e=!0;break a;default:e=!1}e?this.resolveToNonPromiseObj_(a):
+this.fulfill_(a)}};c.prototype.resolveToNonPromiseObj_=function(a){var e=void 0;try{e=a.then}catch(h){this.reject_(h);return}"function"==typeof e?this.settleSameAsThenable_(e,a):this.fulfill_(a)};c.prototype.reject_=function(a){this.settle_(2,a)};c.prototype.fulfill_=function(a){this.settle_(1,a)};c.prototype.settle_=function(a,e){if(0!=this.state_)throw Error("Cannot settle("+a+", "+e+"): Promise already settled in state"+this.state_);this.state_=a;this.result_=e;2===this.state_&&this.scheduleUnhandledRejectionCheck_();
+this.executeOnSettledCallbacks_()};c.prototype.scheduleUnhandledRejectionCheck_=function(){var a=this;d(function(){if(a.notifyUnhandledRejection_()){var e=$jscomp.global.console;"undefined"!==typeof e&&e.error(a.result_)}},1)};c.prototype.notifyUnhandledRejection_=function(){if(this.isRejectionHandled_)return!1;var a=$jscomp.global.CustomEvent,e=$jscomp.global.Event,h=$jscomp.global.dispatchEvent;if("undefined"===typeof h)return!0;"function"===typeof a?a=new a("unhandledrejection",{cancelable:!0}):
+"function"===typeof e?a=new e("unhandledrejection",{cancelable:!0}):(a=$jscomp.global.document.createEvent("CustomEvent"),a.initCustomEvent("unhandledrejection",!1,!0,a));a.promise=this;a.reason=this.result_;return h(a)};c.prototype.executeOnSettledCallbacks_=function(){if(null!=this.onSettledCallbacks_){for(var a=0;a<this.onSettledCallbacks_.length;++a)p.asyncExecute(this.onSettledCallbacks_[a]);this.onSettledCallbacks_=null}};var p=new g;c.prototype.settleSameAsPromise_=function(a){var e=this.createResolveAndReject_();
+a.callWhenSettled_(e.resolve,e.reject)};c.prototype.settleSameAsThenable_=function(a,e){var h=this.createResolveAndReject_();try{a.call(e,h.resolve,h.reject)}catch(k){h.reject(k)}};c.prototype.then=function(a,e){function h(m,n){return"function"==typeof m?function(q){try{k(m(q))}catch(r){l(r)}}:n}var k,l,t=new c(function(m,n){k=m;l=n});this.callWhenSettled_(h(a,k),h(e,l));return t};c.prototype.catch=function(a){return this.then(void 0,a)};c.prototype.callWhenSettled_=function(a,e){function h(){switch(k.state_){case 1:a(k.result_);
+break;case 2:e(k.result_);break;default:throw Error("Unexpected state: "+k.state_);}}var k=this;null==this.onSettledCallbacks_?p.asyncExecute(h):this.onSettledCallbacks_.push(h);this.isRejectionHandled_=!0};c.resolve=f;c.reject=function(a){return new c(function(e,h){h(a)})};c.race=function(a){return new c(function(e,h){for(var k=$jscomp.makeIterator(a),l=k.next();!l.done;l=k.next())f(l.value).callWhenSettled_(e,h)})};c.all=function(a){var e=$jscomp.makeIterator(a),h=e.next();return h.done?f([]):new c(function(k,
+l){function t(q){return function(r){m[q]=r;n--;0==n&&k(m)}}var m=[],n=0;do m.push(void 0),n++,f(h.value).callWhenSettled_(t(m.length-1),l),h=e.next();while(!h.done)})};return c},"es6","es3");BASE_URL="https://webcheck-api-dev.edicratic.com";DEFAULT_BLACKLIST="twitter www.linkedin www.amazon www.facebook www.linkedin mail.google outlook.office mail.aol www.google www.zoho mail.com mail.yahoo www.tiktok www.facebook www.whatsapp www.messenger www.instagram www.tiktok www.ebay www.walmart www.target www.alibaba www.wayfair www.wish www.shopify www.youtube www.netflix docs.google support.google vimeo accounts.google drive.google github www.dropbox www.paypal www.dailymotion news.google bitly bit.ly".split(" ");
+LIST_TYPE="blacklisted-edicratic";chrome.contextMenus.create({title:"WebCheck This Term",contexts:["selection"],id:"CONTEXT_MENU_ID"});chrome.contextMenus.onClicked.addListener(function(){chrome.storage.local.set({"dummy-highlight":(new Date).getTime()})});function createBadge(b){chrome.browserAction.setBadgeText({text:"On"});chrome.browserAction.setBadgeBackgroundColor({color:"#4688F1"})}
+chrome.runtime.onMessage.addListener(function(b,g,f){"callInternet"===b.message?fetch(b.input,b.params).then(function(d){d.text().then(function(c){f([{body:c,status:d.status,statusText:d.statusText},null])})},function(d){console.log(d);f([null,d])}):"callWebCheckAPI"===b.message?(url=BASE_URL+b.input,fetch(url,b.params).then(function(d){requestFailed=!1;200!==d.status&&(requestFailed=!0);d.text().then(function(c){requestFailed?f([null,c]):f([{body:c,status:d.status,statusText:d.statusText},null])})},
+function(d){console.log(d);f([null,d])})):"NYTimes"===b.message?fetch("https://news.google.com/rss/search?q="+b.term).then(function(d){d.text().then(function(c){f([{body:c,status:d.status,statusText:d.statusText},null])},function(c){f([null,c])})}):"basicGET"===b.message&&fetch(b.url).then(function(d){d.text().then(function(c){f([{body:c,status:d.status,statusText:d.statusText},null])},function(c){f([null,c])})});return!0});
+function getToken(b){return new Promise(function(g,f){var d={method:"POST",body:JSON.stringify({body:{oauth2_identifier:{type:"google",id_token:b}}}),"Content-Type":"application/json"};fetch(BASE_URL+"/token",d).then(function(c){200===c.status?g(c):f(c)}).catch(function(c){f(c)})})}
+function createDefaultBlackList(){chrome.storage.local.get([LIST_TYPE],function(b){b[LIST_TYPE]||(b={},b[LIST_TYPE]=DEFAULT_BLACKLIST,chrome.storage.local.set(b),chrome.storage.local.set({"button-change-edicratic":{time:(new Date).getTime(),on:!0}}))})}chrome.runtime.setUninstallURL("https://webcheck.edicratic.com/uninstall.html?origin=extension");
